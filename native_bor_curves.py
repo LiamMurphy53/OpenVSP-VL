@@ -30,7 +30,10 @@ def details(v,gid,parameter):
 
 def mutate(v,r):
     gid=r['geom']
-    if r['operation']=='bor-curve-convert':edit(v,gid);v.Update();return True,gid
+    if r['operation']=='bor-curve-convert':
+        from native_editable_curves import guard_bor_shape_replacement
+        guard_bor_shape_replacement(v,gid,v.XS_EDIT_CURVE)
+        edit(v,gid);v.Update();return True,gid
     if v.GetBORXSecShape(gid)!=v.XS_EDIT_CURVE:raise ValueError('Convert the revolution profile to an editable curve first.')
     from native_region_curves import mutate_edit_native
     from native_tools import finite

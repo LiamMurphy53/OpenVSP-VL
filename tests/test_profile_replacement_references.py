@@ -43,4 +43,25 @@ class ProfileReferences(unittest.TestCase):
         self.assertEqual(next(self.path.glob('*/aircraft.vsp3')).read_bytes(),before)
 
 
+    def test_revolution_replacements_preserve_referenced_profile(self):
+        v=self.v;g=v.AddGeom('BODYOFREVOLUTION');v.ChangeBORXSecShape(g,v.XS_FOUR_SERIES)
+        pid=v.FindParm(g,'Theta','XSecCurve');v.AddAttributeParm(v.GetChildCollection(v.GetVehicleID()),'Revolution profile reference',pid)
+        v.Update();v.WriteVSPFile(str(self.model),v.SET_ALL);before=self.model.read_bytes()
+        requests=[dict(operation='bor-shape',shape='XS_ELLIPSE'),dict(operation='bor-curve-convert'),dict(operation='bor-cst-fit',degree=8),dict(operation='bor-airfoil',content='Airfoil\n1 0\n.5 .1\n0 0\n.5 -.1\n1 0\n'),dict(operation='bor-profile',content='OPENVSP_XSEC_FILE_V1\n1 0\n0 -1\n-1 0\n0 1\n1 0\n')]
+        for extra in requests:
+            existing=set(self.path.glob('*/aircraft.vsp3'))
+            with self.assertRaisesRegex(ValueError,'profile parameter IDs used by parameter reference'):
+                self.worker(dict(action='mutate',geom=g,**extra))
+            candidate=next(iter(set(self.path.glob('*/aircraft.vsp3'))-existing));self.assertEqual(candidate.read_bytes(),before)
+        baseline,_=self.worker(dict(action='state'))
+        before_ref=next(a for a in baseline['tools']['attributes'] if a['name']=='Revolution profile reference')['values']
+        state,path=self.worker(dict(action='mutate',operation='bor-shape',geom=g,shape='XS_FOUR_SERIES'))
+        after_ref=next(a for a in state['tools']['attributes'] if a['name']=='Revolution profile reference')['values']
+        reopened,_=self.worker(dict(action='state'),path)
+        reopened_ref=next(a for a in reopened['tools']['attributes'] if a['name']=='Revolution profile reference')['values']
+        self.assertEqual(after_ref,before_ref);self.assertEqual(reopened_ref,before_ref)
+        curve=next(c for c in reopened['components'] if c['id']==g)
+        self.assertIn(before_ref[0],{p['id'] for p in curve['params'] if p['name']=='Theta' and p['rawGroup']=='XSecCurve'})
+
+
 if __name__=='__main__':unittest.main()

@@ -30,6 +30,15 @@ def guard_shape_replacement(v,xid,target):
     guard_parameter_replacement(v,ids,'native profile parameter IDs')
 
 
+def guard_bor_shape_replacement(v,gid,target):
+    if v.GetBORXSecShape(gid)==target:return
+    parameters=list(v.GetGeomParmIDs(gid))
+    theta=next(p for p in parameters if v.GetParmName(p)=='Theta' and v.GetParmGroupName(p)=='XSecCurve')
+    cid=v.GetParmContainer(theta)
+    ids={p for p in parameters if v.GetParmContainer(p)==cid or v.GetParmGroupName(p).startswith('XSecCurve')}
+    guard_parameter_replacement(v,ids,'native profile parameter IDs')
+
+
 def initialization_shape(v,parameters):
     pid=next((p['id'] for p in parameters if p['name']=='ShapeType'),None)
     if not pid:return None

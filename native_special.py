@@ -120,12 +120,18 @@ def mutate(v,r):
         if op.startswith('bor-curve-'):
             import native_bor_curves
             return native_bor_curves.mutate(v,r)
-        if op=='bor-shape':v.ChangeBORXSecShape(g,getattr(v,one(r['shape'],SHAPES)))
+        if op=='bor-shape':
+            from native_editable_curves import guard_bor_shape_replacement
+            shape=getattr(v,one(r['shape'],SHAPES));guard_bor_shape_replacement(v,g,shape);v.ChangeBORXSecShape(g,shape)
         elif op in ('bor-airfoil','bor-profile'):
-            v.ChangeBORXSecShape(g,v.XS_FILE_AIRFOIL if op=='bor-airfoil' else v.XS_FILE_FUSE)
+            from native_editable_curves import guard_bor_shape_replacement
+            shape=v.XS_FILE_AIRFOIL if op=='bor-airfoil' else v.XS_FILE_FUSE
+            guard_bor_shape_replacement(v,g,shape);v.ChangeBORXSecShape(g,shape)
             (v.ReadBORFileAirfoil if op=='bor-airfoil' else v.ReadBORFileXSec)(g,text_file(r['content'],'bor-profile.dat'))
         elif op=='bor-cst-fit':
             if v.GetBORXSecShape(g) not in [getattr(v,n) for n in BOR_CST_FIT_SHAPES]:raise ValueError('Choose a supported airfoil profile before fitting CST.')
+            from native_editable_curves import guard_bor_shape_replacement
+            guard_bor_shape_replacement(v,g,v.XS_CST_AIRFOIL)
             v.FitBORAfCST(g,one(r['degree'],range(1,21)))
         elif op=='bor-cst-degree':
             if v.GetBORXSecShape(g)!=v.XS_CST_AIRFOIL:raise ValueError('Choose a CST profile before changing its degree.')
