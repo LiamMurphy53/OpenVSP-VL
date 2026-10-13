@@ -127,3 +127,27 @@ def move_tangent(v, xid, request):
 def guard_container_shape_replacement(v,cid,current,target):
     if current==target:return
     guard_parameter_replacement(v,set(v.FindContainerParmIDs(cid)),'native profile parameter IDs')
+
+
+def referenced_parameters(v):
+    """Capture references before a native clipboard decode can remove links."""
+    refs={}
+    def record(ids,label):
+        for pid in ids:
+            if v.ValidParm(pid):refs.setdefault(pid,set()).add(label)
+    for i in range(v.GetNumParmLinks()):
+        link=v.GetParmLinkID(i);record([v.GetParmLinkAParm(link),v.GetParmLinkBParm(link)],'parameter link')
+    for i,name in enumerate(v.GetAdvLinkNames()):
+        record(list(v.GetAdvLinkInputParms(i))+list(v.GetAdvLinkOutputParms(i)),'expression '+name)
+    for group in v.GetVarPresetGroups():record(v.GetVarPresetParmIDs(group),'preset '+v.GetGroupName(group))
+    record([v.GetDesignVar(i) for i in range(v.GetNumDesignVars())],'design variable')
+    for attr in v.FindAllAttributes():
+        if v.GetAttributeType(attr)==v.PARM_REFERENCE_DATA:record(v.GetAttributeParmID(attr),'parameter reference '+v.GetAttributeName(attr))
+    return refs
+
+
+def require_reference_survival(v,refs):
+    missing={pid:users for pid,users in refs.items() if not v.ValidParm(pid)}
+    if missing:
+        users=sorted(set().union(*missing.values()))
+        raise ValueError('This copy replaces native parameter IDs used by '+', '.join(users)+'. Reassign or remove those references before copying. The edit was not saved.')

@@ -676,6 +676,8 @@ def run(req, model):
 
     changed=None
     if action=='mutate':
+        from native_editable_curves import referenced_parameters,require_reference_survival
+        copy_refs=referenced_parameters(v) if req.get('operation') in ('section-copy-from','bor-profile-copy','region-curve-copy-from','auxiliary-profile-copy') else {}
         changed=mutate(v,req)
         import native_wave_controls
         native_wave_controls.refresh(v)
@@ -684,6 +686,7 @@ def run(req, model):
         import native_custom_library
         native_custom_library.validate_gui(v)
         native_custom_library.validate_surfaces(v)
+        require_reference_survival(v,copy_refs)
         v.WriteVSPFile(str(model),v.SET_ALL)
         errors(v)
         # Native file-curve limits are reconstructed differently by DecodeXml.
