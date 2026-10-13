@@ -95,4 +95,29 @@ class CurveInitialization(unittest.TestCase):
                 candidate=next(iter(set(self.path.glob('*/aircraft.vsp3'))-existing));self.assertEqual(candidate.read_bytes(),before)
 
 
+    def test_point_recreation_guards_and_unrelated_delete_preserve_links(self):
+        v=self.v;surf=v.GetXSecSurf(self.gid,0);v.ChangeXSecShape(surf,1,v.XS_EDIT_CURVE);x=v.GetXSec(surf,1);v.SetParmValUpdate(v.GetXSecParm(x,'SymType'),v.SYM_NONE);v.Update()
+        pid=v.GetXSecParm(x,'X_3');link=v.AddParmLink(pid,v.FindParm(self.gid,'X_Rel_Location','XForm'));v.Update();v.WriteVSPFile(str(self.model),v.SET_ALL);before=self.model.read_bytes()
+        for extra in [dict(operation='curve-split',u=.125),dict(operation='curve-delete',point=3),dict(operation='curve-type',type='LINEAR')]:
+            existing=set(self.path.glob('*/aircraft.vsp3'))
+            with self.assertRaisesRegex(ValueError,'point IDs used by parameter link'):
+                self.worker(dict(action='mutate',geom=self.gid,surface=0,index=1,**extra))
+            candidate=next(iter(set(self.path.glob('*/aircraft.vsp3'))-existing));self.assertEqual(candidate.read_bytes(),before)
+        # Deleting another anchor keeps this point's original ID and link.
+        v.EditXSecDelPnt(x,9);v.Update();reference=self.path/'direct-delete.vsp3';v.WriteVSPFile(str(reference),v.SET_ALL)
+        expected,_=self.worker(dict(action='state'),reference)
+        state,path=self.worker(dict(action='mutate',operation='curve-delete',geom=self.gid,surface=0,index=1,point=9))
+        self.assertEqual(state['components'][0]['surfaces'],expected['components'][0]['surfaces'])
+        v.ClearVSPModel();v.ReadVSPFile(str(path));v.Update()
+        self.assertTrue(v.ValidParm(pid));self.assertEqual(v.GetParmLinkAParm(link),pid)
+
+    def test_linear_to_pchip_keeps_referenced_point_ids(self):
+        v=self.v;surf=v.GetXSecSurf(self.gid,0);v.ChangeXSecShape(surf,1,v.XS_EDIT_CURVE);x=v.GetXSec(surf,1);v.EditXSecConvertTo(x,v.LINEAR);v.Update()
+        pid=v.GetXSecParm(x,'X_1');link=v.AddParmLink(pid,v.FindParm(self.gid,'X_Rel_Location','XForm'));v.Update();v.WriteVSPFile(str(self.model),v.SET_ALL)
+        _,path=self.worker(dict(action='mutate',operation='curve-type',geom=self.gid,surface=0,index=1,type='PCHIP'))
+        v.ClearVSPModel();v.ReadVSPFile(str(path));v.Update()
+        self.assertTrue(v.ValidParm(pid));self.assertEqual(v.GetParmLinkAParm(link),pid)
+        self.assertEqual(v.GetParmVal(v.GetXSecParm(v.GetXSec(v.GetXSecSurf(self.gid,0),1),'CurveType')),v.PCHIP)
+
+
 if __name__=='__main__':unittest.main()

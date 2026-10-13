@@ -138,15 +138,24 @@ def mutate_edit_native(v,r,cid,invoke):
         guard_rebuild(v,[dict(id=pid,name=name) for name,pid in parms.items()])
         shape=one(r.get('shape'),('EDIT_XSEC_CIRCLE','EDIT_XSEC_ELLIPSE','EDIT_XSEC_RECTANGLE'))
         v.SetParmVal(parms['ShapeType'],getattr(v,shape));invoke(7)
-    elif op=='region-curve-type':invoke(1,getattr(v,one(r.get('type'),('LINEAR','PCHIP','CEDIT'))))
+    elif op=='region-curve-type':
+        target=getattr(v,one(r.get('type'),('LINEAR','PCHIP','CEDIT')))
+        if (int(v.GetParmVal(parms['CurveType']))==v.CEDIT)!=(target==v.CEDIT):
+            from native_editable_curves import guard_rebuild
+            guard_rebuild(v,[dict(id=pid,name=name) for name,pid in parms.items()])
+        invoke(1,target)
     elif op=='region-curve-split':
         u=finite(r.get('u'))
         if not 0<u<1:raise ValueError('Split position must be strictly between 0 and 1.')
+        from native_editable_curves import guard_rebuild
+        guard_rebuild(v,[dict(id=pid,name=name) for name,pid in parms.items()])
         invoke(2,u=u);v.Update()
         if len(invoke()['controlPoints'])<=count:raise ValueError('OpenVSP did not add a point here. Choose a location between existing anchors.')
     elif op=='region-curve-delete':
         i=point();one(i,range(1,count-1),'The first and closing points cannot be removed.')
         if int(v.GetParmVal(parms['CurveType']))==v.CEDIT and i%3:raise ValueError('Remove a curve anchor, not a Bezier handle.')
+        from native_editable_curves import guard_rebuild
+        guard_rebuild(v,[dict(id=pid,name=name) for name,pid in parms.items()],{i-1,i,i+1} if int(v.GetParmVal(parms['CurveType']))==v.CEDIT else {i})
         invoke(3,i);v.Update()
         if len(invoke()['controlPoints'])>=count:raise ValueError('OpenVSP could not remove this point with the current curve constraints.')
     elif op=='region-curve-reparameterize':invoke(4)

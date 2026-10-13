@@ -2,9 +2,9 @@
 import re
 
 
-def guard_rebuild(v,parameters):
+def guard_rebuild(v,parameters,indices=None):
     """Native initialization recreates point IDs; protect saved references."""
-    ids={p['id'] for p in parameters if re.fullmatch(r'(?:[UXYZR]|G1|FixedU)_\d+',p['name'])}
+    ids={p['id'] for p in parameters if re.fullmatch(r'(?:[UXYZR]|G1|FixedU)_\d+',p['name']) and (indices is None or int(p['name'].rsplit('_',1)[1]) in indices)}
     users=[]
     for i in range(v.GetNumParmLinks()):
         link=v.GetParmLinkID(i)
@@ -16,7 +16,7 @@ def guard_rebuild(v,parameters):
     if ids & {v.GetDesignVar(i) for i in range(v.GetNumDesignVars())}:users.append('design variable')
     for attr in v.FindAllAttributes():
         if v.GetAttributeType(attr)==v.PARM_REFERENCE_DATA and ids & set(v.GetAttributeParmID(attr)):users.append('parameter reference '+v.GetAttributeName(attr))
-    if users:raise ValueError('Rebuilding recreates native point IDs used by '+', '.join(sorted(set(users)))+'. Reassign or remove those references before rebuilding. The edit was not saved.')
+    if users:raise ValueError('This curve edit deletes or recreates native point IDs used by '+', '.join(sorted(set(users)))+'. Reassign or remove those references before editing. The edit was not saved.')
 
 
 def initialization_shape(v,parameters):

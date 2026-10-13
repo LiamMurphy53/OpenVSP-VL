@@ -226,10 +226,17 @@ def mutate(v,r):
             guard_rebuild(v,[dict(id=p,name=v.GetParmName(p)) for p in v.GetXSecParmIDs(xid)])
             shape=one(r.get('shape'),('EDIT_XSEC_CIRCLE','EDIT_XSEC_ELLIPSE','EDIT_XSEC_RECTANGLE'))
             v.SetParmVal(v.GetXSecParm(xid,'ShapeType'),getattr(v,shape));v.EditXSecInitShape(xid)
-        elif op=='curve-type':v.EditXSecConvertTo(xid,getattr(v,one(r['type'],('LINEAR','PCHIP','CEDIT'))))
+        elif op=='curve-type':
+            target=getattr(v,one(r['type'],('LINEAR','PCHIP','CEDIT')))
+            if (int(v.GetParmVal(v.GetXSecParm(xid,'CurveType')))==v.CEDIT)!=(target==v.CEDIT):
+                from native_editable_curves import guard_rebuild
+                guard_rebuild(v,[dict(id=p,name=v.GetParmName(p)) for p in v.GetXSecParmIDs(xid)])
+            v.EditXSecConvertTo(xid,target)
         elif op=='curve-split':
             u=finite(r['u'])
             if not 0<u<1:raise ValueError('Split position must be strictly between 0 and 1.')
+            from native_editable_curves import guard_rebuild
+            guard_rebuild(v,[dict(id=p,name=v.GetParmName(p)) for p in v.GetXSecParmIDs(xid)])
             v.EditXSecSplit01(xid,u);v.Update()
             if len(v.GetEditXSecCtrlVec(xid,True))<=before:raise ValueError('OpenVSP did not add a point here. Choose a location between existing anchors.')
         elif op=='curve-reparameterize':v.ReparameterizeEditXSec(xid)
@@ -247,6 +254,8 @@ def mutate(v,r):
             point=one(r['point'],range(1,before-1),'The first and closing points cannot be removed.')
             typ=int(v.GetParmVal(v.GetXSecParm(xid,'CurveType')))
             if typ==v.CEDIT and point%3:raise ValueError('Remove a curve anchor, not a Bezier handle.')
+            from native_editable_curves import guard_rebuild
+            guard_rebuild(v,[dict(id=p,name=v.GetParmName(p)) for p in v.GetXSecParmIDs(xid)],{point-1,point,point+1} if typ==v.CEDIT else {point})
             v.EditXSecDelPnt(xid,point);v.Update()
             if len(v.GetEditXSecCtrlVec(xid,True))>=before:raise ValueError('OpenVSP could not remove this point with the current curve constraints.')
         else:
