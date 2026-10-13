@@ -76,3 +76,8 @@ Packaged validation: all seven profile-catalogue and clipboard-reference regress
 
 ### 2026-10-13 — legacy propeller Point record preservation
 Added a saved-model regression for an existing unsupported Point profile on a propeller. Studio preserves its original native section ID/type through state reopening and renaming; replacing it with a valid Four-series airfoil succeeds and preserves complete reopened native surfaces. The original SDK warning remains expected for the legacy input; preserving data does not classify that profile as supported blade geometry. Two packaged legacy/point-guard regression methods passed (2.823 seconds), including rejected insertion/copy candidate preservation. No production change was needed for this preservation case. Overall modeling completion remains unproven.
+
+
+### 2026-10-13 — routing point insertion
+
+Specialized geometry exposes Insert before on each routing point, using the selected Anchor surface and the original InsertRoutingPt operation. Three selected routing checks pass (7.033s), including an independent native middle-insertion comparison, exact sampled curve, anchor order/IDs, symmetry copies and cold reopening. Browser insertion creates the expected three ordered points; Undo restores two anchors, and a second Undo restores the original Wing/Wing/BOR isolated aircraft. Three inactive attachment-coordinate limits differ between immediate and reopened snapshots; their cause remains under investigation and metadata-limit fidelity is not claimed. Evidence: `.workspace/evidence/routing-insertion-final-test.log`, `.workspace/evidence/routing-insert-browser.png`. Broader modeling parity remains incomplete.
