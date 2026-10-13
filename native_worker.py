@@ -205,7 +205,10 @@ def snapshot(v):
         if kind in native_custom_library.TYPES or kind=='Custom' or kind.startswith('StudioPart_'):
             from native_custom_scripts import actions
             custom_actions=actions(v,gid)
-        components.append(dict(customActions=custom_actions,designAssist=design_assist,id=gid, name=v.GetGeomName(gid), type=kind, params=params,attachment=attachment,endCaps=end_caps,profileControls=profile_controls,humanControls=human_controls,familyControls=family_controls,conformalSource=conformal_source,
+        from native_special import SHAPES
+        import native_prop_profiles
+        profile_shapes=[n for n in SHAPES if not (native_prop_profiles.is_prop(v,gid) and n=='XS_POINT')]
+        components.append(dict(profileShapes=profile_shapes,customActions=custom_actions,designAssist=design_assist,id=gid, name=v.GetGeomName(gid), type=kind, params=params,attachment=attachment,endCaps=end_caps,profileControls=profile_controls,humanControls=human_controls,familyControls=family_controls,conformalSource=conformal_source,
                                parent=v.GetGeomParent(gid), shown=v.GetSetFlag(gid,v.SET_SHOWN), mainSurfaceCount=v.GetNumMainSurfs(gid), surfaces=surfaces, referenceDrawings=reference_drawings,featureLines=features, paths=paths, points=isolated_points, wireSettings=wire_settings, mesh=mesh, sections=sections))
     import native_custom_bindings
     binding_parameters={p['id']:{**p,'bindingOwner':c['name']} for c in components for p in c['params']}
@@ -466,6 +469,8 @@ def mutate(v, req):
             from native_special import SHAPES
             shape=req.get('shape')
             if type(shape)!=int or shape not in [getattr(v,name) for name in SHAPES]:raise ValueError('Choose a supported native profile shape.')
+            import native_prop_profiles
+            native_prop_profiles.validate_shape(v,gid,shape)
         if action=='shape':
             from native_editable_curves import guard_shape_replacement
             guard_shape_replacement(v,v.GetXSec(surf,index),shape)
@@ -687,8 +692,11 @@ def run(req, model):
     changed=None
     if action=='mutate':
         from native_editable_curves import referenced_parameters,require_reference_survival
+        import native_prop_profiles
+        old_prop_points=native_prop_profiles.point_sections(v)
         copy_refs=referenced_parameters(v) if req.get('operation') in ('section-copy-from','bor-profile-copy','region-curve-copy-from','auxiliary-profile-copy') else {}
         changed=mutate(v,req)
+        native_prop_profiles.validate_new_points(v,old_prop_points)
         import native_wing_controls
         if req.get('operation')=='drivers' and v.GetGeomTypeName(req['geom']).upper()=='WING':native_wing_controls.evaluate_selected_drivers(v,req['geom'],req['index'])
         native_wing_controls.validate_finite_dimensions(v)
