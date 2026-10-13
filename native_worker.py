@@ -86,6 +86,8 @@ def snapshot(v):
     warnings = []
     for gid in v.FindGeoms():
         kind = v.GetGeomTypeName(gid)
+        import native_custom_library
+        native_custom_library.validate_surfaces(v,gid)
         params = [parameter(v, p) for p in v.GetGeomParmIDs(gid)]
         surfaces = []
         for i in range(v.GetTotalNumSurfs(gid)):
@@ -673,6 +675,7 @@ def run(req, model):
         native_parasite_controls.refresh(v)
         import native_custom_library
         native_custom_library.validate_gui(v)
+        native_custom_library.validate_surfaces(v)
         v.WriteVSPFile(str(model),v.SET_ALL)
         errors(v)
         # Native file-curve limits are reconstructed differently by DecodeXml.

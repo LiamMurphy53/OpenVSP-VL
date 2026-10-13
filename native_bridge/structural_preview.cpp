@@ -1269,3 +1269,22 @@ extern "C" const char* studio_refresh_section_owner(const char* engine,const cha
     }catch(const std::exception& error){output="{\"error\":"+quote(error.what())+"}";}
     if(library)dlclose(library);return output.c_str();
 }
+
+// Original native patch counts detect unsuccessful custom skinning before sampling.
+extern "C" const char* studio_surface_topology(const char* engine,const char* geom,int count) {
+    static thread_local std::string output;void* library=nullptr;
+    try {
+        if(count<0 || count>10000)throw std::runtime_error("Invalid native surface count.");
+        library=dlopen(engine,RTLD_NOW);if(!library)throw std::runtime_error(dlerror());
+        auto find=symbol<void*(*)(const std::string&,const std::string&)>(library,"_ZN3vsp13FindGeomForOpERKNSt3__112basic_stringIcNS0_11char_traitsIcEENS0_9allocatorIcEEEES8_");
+        void* component=find(std::string(geom),"Studio native surface validation");
+        if(!component)throw std::runtime_error("Native component unavailable.");
+        auto get=symbol<const void*(*)(const void*,int)>(library,"_ZNK4Geom14GetMainSurfPtrEi");
+        auto u=symbol<int(*)(const void*)>(library,"_ZNK7VspSurf11GetNumSectUEv");
+        auto w=symbol<int(*)(const void*)>(library,"_ZNK7VspSurf11GetNumSectWEv");
+        std::ostringstream s;s << '[';
+        for(int i=0;i<count;++i){if(i)s << ',';const void* surface=get(component,i);if(!surface)throw std::runtime_error("Native surface unavailable.");s << "{\"index\":" << i << ",\"uPatches\":" << u(surface) << ",\"wPatches\":" << w(surface) << '}';}
+        s << ']';output=s.str();
+    }catch(const std::exception& error){output="{\"error\":"+quote(error.what())+"}";}
+    if(library)dlclose(library);return output.c_str();
+}

@@ -110,6 +110,15 @@ class CustomScripts(unittest.TestCase):
             expected=[[p.x(),p.y(),p.z()] for p in v.CompVecPnt01(reference,i,[a for a in u for _ in w],[b for _ in u for b in w])]
             self.assertEqual(surface['points'],expected)
 
+    def test_empty_native_surface_rejects_without_saving(self):
+        text='void Init(){string s=AddXSecSurf();AppendCustomXSec(s,XS_ELLIPSE);} void InitGui(){} void UpdateGui(){} void UpdateSurf(){SkinXSecSurf();}'
+        before=self.model.read_bytes()
+        with self.assertRaisesRegex(ValueError,'did not produce a valid native surface'):
+            self.worker(dict(action='mutate',operation='geometry-import',format='CUSTOM_SCRIPT',content=base64.b64encode(text.encode()).decode()))
+        self.assertEqual(next(self.path.glob('*/aircraft.vsp3')).read_bytes(),before)
+        _,_,empty=self.import_component('void Init(){} void InitGui(){} void UpdateGui(){} void UpdateSurf(){SkinXSecSurf();}')
+        self.assertEqual(empty['surfaces'],[])
+
     def test_bad_package_graphs_reject_before_writing(self):
         main=self.template()
         cases=[ [('Main.vsppart',main),('../escape.as','bad')],

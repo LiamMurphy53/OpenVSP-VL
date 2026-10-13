@@ -68,3 +68,12 @@ def validate_gui(v):
 def is_custom(v,gid):
     kind=v.GetGeomTypeName(gid)
     return kind in TYPES or kind=='Custom' or kind.startswith('StudioPart_')
+
+
+def validate_surfaces(v,gid=None):
+    from native_custom_scripts import surface_topology
+    for g in ([gid] if gid else v.FindGeoms()):
+        if not is_custom(v,g):continue
+        for surface in surface_topology(v,g):
+            if surface['uPatches']<=0 or surface['wPatches']<=0:
+                raise ValueError(f'{v.GetGeomName(g)}: custom script did not produce a valid native surface {surface["index"]}. Check its profile compatibility and SkinXSecSurf call. The edit was not saved.')

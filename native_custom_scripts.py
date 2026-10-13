@@ -99,6 +99,15 @@ def gui_definitions(v,gid):
     return result
 
 
+def surface_topology(v,gid):
+    _,engine,bridge=native_preview.adapter(v)
+    f=bridge.studio_surface_topology
+    f.argtypes=[ctypes.c_char_p,ctypes.c_char_p,ctypes.c_int];f.restype=ctypes.c_char_p
+    result=json.loads(f(engine,gid.encode(),v.GetNumMainSurfs(gid)))
+    if isinstance(result,dict):raise ValueError(result.get('error','Native surface validation unavailable.'))
+    return result
+
+
 def gui_updates(v,gid):
     from native_worker import errors
     from collections import Counter
