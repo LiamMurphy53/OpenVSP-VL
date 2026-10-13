@@ -8,6 +8,16 @@ def digest(source,headers):
     return hashlib.sha256(source.read_bytes()+b''.join(p.read_bytes() for p in sorted(headers.glob('*.h')))).hexdigest()[:20]
 
 
+def copy_sources(root,studio):
+    """Keep the delivered workflow source and linked status documents together."""
+    documents=('README.md','FEATURE_STATUS.md','CAPABILITY_PLAN.md','PROJECT_STATUS.md')
+    for name in documents:
+        if not (root/name).is_file():raise ValueError('A required project document is missing: '+name)
+    for path in root.glob('*.py'):shutil.copy2(path,studio/path.name)
+    for name in documents:shutil.copy2(root/name,studio/name)
+    shutil.copytree(root/'web',studio/'web');shutil.copytree(root/'native_bridge',studio/'native_bridge')
+
+
 def build(output):
     output=Path(output).expanduser().resolve()
     if output.suffix!='.app':raise ValueError('Choose an output path ending in .app.')
@@ -24,9 +34,7 @@ def build(output):
     with tempfile.TemporaryDirectory(prefix='studio-package-',dir=output.parent) as temp:
         staged=Path(temp)/output.name;contents=staged/'Contents';studio=contents/'Resources/studio';studio.mkdir(parents=True);macos=contents/'MacOS';macos.mkdir()
         print('Copying Studio interface and native workflows',flush=True)
-        for path in ROOT.glob('*.py'):shutil.copy2(path,studio/path.name)
-        for name in ('README.md','FEATURE_STATUS.md','CAPABILITY_PLAN.md'):shutil.copy2(ROOT/name,studio/name)
-        shutil.copytree(ROOT/'web',studio/'web');shutil.copytree(ROOT/'native_bridge',studio/'native_bridge')
+        copy_sources(ROOT,studio)
         runtime=studio/'.runtime';runtime.mkdir();print('Copying original OpenVSP distribution',flush=True);shutil.copytree(engine.resolve(),runtime/engine.name,symlinks=False)
         print('Copying matching Python and dependencies',flush=True);shutil.copytree(python.resolve(),runtime/'python-interpreters/cpython-3.11-macos-aarch64-none',symlinks=False);shutil.copytree(site,runtime/'site',symlinks=False)
         (runtime/'native-preview').mkdir();shutil.copy2(library,runtime/'native-preview'/library.name)
