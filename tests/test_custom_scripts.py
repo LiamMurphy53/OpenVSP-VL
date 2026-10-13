@@ -150,3 +150,20 @@ class CustomScripts(unittest.TestCase):
             with self.subTest(entries=[n for n,_ in entries]):
                 self.rejected_file_is_unchanged(dict(action='mutate',operation='geometry-import',format='CUSTOM_PACKAGE',
                                                     content=base64.b64encode(self.archive(entries)).decode()),self.model)
+
+    def test_native_counter_and_index_selector_bindings_preserve_complete_geometry(self):
+        from native_custom_scripts import gui_definitions
+        for device in ('GDEV_COUNTER','GDEV_INDEX_SELECTOR'):
+            with self.subTest(device=device):
+                text=self.template().replace('GDEV_SLIDER_ADJ_RANGE_INPUT, "Length"','%s, "Length"'%device)
+                self.assertNotEqual(text,self.template())
+                state,path,c=self.import_component(text);gid=c['id'];field=self.fields(c)['Length']
+                self.assertTrue(field['customControl']);self.assertFalse(field.get('displayReadOnly',False))
+                value=7 if device=='GDEV_INDEX_SELECTOR' else 7.5
+                state,path=self.worker(dict(action='mutate',operation='parameter',id=field['id'],value=value),path)
+                c=next(c for c in state['components'] if c['id']==gid);self.compare_box(c,path,value)
+                definitions=gui_definitions(self.v,gid)
+                self.assertTrue(any(d['type']==getattr(self.v,device) and d['label']=='Length' for d in definitions))
+                reopened,saved=self.worker(dict(action='state'),path);cold=next(c for c in reopened['components'] if c['id']==gid)
+                self.assertEqual(self.fields(cold)['Length']['id'],field['id']);self.compare_box(cold,saved,value)
+                self.rejected_file_is_unchanged(dict(action='mutate',operation='parameter',id=field['id'],value=field['max']+1),path)
