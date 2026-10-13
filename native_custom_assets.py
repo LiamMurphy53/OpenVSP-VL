@@ -21,10 +21,12 @@ def stage(raw):
 
 
 def rewrite_reads(text,source,base,asset_root):
-    """Relocate literal filenames in the original native file-profile APIs."""
+    """Relocate file-profile arguments while retaining native script evaluation."""
+    import os
     # Tokenize comments separately so examples and labels cannot become edits.
     tokens=[m for m in re.finditer(r'//[^\n]*|/\*.*?\*/|"(?:\\.|[^"\\])*"|[A-Za-z_]\w*|[^\s]',text,re.S) if not m[0].startswith(('//','/*'))]
-    replacements=[]
+    replacements=[];dynamic=False
+    helper='StudioPackageProfile_'+hashlib.sha256((str(asset_root)+str(source.relative_to(base))).encode()).hexdigest()[:16]
     for i,token in enumerate(tokens):
         if token[0] not in ('ReadFileAirfoil','ReadFileXSec') or i+1>=len(tokens) or tokens[i+1][0]!='(':continue
         depth=1;j=i+2
@@ -35,7 +37,20 @@ def rewrite_reads(text,source,base,asset_root):
             elif part==',' and depth==1:break
             if depth==0:break
             j+=1
-        if j+2>=len(tokens) or tokens[j][0]!=',' or not tokens[j+1][0].startswith('"') or tokens[j+2][0]!=')':continue
+        if j+2>=len(tokens) or tokens[j][0]!=',':continue
+        if not tokens[j+1][0].startswith('"') or tokens[j+2][0]!=')':
+            end=j+1;depth=1
+            while end<len(tokens):
+                if tokens[end][0]=='(':depth+=1
+                elif tokens[end][0]==')':depth-=1
+                if depth==0:break
+                if tokens[end][0]==',' and depth==1:raise ValueError('Use the two-argument native file-profile API.')
+                end+=1
+            if end==len(tokens):raise ValueError('Unclosed native file-profile call.')
+            start=tokens[j+1].start();stop=tokens[end].start()
+            replacements.append((start,stop,helper+'('+text[start:stop]+')'))
+            dynamic=True
+            continue
         literal=tokens[j+1]
         try:filename=json.loads(literal[0])
         except ValueError:raise ValueError('Use a plain relative profile filename in the package.')
@@ -46,6 +61,20 @@ def rewrite_reads(text,source,base,asset_root):
         destination=asset_root/candidates[0].relative_to(base)
         replacements.append((literal.start(),literal.end(),json.dumps(destination.relative_to(Path.cwd()).as_posix())))
     for start,end,replacement in reversed(replacements):text=text[:start]+replacement+text[end:]
+    if dynamic:
+        choices={}
+        for file in base.rglob('*'):
+            if not file.is_file():continue
+            target=(asset_root/file.relative_to(base)).relative_to(Path.cwd()).as_posix()
+            for key in {file.relative_to(base).as_posix(),Path(os.path.relpath(file,source.parent)).as_posix()}:
+                choices.setdefault(key,set()).add(target)
+        cases=''.join('if(filename=='+json.dumps(key)+')return '+json.dumps(next(iter(paths)))+';\n' for key,paths in sorted(choices.items()) if len(paths)==1)
+        missing_path=asset_root/'.unavailable-profile'
+        while (base/missing_path.relative_to(asset_root)).exists():missing_path=Path(str(missing_path)+'_')
+        missing=missing_path.relative_to(Path.cwd()).as_posix()
+        # Unknown computed names go through the native reader's missing-file
+        # diagnostic rather than accessing an unrelated file in the job.
+        text+='\nstring '+helper+'(const string &in filename){\n'+cases+'return '+json.dumps(missing)+';\n}\n'
     return text
 
 

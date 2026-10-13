@@ -13,7 +13,7 @@ This is a status view of the existing capability plan, not a new scope or a repl
 
 Latest modeling evidence includes secondary custom-surface copying, generated read-only profile viewers, restored Modeling tools copy routing, strict section indices and original native surface refresh after curve paste. Selected saved and viewport geometry comparisons pass; broad W02/W03 closure remains open.
 
-Custom components can import single scripts or ZIPs with nested helpers, use native named choices, dynamic bindings and parameter-backed/event-only actions. Literal packaged file-profile references now retain companions inside the native aircraft and reload them in fresh jobs. Selected original-engine geometry, save/reopen, rejection and browser Undo checks pass. This does not prove all custom script behavior.
+Custom components can import single scripts or ZIPs with nested helpers, use native named choices, dynamic bindings and parameter-backed/event-only actions. Packaged file-profile references retain companions inside the native aircraft and reload them in fresh jobs; selected script-computed profile switching also passes. Selected original-engine geometry, save/reopen, rejection and browser Undo checks pass. This does not prove all custom script behavior.
 
 The retained full-suite run discovered 327 tests and completed with two unresolved failures/crashes. It predates recent changes and is not a current full-suite pass. Its exact counts are retained in the fixed inventory; targeted subsequent checks do not replace it.
 

@@ -51,6 +51,40 @@ class CustomAssets(unittest.TestCase):
         restore(path);v.ClearVSPModel();v.ReadVSPFile(str(path));v.Update()
         self.assertEqual(v.GetXSecShape(v.GetXSec(v.GetXSecSurf(c['id'],0),1)),v.XS_FILE_FUSE)
 
+    def test_computed_profile_switch_matches_native_points_after_reopen(self):
+        script=SCRIPT.replace('void Init(){','void Init(){string p=AddParm(PARM_BOOL_TYPE,"AlternateProfile","Design");SetParmVal(p,0);')
+        script=script.replace('void UpdateSurf(){','void UpdateSurf(){string filename=GetParmVal(GetCurrCustomGeom(),"AlternateProfile","Design")>0?"alternate.dat":"profile.dat";')
+        script=script.replace('"profile.dat");','filename);')
+        alternate=PROFILE.replace('1 0','2 0').replace('-1 0','-2 0')
+        raw=io.BytesIO()
+        with zipfile.ZipFile(raw,'w') as archive:
+            archive.writestr('part/Main.vsppart',script);archive.writestr('part/profile.dat',PROFILE);archive.writestr('part/alternate.dat',alternate)
+        state,path=self.worker(dict(action='mutate',operation='geometry-import',format='CUSTOM_PACKAGE',name='Switching profile',content=base64.b64encode(raw.getvalue()).decode()))
+        c=next(c for c in state['components'] if c['name']=='Switching profile');gid=c['id']
+        pid=next(p['id'] for p in c['params'] if p['name']=='AlternateProfile')
+        shutil.rmtree(path.parent/'component-package');shutil.rmtree(path.parent/'.studio-custom-assets')
+        state,saved=self.worker(dict(action='mutate',operation='parameter',id=pid,value=1),path)
+        c=next(c for c in state['components'] if c['id']==gid)
+        # Direct original compiler/reader with the computed filename unchanged.
+        (self.path/'profile.dat').write_text(PROFILE);(self.path/'alternate.dat').write_text(alternate)
+        source=self.path/'switch.vsppart';source.write_text(script)
+        v=self.v;reference=import_script(v,source,'OriginalComputedProfile')
+        v.SetParmValUpdate(reference,'AlternateProfile','Design',1);v.Update()
+        for surface in c['surfaces']:
+            i=surface['index'];u,w=v.GetUWTess01(reference,i%v.GetNumMainSurfs(reference))
+            points=[[p.x(),p.y(),p.z()] for p in v.CompVecPnt01(reference,i,[a for a in u for _ in w],[b for _ in u for b in w])]
+            self.assertEqual(surface['points'],points)
+        (self.path/'profile.dat').unlink();(self.path/'alternate.dat').unlink();source.unlink()
+        reopened,_=self.worker(dict(action='state'),saved)
+        self.assertEqual(next(c for c in reopened['components'] if c['id']==gid)['surfaces'],c['surfaces'])
+
+    def test_unknown_computed_filename_rejects_before_save(self):
+        script=SCRIPT.replace('void UpdateSurf(){','void UpdateSurf(){string filename="../outside.dat";').replace('"profile.dat");','filename);')
+        before=self.model.read_bytes()
+        with self.assertRaises(ValueError):
+            self.worker(dict(action='mutate',operation='geometry-import',format='CUSTOM_PACKAGE',content=base64.b64encode(self.package(script)).decode()))
+        self.assertEqual(next(self.path.glob('*/aircraft.vsp3')).read_bytes(),before)
+
     def test_missing_profile_rejects_without_saving(self):
         before=self.model.read_bytes()
         with self.assertRaisesRegex(ValueError,'in-package profile'):
