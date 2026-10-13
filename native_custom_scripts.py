@@ -151,3 +151,23 @@ def trigger(v,gid,index):
     if isinstance(result,dict):raise ValueError(result.get('error','Custom component action failed.'))
     gui_updates(v,gid)
     v.Update()
+
+
+def index_step(v,gid,index,delta):
+    """Mirror IndexSelector's GUI integer stepping; geometry stays native."""
+    import math,native_custom_library
+    from native_preview import parameter_activity
+    if type(index)!=int or type(delta)!=int or delta not in (-10,-1,1,10):raise ValueError('Choose an index step of −10, −1, +1 or +10.')
+    definition=next((d for d in gui_definitions(v,gid) if d['index']==index and d['type']==v.GDEV_INDEX_SELECTOR),None)
+    if definition is None:raise ValueError('Choose an available custom index selector.')
+    bindings={u['index']:u['parameterId'] for u in gui_updates(v,gid)}
+    pid=bindings.get(index) if index in bindings else next((p for p in v.GetGeomParmIDs(gid) if v.GetParmName(p)==definition['parameter'] and v.GetParmGroupName(p)==definition['group']),None)
+    if not pid or not v.ValidParm(pid):raise ValueError('This custom index selector is disconnected.')
+    native_custom_library.validate(v,pid)
+    if not parameter_activity(v,[pid])[pid]:raise ValueError('This index parameter is locked by OpenVSP.')
+    values=[v.GetParmLowerLimit(pid),v.GetParmUpperLimit(pid),v.GetParmVal(pid)]
+    if any(not math.isfinite(x) or not -2147483648<=x+.5<=2147483647 for x in values):raise ValueError('Index selector limits exceed the native integer range. Edit the parameter field instead.')
+    lower,upper,current=[math.trunc(x+.5) for x in values]
+    # Original IndexSelector::SetValAndLimits, DeviceCB and SetIndex.
+    value=max(lower,min(upper,max(lower,min(upper,current))+delta))
+    v.SetParmValUpdate(pid,value);gui_updates(v,gid);v.Update()

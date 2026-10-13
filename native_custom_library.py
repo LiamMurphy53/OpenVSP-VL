@@ -52,6 +52,7 @@ def enrich(v,gid,params):
         if p['name'] in LENGTHS:p['dimension']='length'
         if p['description'] in ('Default Description','Custom Descript'):p['description']=''
         if definition['label'] and p['name'] not in LABELS:p['label']=definition['label'].rstrip(':')
+        if kind==v.GDEV_INDEX_SELECTOR:p['customIndexSelector']=definition['index']
         if kind==v.GDEV_PARM_BUTTON:p['customParmButton']=True
         if kind==v.GDEV_OUTPUT:p.update(displayReadOnly=True,readOnlyReason='Calculated output from the custom script.')
         if kind==v.GDEV_TRIGGER_BUTTON:

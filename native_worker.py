@@ -324,6 +324,9 @@ def mutate(v, req):
     if action=='custom-trigger':
         import native_custom_scripts
         native_custom_scripts.trigger(v,gid,req.get('index'))
+    elif action=='custom-index-step':
+        import native_custom_scripts
+        native_custom_scripts.index_step(v,gid,req.get('index'),req.get('delta'))
     elif action=='parameter':
         pid=req['id']
         allowed={p for g in v.FindGeoms() for p in v.GetGeomParmIDs(g)} | native_tools.parameter_ids(v)

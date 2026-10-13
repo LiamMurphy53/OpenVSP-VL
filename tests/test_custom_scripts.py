@@ -184,3 +184,29 @@ class CustomScripts(unittest.TestCase):
         cold,_=self.worker(dict(action='state'),path);reopened=next(c for c in cold['components'] if c['id']==gid)
         self.assertEqual(reopened['surfaces'],actual['surfaces']);self.assertTrue(self.fields(reopened)['Length']['customParmButton'])
         self.assertTrue(any(l['source']==source['id'] and l['target']==self.fields(c)['Width']['id'] for l in cold['tools']['links']))
+
+    def test_index_steps_clamp_and_match_original_native_array_geometry(self):
+        text=self.template('BoxGroup').replace('GDEV_COUNTER, "Num Row"','GDEV_INDEX_SELECTOR, "Num Row"')
+        self.assertNotEqual(text,self.template('BoxGroup'));_,path,c=self.import_component(text);gid=c['id'];index=self.fields(c)['NumRow']['customIndexSelector']
+        for delta,rows in [(1,2),(10,10),(-1,9),(-10,1)]:
+            state,path=self.worker(dict(action='mutate',operation='custom-index-step',geom=gid,index=index,delta=delta),path)
+            c=next(c for c in state['components'] if c['id']==gid);self.assertEqual(self.fields(c)['NumRow']['value'],rows)
+            v=self.v;v.ClearVSPModel();v.ReadVSPFile(str(path));v.Update();reference=v.AddGeom('BoxGroup');v.SetParmValUpdate(v.FindParm(reference,'NumRow','Design'),rows)
+            self.assertEqual(v.GetTotalNumSurfs(gid),v.GetTotalNumSurfs(reference))
+            for surface in c['surfaces']:
+                i=surface['index'];u,w=v.GetUWTess01(reference,i%v.GetNumMainSurfs(reference))
+                expected=[[p.x(),p.y(),p.z()] for p in v.CompVecPnt01(reference,i,[a for a in u for _ in w],[b for _ in u for b in w])]
+                self.assertEqual(surface['points'],expected)
+            cold,_=self.worker(dict(action='state'),path);reopened=next(c for c in cold['components'] if c['id']==gid)
+            self.assertEqual(reopened['surfaces'],c['surfaces']);self.assertEqual(self.fields(reopened)['NumRow']['customIndexSelector'],index)
+        for extra in [dict(delta=True),dict(delta=1.5),dict(delta=2),dict(index=False),dict(index=500)]:
+            request=dict(action='mutate',operation='custom-index-step',geom=gid,index=index,delta=1);request.update(extra);self.rejected_file_is_unchanged(request,path)
+
+    def test_disconnected_index_selector_does_not_edit_saved_parameter(self):
+        text=self.template('BoxGroup').replace('int LengthSlider;','int TestSelector;\nint LengthSlider;')
+        text=text.replace('AddGui( GDEV_COUNTER, "Num Row"','TestSelector=AddGui( GDEV_INDEX_SELECTOR, "Num Row"')
+        text=text.replace('void UpdateGui()\n{','void UpdateGui()\n{\n UpdateGui(TestSelector,GetParm(GetCurrCustomGeom(),"","Design"));')
+        self.assertNotEqual(text,self.template('BoxGroup'));_,path,c=self.import_component(text)
+        from native_custom_scripts import gui_definitions
+        v=self.v;v.ClearVSPModel();v.ReadVSPFile(str(path));v.Update();index=next(d['index'] for d in gui_definitions(v,c['id']) if d['type']==v.GDEV_INDEX_SELECTOR)
+        self.rejected_file_is_unchanged(dict(action='mutate',operation='custom-index-step',geom=c['id'],index=index,delta=1),path)
