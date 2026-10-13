@@ -1,0 +1,140 @@
+--- original/vspaero.C
++++ reader-repair/vspaero.C
+@@ -671,7 +671,14 @@
+ 
+     // Stability and control run
+     
+-    if ( StabControlRun_ == 1 ) {
++    // Interrogation retains the selected motion setup but must never solve anew.
++    if ( RestartAndInterrogateSolution_ ) {
++
++       Solve();
++
++    }
++
++    else if ( StabControlRun_ == 1 ) {
+ 
+        FiniteDifference_StabilityAndControlSolve();
+  
+--- original/VSP_Solver.C
++++ reader-repair/VSP_Solver.C
+@@ -3532,10 +3532,12 @@
+     
+     Time_ = 0;
+              
+-    if ( TimeAccurate_ ) UpdateGeometryLocation();
++    // Preserve the untransformed initial geometry, as the original solve does.
+                  
+     // Initialize free stream
+     
++    VSPGeom().MarkAndSetupRotorWakes(); // Same rotor initialization as the original solve
++
+     InitializeFreeStream();
+ 
+     // Create interaction list for fixed components
+@@ -3652,16 +3654,40 @@
+        CurrentTime_ = CurrentNoiseTime_ = 0.;
+        
+        if ( TimeAccurate_ ) CurrentTime_ = CurrentNoiseTime_ = Time_ * DeltaTime_;
++       if ( TimeAccurate_ && Time_ > 0 ) {
++          UpdateWakeConvectedDistance();
++          UpdateGeometryLocation();
++       }
++
+        
+        // Read in the next ADB Solution
+ 
+-       if ( Case == 0 || Case == 1 || TimeAccurate_ ) ReadInAerothermalDatabaseGeometry();
++       ReadInAerothermalDatabaseGeometry(); // Writer emits geometry for every case
+     
+        ReadInAerothermalDatabaseSolution(0);
++
++       // Restore saved wake positions into the calculation mesh before use.
++       if ( DoSolutionInterrogation_ ) {
++          for ( int sheet = 1; sheet <= VSPGeom().NumberOfVortexSheets(); sheet++ ) {
++             for ( int trail = 1; trail <= VSPGeom().VortexSheet(sheet).NumberOfTrailingVortices(); trail++ ) {
++                // The original writer saves only active nodes (one for concave trails).
++                for ( int point = 2; point <= VSPGeom().VortexSheet(sheet).TrailingVortex(trail).NumberOfNodes() && (!TimeAccurate_ || point <= Time_ + 1) && !VSPGeom().VortexSheet(sheet).TrailingVortex(trail).TE_Node_Region_Is_Concave(); point++ ) {
++                   int node = VSPGeom().VortexSheet(sheet).TrailingVortex(trail).GlobalNode(point);
++                   node = VSPGeom().Grid(MGLevel_).NodeList(node).FineGridNode();
++                   VSPGeom().Grid(0).NodeList(node).x() = VSPGeom().VortexSheet(sheet).TrailingVortex(trail).WakeNodeX(point);
++                   VSPGeom().Grid(0).NodeList(node).y() = VSPGeom().VortexSheet(sheet).TrailingVortex(trail).WakeNodeY(point);
++                   VSPGeom().Grid(0).NodeList(node).z() = VSPGeom().VortexSheet(sheet).TrailingVortex(trail).WakeNodeZ(point);
++                }
++             }
++          }
++          VSPGeom().UpdateMeshes();
++          CreateSurfaceVorticesInteractionList();
++       }
+ 
+        InterpolateExistingSolution(CurrentNoiseTime_);
+                  
+-       UpdateVortexEdgeStrengths(MGLevel_, ALL_WAKE_GAMMAS);
++       if ( TimeAccurate_ ) ApplyVortexStretchingModel();
++       CalculateVelocities(ALL_WAKE_GAMMAS); // Restore every grid level and original core widths
+     
+        // Initialize the free stream conditions
+                    
+@@ -3674,6 +3700,7 @@
+        // Update velocities, forces, etc
+        
+        CalculateForces();
++       InterpolateExistingSolution(CurrentNoiseTime_); // Restore original stored near-body velocities in every mode
+ 
+        if ( NumberofSurveyPoints_ > 0 ) CalculateVelocitySurvey(Case);
+ 
+@@ -3683,13 +3710,16 @@
+ 
+           CreateQuadTreePlaneDataStructures();
+                  
+-          CalculateQuadTreeVelocitySurvey(Case);
++          // Preserve one output per saved temporal record instead of overwriting.
++          int OutputRecord = Case;
++          if ( TimeAccurate_ ) OutputRecord = ((Case == 0 ? 1 : (Case < 0 ? -Case : Case)) - 1) * (NumberOfTimeSteps_ + 1) + Time_ + 1;
++          CalculateQuadTreeVelocitySurvey(OutputRecord);
+  
+        }    
+        
+        // Update geometry location and interaction lists for moving geoemtries
+ 
+-       if ( TimeAccurate_ ) UpdateGeometryLocation();     
++       // Motion was applied before restoring this saved time record.     
+   
+     }
+     
+@@ -32295,6 +32325,7 @@
+        fread(&DumInt,   i_size, 1, InputADBFile_);
+        fread(&DumInt,   i_size, 1, InputADBFile_);
+        fread(&DumInt,   i_size, 1, InputADBFile_);
++       fread(&DumInt,   i_size, 1, InputADBFile_); // MinValidTimeStep
+        fread(&DumFloat, f_size, 1, InputADBFile_);
+ 
+     }
+@@ -32331,7 +32362,7 @@
+      
+        if ( EngineFace(i).SurfaceType() == NOZZLE_FACE ) {
+ 	  
+-	       EngineFace(i).Skip_Read_Binary_STP_Data(ADBFile_);
++	       EngineFace(i).Skip_Read_Binary_STP_Data(InputADBFile_);
+ 	       
+ 	       j++;
+ 	  
+@@ -32367,6 +32398,8 @@
+        }
+        
+        for ( j = 1 ; j <= VSPGeom().Grid(Level).NumberOfEdges() ; j++ ) {
++
++          fread(&DumInt, i_size, 1, InputADBFile_); // MinValidTimeStep
+ 
+           fread(&DumInt, i_size, 1, InputADBFile_);
+           
+@@ -32836,7 +32869,8 @@
+       
+        for ( i = 1 ; i <= VSPGeom().VortexSheet(k).NumberOfTrailingVortices() ; i++ ) {
+   
+-          VSPGeom().VortexSheet(k).TrailingVortex(i).SkipReadInFile(InputADBFile_);
++          if ( DoSolutionInterrogation_ ) VSPGeom().VortexSheet(k).TrailingVortex(i).ReadInFile(InputADBFile_);
++          else VSPGeom().VortexSheet(k).TrailingVortex(i).SkipReadInFile(InputADBFile_);
+ 
+        }
+        

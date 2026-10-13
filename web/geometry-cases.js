@@ -1,0 +1,50 @@
+// Configure saved native cases. Geometry and interference calculations stay in OpenVSP.
+let chosen='';
+export function renderGeometryCases({app,model,data,render,helpers:h}){
+ const {E,field,select,button,card,params,mutate,bind,val,num}=h,cases=data.geometryCases||[];
+ const c=cases.find(c=>c.id===chosen)||cases[0];chosen=c?.id||'';
+ const componentChoices=[['','Choose a component…'],...model.components.map(g=>[g.id,g.name])];
+ const preserve=(items,value)=>value&&!items.some(([id])=>id===value)?[...items,[value,'Unavailable native reference · '+value]]:items;
+ const guide=c?.editorGuide;
+ const refs=c?Object.entries({PrimaryGeomID:'Primary component',PrimaryModeID:'Primary native mode',SecondaryGeomID:'Secondary component',DirectionGeomID:'Projection direction component'}).filter(([key])=>!guide||guide.references.includes(key)).map(([key,label])=>{
+  const items=key==='PrimaryModeID'?[['','Choose a mode…'],...data.modes.map(m=>[m.id,m.name])]:componentChoices;
+  return select(label,'geometry-ref-'+key,preserve(items,c.references[key]),c.references[key]);
+ }).join(''):'';
+ const groups=(guide?.groups||[{title:'Calculation and geometry',names:['IntererenceCheckType','PrimaryType','PrimarySet','SecondaryType','SecondarySet']}]).map(g=>[g.title,g.names]);
+ const actions=c?card('Use a calculated result',`<p>These actions recalculate this case using the current aircraft, including any selected mode presets, then save the change with Undo.</p>${button('geometry-result-mesh','Calculate and create result mesh')}${guide?.rotationAction?button('geometry-apply-rotation','Calculate and apply contact rotation'):''}<p class="native-tip">Mesh creation requires a native result mesh. Contact rotation updates the secondary auxiliary’s original attitude control. Use Analyze this case to save and inspect calculation results.</p>`):'';
+ const setup=c?.specialistSetup;
+ const setupCard=setup?card('Landing-gear check setup',`<p><strong>${E(setup.role)} selection: ${E(setup.required)}</strong></p><p>${E(setup.note)}</p><p>${E(setup.selectionNote)}</p>${setup.mode?`<p><strong>Native mode: ${E(setup.mode.name)}</strong> · geometry set ${E(setup.mode.setName)} · ${setup.mode.presets.length} saved preset ${setup.mode.presets.length===1?'setting':'settings'}.</p><p>${E(setup.modeNote)}</p>`:''}${setup.problems.map(p=>`<p role="status" class="status-error">${E(p)}</p>`).join('')}<p>${setup.compatible.length?'Compatible auxiliary components: '+setup.compatible.map(g=>E(g.name)).join(', '):setup.mode?'No matching auxiliary family in the saved baseline. Review the mode’s presets for the configuration used during the run.':'Create the required auxiliary in Modeling tools → Specialized geometry.'}</p>`,'wide'):'';
+ const used=new Set(groups.flatMap(([,names])=>names));
+ const settings=c?groups.map(([title,names],i)=>`<details ${i===0?'open':''}><summary>${E(title)}</summary><div class="tool-fields">${params(names.map(name=>c.params.find(p=>p.name===name)).filter(Boolean))}</div></details>`).join('')+`<details><summary>Additional native parameters</summary><div class="tool-fields">${params(c.params.filter(p=>!used.has(p.name)))}</div></details>`:'';
+ const directions=c?`<p>Angles use degrees. These directions are used when discrete visibility is enabled.</p>${c.directions.map(d=>`<article class="tool-item"><div class="tool-fields">${params([d.azimuth,d.elevation])}</div><button data-geometry-direction-delete="${d.index}">Remove direction ${d.index+1}</button></article>`).join('')}${field('New azimuth (degrees)','geometry-az',0)}${field('New elevation (degrees)','geometry-el',0)}${button('geometry-add-direction','Add visibility direction')}`:'';
+ const cutouts=c?data.controls.map(s=>`<label class="membership-row"><input type="checkbox" data-geometry-cutout="${E(s.id)}" ${c.cutouts.includes(s.id)?'checked':''}>${E(model.components.find(g=>g.id===s.geom)?.name)} · ${E(s.name)}</label>`).join(''):'';
+ document.querySelector('#tool-content').innerHTML=card('Add a geometry check',`${field('Case name','geometry-new-name','Geometry check','text')}${select('Calculation','geometry-new-type',(data.geometryCaseTypes||[]).map(t=>[t.value,t.label]),15)}${button('geometry-add','Create saved case',true)}<p class="native-tip">Checks are saved in the aircraft and support Undo. Landing-gear and envelope checks require the matching native geometry. Configure the relevant groups below, then review the native results in Analyze.</p>`)+card('Saved geometry checks',cases.length?`${select('Saved case','geometry-choice',cases.map(c=>[c.id,c.name]),chosen)}${field('Case name','geometry-case-name',c.name,'text')}${button('geometry-rename','Rename case')}${button('geometry-delete','Remove case')}${button('geometry-prepare-run','Analyze this case',true)}`:'<p class="empty-state">Create a case to choose geometry and calculation settings.</p>')+setupCard+actions+(c?card('Geometry references',`<p>Choose a set, component, or mode in Case and geometry. The corresponding reference below supplies that selection. A secondary component may be a landing gear or auxiliary envelope, depending on the calculation.</p>${refs}`)+card('Native case settings',`<p>${E(guide?.note||'Configure the native calculation settings.')}</p>${settings}`,'wide')+(guide?.visibility?card('Discrete visibility directions',directions)+card('Visibility cutouts',`${cutouts||'<p>No surface regions are available.</p>'}${c.cutouts.filter(id=>!data.controls.some(s=>s.id===id)).map(id=>`<p class="status-error">Unavailable saved cutout: ${E(id)}</p>`).join('')}${button('geometry-save-cutouts','Save visibility cutouts')}`):''):'');
+ bind('geometry-add',()=>mutate({operation:'geometry-case-add',name:val('geometry-new-name'),type:num('geometry-new-type')}));
+ if(!c)return;
+ document.querySelector('#geometry-choice').onchange=e=>{chosen=e.target.value;render();};
+ bind('geometry-rename',()=>mutate({operation:'geometry-case-rename',id:c.id,name:val('geometry-case-name')}));
+ bind('geometry-delete',()=>mutate({operation:'geometry-case-delete',id:c.id}));
+ bind('geometry-prepare-run',()=>app.prepareGeometryCase(c.id));
+ bind('geometry-result-mesh',()=>mutate({operation:'geometry-case-result-mesh',id:c.id}));
+ bind('geometry-apply-rotation',()=>mutate({operation:'geometry-case-apply-rotation',id:c.id}));
+ for(const key of Object.keys(c.references)){const input=document.querySelector('#geometry-ref-'+key);if(input)input.onchange=e=>mutate({operation:'geometry-case-reference',id:c.id,key,value:e.target.value});}
+ bind('geometry-add-direction',()=>mutate({operation:'geometry-case-direction-add',id:c.id,azimuth:num('geometry-az'),elevation:num('geometry-el')}));
+ document.querySelectorAll('[data-geometry-direction-delete]').forEach(b=>b.onclick=()=>mutate({operation:'geometry-case-direction-delete',id:c.id,index:Number(b.dataset.geometryDirectionDelete)}));
+ bind('geometry-save-cutouts',()=>mutate({operation:'geometry-case-cutouts',id:c.id,values:[...document.querySelectorAll('[data-geometry-cutout]:checked')].map(e=>e.dataset.geometryCutout)}));
+}
+
+export function geometryCaseResults(data,esc){
+ if(!data.geometryCases)return'';
+ const display=v=>typeof v==='number'?String(Number(v.toPrecision(9))):Array.isArray(v)?v.map(display).join(', '):String(v??'—');
+ const selected=data.inputs.find(e=>e.name==='CaseID')?.values[0],cases=data.geometryCases.filter(c=>['ALL','all'].includes(selected)||c.id===selected);
+ const records=data.results.filter(r=>r.entries.some(e=>['Result','Interference','NominalTip','MinTip','MaxTip','RollAngle','Tip','NominalReactions','ExcursionReactions','GearTurnRadii','MaxRadii','COR','Axis','Total_Wet_Area','Total_Mass','Area','Xac'].includes(e.name)));
+ return `<section class="guided-result" data-guided-result="GeometryAnalysis"><h3>Saved geometry check results</h3><p>Evaluated ${esc(cases.map(c=>c.name).join(', '))}. Results below keep OpenVSP’s names and descriptions. Clearances use model length units; angles use degrees. No tolerance or pass/fail threshold is added by this interface.</p>${reactionTables(records,esc,display)}${records.map(r=>`<section class="guide-result-table"><h4>${esc(r.description||r.name)}</h4><div class="guide-table-scroll"><table><thead><tr><th>Native result</th><th>Value</th><th>Description</th></tr></thead><tbody>${r.entries.filter(e=>['Result','Interference','NominalTip','MinTip','MaxTip','RollAngle','Tip','GearTurnRadii','MaxRadii','COR','Axis','Total_Wet_Area','Total_Wet_Vol','Total_Mass','Total_CG','Area','Xac','cbar'].includes(e.name)).map(e=>`<tr><td>${esc(e.name)}</td><td>${esc(display(e.values))}</td><td>${esc(e.description)}</td></tr>`).join('')}</tbody></table></div></section>`).join('')||'<p>Review the complete native result tables below for this calculation.</p>'}<details><summary>Saved case configuration</summary><pre>${esc(JSON.stringify(cases,null,2))}</pre></details><p class="native-tip">Full-precision native results and saved case settings remain in JSON. Result arrays are also available in CSV.</p></section>`;
+}
+
+function reactionTables(records,esc,display){
+ return records.filter(r=>r.name==='Gear_Weight_Distribution').map(r=>{
+  const nominal=r.entries.find(e=>e.name==='NominalReactions')?.values||[],excursions=r.entries.find(e=>e.name==='ExcursionReactions')?.values||[];
+  const rows=[...nominal.map(v=>['Nominal CG',v]),...excursions.map((v,i)=>['CG range point '+(i+1),v])];
+  return `<section class="guide-result-table"><h4>Gear reactions by contact</h4><p>Columns follow the auxiliary’s contact order. Each row preserves OpenVSP’s native reaction vector; CG range points follow the native corner order.</p><div class="guide-table-scroll"><table><thead><tr><th>CG position</th><th>Contact 1</th><th>Contact 2</th><th>Contact 3</th></tr></thead><tbody>${rows.map(([label,v])=>`<tr><td>${esc(label)}</td>${v.map(x=>`<td>${esc(display(x))}</td>`).join('')}</tr>`).join('')}</tbody></table></div></section>`;
+ }).join('');
+}

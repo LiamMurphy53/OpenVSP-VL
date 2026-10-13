@@ -1,0 +1,60 @@
+{
+  "tag": "OpenVSP_3.52.2",
+  "commit": "8782f46d4399ac04d0a1277d414246bb37035666",
+  "sha256": {
+    "LICENSE": "380ae9ac8ecce9f00822d74da9fab782d09fbeeafd9d4550355eebb0929c8166",
+    "Vec3d.h": "2b534f1269a02c80b96a8e62d91f63800057f50121b26502eeeddbc34c2daf9d",
+    "DrawObj.h": "bad5914ab426c58d3e2a9ae5e5cb9143bf575131288d9a852d7847267a0c965a",
+    "Vec2d.h": "94fe74d6af393bce331ba37eeb15f1a583411179f4032790b2063ef01013ee0d",
+    "GuiDeviceEnums.h": "8f9178ce0b6f465e0a808e162382a9d8310f3f58edf7723764edcdbdb4b53705",
+    "XmlUtil.h": "db54d9240b95a1a52ef0bf26fd222fd258c20e2976def72fa3492aa30e1a0d20",
+    "Parm.h": "3a7d6f01798b4ebd56e281b1e0489c36538e0614f2b55df250b9ecf1d278b4f6",
+    "AttributeManager.h": "8235b052472f39b7211fc0bd9d2d7881744aabe6e47e29f171dfdc4864d14cd7",
+    "APIDefines.h": "a70fb682b530ec3a55f1137436c4f5e4fa93a01269fb0d0e09a5b17980353156",
+    "VspUtil.h": "4a354fe496d256ba57f1cba5bcda744990507827e7cf0b870c98da36fb5f395e",
+    "ResultsMgr.h": "cfba5bee116681397cad6962d9aaf66f49f37f5d52377b7a4b2ba8bed0842af1",
+    "GridDensity.h": "ac6c688c76f5b449d1e39d27d0288a84a61816293c2fd09b4d83c580a5e4a3ac",
+    "ParmContainer.h": "e84d73819f2fc02e69d8285f09224bd1635e304c117ceb5fa2ad1f95feb50c41",
+    "BndBox.h": "0818150c30edcf93feabb479948f4cf907694860e2dc8bcf3d50b49e364fbc11",
+    "Matrix4d.h": "3f6052204b3c19e1411002e9daa1ca7f51b491dab817c7e861be2875687be3c7"
+  },
+  "sources": {
+    "Parm.h": "src/geom_core/Parm.h",
+    "XmlUtil.h": "src/xmlvsp/XmlUtil.h",
+    "GuiDeviceEnums.h": "src/util/GuiDeviceEnums.h",
+    "VspUtil.h": "src/util/VspUtil.h",
+    "AttributeManager.h": "src/geom_core/AttributeManager.h",
+    "Vec2d.h": "src/util_api/Vec2d.h",
+    "Vec3d.h": "src/util_api/Vec3d.h",
+    "ResultsMgr.h": "src/geom_core/ResultsMgr.h",
+    "APIDefines.h": "src/geom_api/APIDefines.h",
+    "GridDensity.h": "src/geom_core/GridDensity.h",
+    "ParmContainer.h": "src/geom_core/ParmContainer.h",
+    "BndBox.h": "src/util/BndBox.h",
+    "Matrix4d.h": "src/util_api/Matrix4d.h"
+  },
+  "excerpts": {
+    "PropDriverGroup.h": {
+      "source": "src/geom_core/VSPAEROMgr.h",
+      "sourceSHA256": "336a71a5d8c9d5c810f67c4de61db4e7e6a5e7f6d10d3305343f4a6b95b323bf",
+      "class": "PropDriverGroup",
+      "sha256": "ace4c830f6e3cbf29bfd4693f3b5744180a3a19611381d039ce600760dbfb5b8"
+    },
+    "WingDriverGroup.h": {
+      "source": "src/geom_core/WingGeom.h",
+      "sourceSHA256": "e78a211ba3931281f1a1c7294debc00b0e83f83e8c27516e3bfdaa30d387fa6d",
+      "class": "WingDriverGroup",
+      "sha256": "5c7a915c42c1c05682ad52088e70ae5224ff5f6dfaa8603d772ef7b2c6ba210e"
+    },
+    "XSecCurveDriverGroup.h": {
+      "source": "src/geom_core/XSecCurve.h",
+      "sourceSHA256": "4bc30d2823e32f5393f7e1cf445cac67c281aa48fc0a4eaa593acab2578544fb",
+      "classes": [
+        "XSecCurveDriverGroup",
+        "HWXSecCurveDriverGroup",
+        "DXSecCurveDriverGroup"
+      ],
+      "sha256": "6b7cf8caa2575a2e3569623ce8976c9a4fa1cda6c6d17d4d511a59ff0ad4f69b"
+    }
+  }
+}

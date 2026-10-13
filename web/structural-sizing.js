@@ -1,0 +1,5 @@
+export function structuralSizing(structure,h){
+ const fields=structure.params.filter(p=>p.rawGroup==='FEAGridDensity'),find=n=>fields.find(p=>p.name===n),pairs=[['BaseAbsRel','BaseLen','BaseLenFrac'],['MinAbsRel','MinLen','MinFrac'],['MaxGapAbsRel','MaxGap','MaxGapFrac']];
+ const primary=pairs.flatMap(([mode,absolute,relative])=>[find(mode),... [find(absolute),find(relative)].filter(p=>p&&p.active!==false)]).filter(Boolean),linked=fields.filter(p=>p.readOnly),used=new Set([...primary,...linked].map(p=>p.id));
+ return `<h4>Structural mesh sizing</h4>${h.paramDetails(primary,primary.map(p=>p.name))}<p class="native-tip">Maximum edge fractions use the native parent-component size and structural scale. Minimum edge and gap fractions use the current maximum edge length. OpenVSP calculates linked values. Circle segmentation is a native continuous target.</p>${linked.length?`<details><summary>Calculated native sizing</summary>${h.paramDetails(linked,linked.map(p=>p.name))}</details>`:''}${h.paramDetails(fields.filter(p=>!used.has(p.id)),['RigorLimit','NCircSeg','GrowRatio'])}`;
+}

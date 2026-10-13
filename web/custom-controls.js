@@ -1,0 +1,2 @@
+export function customActionsMarkup(c,E){return c.customActions?.length?`<details class="parameter-group geometry-primary" data-group="custom-actions" open><summary>Component actions</summary>${c.customActions.map(a=>`<button type="button" data-custom-action="${a.index}">${E(a.label)}</button>`).join('')}</details>`:'';}
+export function bindCustomActions(host,c,mutate){host.querySelectorAll('[data-custom-action]').forEach(button=>button.onclick=()=>mutate({operation:'custom-trigger',geom:c.id,index:Number(button.dataset.customAction)}));}

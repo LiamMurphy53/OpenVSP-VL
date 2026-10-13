@@ -1,0 +1,599 @@
+{
+  "tag": "OpenVSP_3.52.2",
+  "files": [
+    {
+      "name": ".goutputstream-XOB48X",
+      "url": "https://raw.githubusercontent.com/OpenVSP/OpenVSP/OpenVSP_3.52.2/src/vsp_aero/Solver/.goutputstream-XOB48X",
+      "sha256": "3d416dd5a8b502ecc727506e0c0346453cea8300670330ab4cdfaf39607f8864",
+      "bytes": 18518
+    },
+    {
+      "name": ".vsptime",
+      "url": "https://raw.githubusercontent.com/OpenVSP/OpenVSP/OpenVSP_3.52.2/src/vsp_aero/Solver/.vsptime",
+      "sha256": "f021d85068542baa5aa681dbc509d0175c8d33d2db3d5a91fbf00bf01ed2cf79",
+      "bytes": 10
+    },
+    {
+      "name": "AdjointGradient.C",
+      "url": "https://raw.githubusercontent.com/OpenVSP/OpenVSP/OpenVSP_3.52.2/src/vsp_aero/Solver/AdjointGradient.C",
+      "sha256": "88b9a8eaa4b358656211ce5c18f08ae03157b86579471b26324c7b78ae56efff",
+      "bytes": 4674
+    },
+    {
+      "name": "AdjointGradient.H",
+      "url": "https://raw.githubusercontent.com/OpenVSP/OpenVSP/OpenVSP_3.52.2/src/vsp_aero/Solver/AdjointGradient.H",
+      "sha256": "8172b06deb3c086cb30c2e2a2e12e85b46fd01f0f9a8602d47ad4f9c286aa2db",
+      "bytes": 2645
+    },
+    {
+      "name": "BoundaryConditionData.C",
+      "url": "https://raw.githubusercontent.com/OpenVSP/OpenVSP/OpenVSP_3.52.2/src/vsp_aero/Solver/BoundaryConditionData.C",
+      "sha256": "28228a60b766ebd434242f90228e6ac8299f999ec091969e4ab0db9f48f4708e",
+      "bytes": 2755
+    },
+    {
+      "name": "BoundaryConditionData.H",
+      "url": "https://raw.githubusercontent.com/OpenVSP/OpenVSP/OpenVSP_3.52.2/src/vsp_aero/Solver/BoundaryConditionData.H",
+      "sha256": "07ffd421542fec8a7f5dec74558b8486f5106dee81f896e32bfd3bfe3b995c7a",
+      "bytes": 1430
+    },
+    {
+      "name": "CMakeLists.txt",
+      "url": "https://raw.githubusercontent.com/OpenVSP/OpenVSP/OpenVSP_3.52.2/src/vsp_aero/Solver/CMakeLists.txt",
+      "sha256": "102bcadab0ea5860fbdec28b82e978c2a2b141b58a41e5c1a3b2a0d3471e98b7",
+      "bytes": 5397
+    },
+    {
+      "name": "CharSizes.H",
+      "url": "https://raw.githubusercontent.com/OpenVSP/OpenVSP/OpenVSP_3.52.2/src/vsp_aero/Solver/CharSizes.H",
+      "sha256": "ac214192b4f891c6fe94db053a33b97077d01693538691e66b8d08d31c8eab8f",
+      "bytes": 391
+    },
+    {
+      "name": "ComponentGroup.C",
+      "url": "https://raw.githubusercontent.com/OpenVSP/OpenVSP/OpenVSP_3.52.2/src/vsp_aero/Solver/ComponentGroup.C",
+      "sha256": "764b86b320d8605213201e27d59248bb37c2d9822c4d213e56c91a8b397e4051",
+      "bytes": 51399
+    },
+    {
+      "name": "ComponentGroup.H",
+      "url": "https://raw.githubusercontent.com/OpenVSP/OpenVSP/OpenVSP_3.52.2/src/vsp_aero/Solver/ComponentGroup.H",
+      "sha256": "00c636baca1aa9ddbe42fdd7ff6c25b8c864e54a6f3343f03fc31deb75e6d0eb",
+      "bytes": 22548
+    },
+    {
+      "name": "ControlSurface.C",
+      "url": "https://raw.githubusercontent.com/OpenVSP/OpenVSP/OpenVSP_3.52.2/src/vsp_aero/Solver/ControlSurface.C",
+      "sha256": "a355691d5d675a6c96716856b7f73b4b952585c287ddaa52df33e4ab7d0d82b5",
+      "bytes": 13745
+    },
+    {
+      "name": "ControlSurface.H",
+      "url": "https://raw.githubusercontent.com/OpenVSP/OpenVSP/OpenVSP_3.52.2/src/vsp_aero/Solver/ControlSurface.H",
+      "sha256": "3f1da0dc18c05e2cd4e90c86b736669c55209e35450191952146fb9373a6f464",
+      "bytes": 7345
+    },
+    {
+      "name": "ControlSurfaceGroup.C",
+      "url": "https://raw.githubusercontent.com/OpenVSP/OpenVSP/OpenVSP_3.52.2/src/vsp_aero/Solver/ControlSurfaceGroup.C",
+      "sha256": "2b2dbbbe9560c6e999e41edee179f8dded0a61c4b4995cfd0d67d4be070c8082",
+      "bytes": 5365
+    },
+    {
+      "name": "ControlSurfaceGroup.H",
+      "url": "https://raw.githubusercontent.com/OpenVSP/OpenVSP/OpenVSP_3.52.2/src/vsp_aero/Solver/ControlSurfaceGroup.H",
+      "sha256": "3514bac00269687cf4167401bcfd36d4a918ea439112d874ec8dcc90300388c8",
+      "bytes": 5420
+    },
+    {
+      "name": "DoxConfigFile",
+      "url": "https://raw.githubusercontent.com/OpenVSP/OpenVSP/OpenVSP_3.52.2/src/vsp_aero/Solver/DoxConfigFile",
+      "sha256": "a8e76ecc0fbebbfeb74d0302ee991758f646164d74334493feb2fb4406eb2eea",
+      "bytes": 117045
+    },
+    {
+      "name": "END_NAME_SPACE.H",
+      "url": "https://raw.githubusercontent.com/OpenVSP/OpenVSP/OpenVSP_3.52.2/src/vsp_aero/Solver/END_NAME_SPACE.H",
+      "sha256": "412ca345ccf75bf9c0806bce695be8de808b79984251a7a54d202cf6101dd451",
+      "bytes": 2
+    },
+    {
+      "name": "EngineFace.C",
+      "url": "https://raw.githubusercontent.com/OpenVSP/OpenVSP/OpenVSP_3.52.2/src/vsp_aero/Solver/EngineFace.C",
+      "sha256": "e074e0d06d87106a3e748e6d4f7ce42a8e90c5586a6280f561d5d168e282fe61",
+      "bytes": 9348
+    },
+    {
+      "name": "EngineFace.H",
+      "url": "https://raw.githubusercontent.com/OpenVSP/OpenVSP/OpenVSP_3.52.2/src/vsp_aero/Solver/EngineFace.H",
+      "sha256": "6c37a1c0414adfce15bf9ee319f69c53a90fab029d729dfe8a6fe5c616ce4ec0",
+      "bytes": 2899
+    },
+    {
+      "name": "FEM_Node.C",
+      "url": "https://raw.githubusercontent.com/OpenVSP/OpenVSP/OpenVSP_3.52.2/src/vsp_aero/Solver/FEM_Node.C",
+      "sha256": "8437237fa6580ba92ac148df883c10c70ccb0c9c474559e8d4cc9c49c4fed2e7",
+      "bytes": 10549
+    },
+    {
+      "name": "FEM_Node.H",
+      "url": "https://raw.githubusercontent.com/OpenVSP/OpenVSP/OpenVSP_3.52.2/src/vsp_aero/Solver/FEM_Node.H",
+      "sha256": "b19b448a54abd7d5327975b8ee77f04939301a46d5f632dd6e38ea7ea39c9d5f",
+      "bytes": 3101
+    },
+    {
+      "name": "FastMatrix.C",
+      "url": "https://raw.githubusercontent.com/OpenVSP/OpenVSP/OpenVSP_3.52.2/src/vsp_aero/Solver/FastMatrix.C",
+      "sha256": "226737e53ebabca645231a3de24ea78fbc8b1d18db08533a39c7332ae8760c80",
+      "bytes": 58157
+    },
+    {
+      "name": "FastMatrix.H",
+      "url": "https://raw.githubusercontent.com/OpenVSP/OpenVSP/OpenVSP_3.52.2/src/vsp_aero/Solver/FastMatrix.H",
+      "sha256": "8be14ac76b4f1de6450042de4fa0ea9d7e32540f01051893a1713f0d6da6d606",
+      "bytes": 5850
+    },
+    {
+      "name": "GlobalWakeLoop.C",
+      "url": "https://raw.githubusercontent.com/OpenVSP/OpenVSP/OpenVSP_3.52.2/src/vsp_aero/Solver/GlobalWakeLoop.C",
+      "sha256": "12a3673fcd80edb2fca6a8cf55abcf404f82abb94ee8094a3b146945430439cb",
+      "bytes": 2915
+    },
+    {
+      "name": "GlobalWakeLoop.H",
+      "url": "https://raw.githubusercontent.com/OpenVSP/OpenVSP/OpenVSP_3.52.2/src/vsp_aero/Solver/GlobalWakeLoop.H",
+      "sha256": "4556b252e06211ed72e6898eae5aaa86386010df623cee8d6b9bd9033eca3f1b",
+      "bytes": 2816
+    },
+    {
+      "name": "Gradient.C",
+      "url": "https://raw.githubusercontent.com/OpenVSP/OpenVSP/OpenVSP_3.52.2/src/vsp_aero/Solver/Gradient.C",
+      "sha256": "fb68ee126fa42d7cd3c7a472af379f5c18c2da659485aa3261ecd1e97b892a2c",
+      "bytes": 5429
+    },
+    {
+      "name": "Gradient.H",
+      "url": "https://raw.githubusercontent.com/OpenVSP/OpenVSP/OpenVSP_3.52.2/src/vsp_aero/Solver/Gradient.H",
+      "sha256": "e616a724154156fe16aadab2dbe5ac21abf92df1521c406eaf3fb6bc51e62ec6",
+      "bytes": 2398
+    },
+    {
+      "name": "Interaction.H",
+      "url": "https://raw.githubusercontent.com/OpenVSP/OpenVSP/OpenVSP_3.52.2/src/vsp_aero/Solver/Interaction.H",
+      "sha256": "2d71b84ca25c102e7cf1d957a45d84aca7a858b1bacf465d78deced7d7d0dbe4",
+      "bytes": 1874
+    },
+    {
+      "name": "InteractionLoop.C",
+      "url": "https://raw.githubusercontent.com/OpenVSP/OpenVSP/OpenVSP_3.52.2/src/vsp_aero/Solver/InteractionLoop.C",
+      "sha256": "27e94e349441140e6947f8a90c9e236c9afb0e484694db031d85c1d55199c5aa",
+      "bytes": 10499
+    },
+    {
+      "name": "InteractionLoop.H",
+      "url": "https://raw.githubusercontent.com/OpenVSP/OpenVSP/OpenVSP_3.52.2/src/vsp_aero/Solver/InteractionLoop.H",
+      "sha256": "e2bd494048f7667d772def370f59eec1b376607f2848367dbb21c30e25b02ab2",
+      "bytes": 3428
+    },
+    {
+      "name": "MatPrecon.C",
+      "url": "https://raw.githubusercontent.com/OpenVSP/OpenVSP/OpenVSP_3.52.2/src/vsp_aero/Solver/MatPrecon.C",
+      "sha256": "8b400c177ec0071f5e6690511a2d81459b07852207d8c606686ebea534aee443",
+      "bytes": 5987
+    },
+    {
+      "name": "MatPrecon.H",
+      "url": "https://raw.githubusercontent.com/OpenVSP/OpenVSP/OpenVSP_3.52.2/src/vsp_aero/Solver/MatPrecon.H",
+      "sha256": "33f10f700176e4962766d5c85fdebfcc01386348464994cd49d97691e4b4038b",
+      "bytes": 3293
+    },
+    {
+      "name": "MergeSort.C",
+      "url": "https://raw.githubusercontent.com/OpenVSP/OpenVSP/OpenVSP_3.52.2/src/vsp_aero/Solver/MergeSort.C",
+      "sha256": "6e85d02ed119b6d5faf5971f33b2070859e5b2d145ad620cf4912e3dd1c4e7ab",
+      "bytes": 8809
+    },
+    {
+      "name": "MergeSort.H",
+      "url": "https://raw.githubusercontent.com/OpenVSP/OpenVSP/OpenVSP_3.52.2/src/vsp_aero/Solver/MergeSort.H",
+      "sha256": "256ce1216b394e25f811372fa5f81151f5e72f34781330d959136f76aaf246ee",
+      "bytes": 955
+    },
+    {
+      "name": "MeshGradient.C",
+      "url": "https://raw.githubusercontent.com/OpenVSP/OpenVSP/OpenVSP_3.52.2/src/vsp_aero/Solver/MeshGradient.C",
+      "sha256": "9c1c76187a8504cfbd276f273c0fff9c88a99ed78879db9a73131edf87429add",
+      "bytes": 2264
+    },
+    {
+      "name": "MeshGradient.H",
+      "url": "https://raw.githubusercontent.com/OpenVSP/OpenVSP/OpenVSP_3.52.2/src/vsp_aero/Solver/MeshGradient.H",
+      "sha256": "7dd1a8218653fd78d034b74a9649b3908ec1c6be9534b8a0a1433776c1ed3abb",
+      "bytes": 900
+    },
+    {
+      "name": "OptimizationFunction.C",
+      "url": "https://raw.githubusercontent.com/OpenVSP/OpenVSP/OpenVSP_3.52.2/src/vsp_aero/Solver/OptimizationFunction.C",
+      "sha256": "e43d8b5444da4e1bd59f97e6f326aa3944e9a57c81f808501c89918aa8df9429",
+      "bytes": 5045
+    },
+    {
+      "name": "OptimizationFunction.H",
+      "url": "https://raw.githubusercontent.com/OpenVSP/OpenVSP/OpenVSP_3.52.2/src/vsp_aero/Solver/OptimizationFunction.H",
+      "sha256": "d99759ae7215992772516251a31a0a9f916586d414e78be31bdcdbec5ad2e656",
+      "bytes": 9709
+    },
+    {
+      "name": "OptimizationGradientData.H",
+      "url": "https://raw.githubusercontent.com/OpenVSP/OpenVSP/OpenVSP_3.52.2/src/vsp_aero/Solver/OptimizationGradientData.H",
+      "sha256": "d869ebe896827c1fe80170808da32fd2deb0b5a8d3fed2a0d2315e70371f8b26",
+      "bytes": 413
+    },
+    {
+      "name": "OptimizationParameterData.C",
+      "url": "https://raw.githubusercontent.com/OpenVSP/OpenVSP/OpenVSP_3.52.2/src/vsp_aero/Solver/OptimizationParameterData.C",
+      "sha256": "9ec13c1603044e41b0989cb321cd881f1cc528602275b73e7b12de48a02b62fd",
+      "bytes": 11330
+    },
+    {
+      "name": "OptimizationParameterData.H",
+      "url": "https://raw.githubusercontent.com/OpenVSP/OpenVSP/OpenVSP_3.52.2/src/vsp_aero/Solver/OptimizationParameterData.H",
+      "sha256": "526299f45131c8df9cc4a08ae40b005d7dee6a6f55b2f92a08a3a5f588165ab3",
+      "bytes": 2330
+    },
+    {
+      "name": "QuadCell.C",
+      "url": "https://raw.githubusercontent.com/OpenVSP/OpenVSP/OpenVSP_3.52.2/src/vsp_aero/Solver/QuadCell.C",
+      "sha256": "0f13aec48d4d1f30a2862de07c48aa32d9653124ae893c762b5d1097e4911e65",
+      "bytes": 2512
+    },
+    {
+      "name": "QuadCell.H",
+      "url": "https://raw.githubusercontent.com/OpenVSP/OpenVSP/OpenVSP_3.52.2/src/vsp_aero/Solver/QuadCell.H",
+      "sha256": "c864894b93cf70aa46b7c854ae93aa96211b033fa24811b8d297be16b5624447",
+      "bytes": 1752
+    },
+    {
+      "name": "QuadEdge.C",
+      "url": "https://raw.githubusercontent.com/OpenVSP/OpenVSP/OpenVSP_3.52.2/src/vsp_aero/Solver/QuadEdge.C",
+      "sha256": "06feb6f5755355e90265b43b9887fe9dfcdacc03cfca1219821c1d8402537c7a",
+      "bytes": 1810
+    },
+    {
+      "name": "QuadEdge.H",
+      "url": "https://raw.githubusercontent.com/OpenVSP/OpenVSP/OpenVSP_3.52.2/src/vsp_aero/Solver/QuadEdge.H",
+      "sha256": "d81f6e3247e398d6723857d6abcd5ece614dddb3eea2685425af0dfc783f2dd9",
+      "bytes": 700
+    },
+    {
+      "name": "QuadNode.C",
+      "url": "https://raw.githubusercontent.com/OpenVSP/OpenVSP/OpenVSP_3.52.2/src/vsp_aero/Solver/QuadNode.C",
+      "sha256": "c645e929b8394bc9a0104dbedb92b80d2b3db8e97e63e024e9f975ec04d8848e",
+      "bytes": 2025
+    },
+    {
+      "name": "QuadNode.H",
+      "url": "https://raw.githubusercontent.com/OpenVSP/OpenVSP/OpenVSP_3.52.2/src/vsp_aero/Solver/QuadNode.H",
+      "sha256": "427041ef38b1b1e0b69cdd7174553409cac5b5ef8bfe78f607c442a580ea8bd9",
+      "bytes": 1325
+    },
+    {
+      "name": "QuadTree.C",
+      "url": "https://raw.githubusercontent.com/OpenVSP/OpenVSP/OpenVSP_3.52.2/src/vsp_aero/Solver/QuadTree.C",
+      "sha256": "12b698d05d86dfb19b28c5c7d49f8cf5a8d9c2dcabc08d14e4b5e7e7e4f8f786",
+      "bytes": 37876
+    },
+    {
+      "name": "QuadTree.H",
+      "url": "https://raw.githubusercontent.com/OpenVSP/OpenVSP/OpenVSP_3.52.2/src/vsp_aero/Solver/QuadTree.H",
+      "sha256": "841acf3b344f922052f030e5dd20865e049069186ad4a0b778a434ed8d6d36b0",
+      "bytes": 3432
+    },
+    {
+      "name": "RotorDisk.C",
+      "url": "https://raw.githubusercontent.com/OpenVSP/OpenVSP/OpenVSP_3.52.2/src/vsp_aero/Solver/RotorDisk.C",
+      "sha256": "6090c9bb5d3e21e371c1b6cbaeb7a6fb96118b99b5d654f4b695c7f386a2ceb8",
+      "bytes": 32966
+    },
+    {
+      "name": "RotorDisk.H",
+      "url": "https://raw.githubusercontent.com/OpenVSP/OpenVSP/OpenVSP_3.52.2/src/vsp_aero/Solver/RotorDisk.H",
+      "sha256": "95d2d69c7a31ad5b0431bf6e1f2f7144ebc27c928de82f2486f60ffb8e88c328",
+      "bytes": 6447
+    },
+    {
+      "name": "START_NAME_SPACE.H",
+      "url": "https://raw.githubusercontent.com/OpenVSP/OpenVSP/OpenVSP_3.52.2/src/vsp_aero/Solver/START_NAME_SPACE.H",
+      "sha256": "c62b0c8eeb798a76b2e99cf8dd1176b6b53d2aaf76bb8b199596afc1bfddc4da",
+      "bytes": 28
+    },
+    {
+      "name": "SaveState.C",
+      "url": "https://raw.githubusercontent.com/OpenVSP/OpenVSP/OpenVSP_3.52.2/src/vsp_aero/Solver/SaveState.C",
+      "sha256": "61d0c0aa84baf42e57e66dc0abd9f8e9273f17488920c9ac0af242345daa4489",
+      "bytes": 6528
+    },
+    {
+      "name": "SaveState.H",
+      "url": "https://raw.githubusercontent.com/OpenVSP/OpenVSP/OpenVSP_3.52.2/src/vsp_aero/Solver/SaveState.H",
+      "sha256": "02dd4618f0be975b083deb26aaa253f60558bd74810c8bc8012a3e29cea081ad",
+      "bytes": 2092
+    },
+    {
+      "name": "Search.C",
+      "url": "https://raw.githubusercontent.com/OpenVSP/OpenVSP/OpenVSP_3.52.2/src/vsp_aero/Solver/Search.C",
+      "sha256": "b38c5979ec939c6fc51f808fefb3d207373e3029921f6cf8bc682332d4947821",
+      "bytes": 15102
+    },
+    {
+      "name": "Search.H",
+      "url": "https://raw.githubusercontent.com/OpenVSP/OpenVSP/OpenVSP_3.52.2/src/vsp_aero/Solver/Search.H",
+      "sha256": "1ce023e9762aaab68f704b4ae60c34e5207e8c159219e3dbe5295192ed7028aa",
+      "bytes": 1565
+    },
+    {
+      "name": "SearchLeaf.C",
+      "url": "https://raw.githubusercontent.com/OpenVSP/OpenVSP/OpenVSP_3.52.2/src/vsp_aero/Solver/SearchLeaf.C",
+      "sha256": "39fb478cc9fc4cdde0eca83131ae40a6eccfb9d0da0bcf904db06924f68f8edf",
+      "bytes": 2140
+    },
+    {
+      "name": "SearchLeaf.H",
+      "url": "https://raw.githubusercontent.com/OpenVSP/OpenVSP/OpenVSP_3.52.2/src/vsp_aero/Solver/SearchLeaf.H",
+      "sha256": "8b2a2296630250f0c60e921216f5a2f0dd94fd54e259c62c86865e8c8dee64b5",
+      "bytes": 1251
+    },
+    {
+      "name": "VSPAERO_OMP.H",
+      "url": "https://raw.githubusercontent.com/OpenVSP/OpenVSP/OpenVSP_3.52.2/src/vsp_aero/Solver/VSPAERO_OMP.H",
+      "sha256": "9c14285cd570772d0e3dbae1fde6d4d4133122f7ebd202907d080c7083d0cb1e",
+      "bytes": 382
+    },
+    {
+      "name": "VSP_Agglom.C",
+      "url": "https://raw.githubusercontent.com/OpenVSP/OpenVSP/OpenVSP_3.52.2/src/vsp_aero/Solver/VSP_Agglom.C",
+      "sha256": "f78efd8e16b9de9f1d510b93aebea159e33912cd827143ae755eeb89cd54c88c",
+      "bytes": 207685
+    },
+    {
+      "name": "VSP_Agglom.H",
+      "url": "https://raw.githubusercontent.com/OpenVSP/OpenVSP/OpenVSP_3.52.2/src/vsp_aero/Solver/VSP_Agglom.H",
+      "sha256": "9911f3330fd26b9324b066edbc97a38084e32563883c906e72f98e041ac4ce61",
+      "bytes": 5284
+    },
+    {
+      "name": "VSP_Edge.C",
+      "url": "https://raw.githubusercontent.com/OpenVSP/OpenVSP/OpenVSP_3.52.2/src/vsp_aero/Solver/VSP_Edge.C",
+      "sha256": "3985060fc63430eef5a0ac6140b17e869f13eb20306d4dc1d9a03cefd095c8f9",
+      "bytes": 419350
+    },
+    {
+      "name": "VSP_Edge.H",
+      "url": "https://raw.githubusercontent.com/OpenVSP/OpenVSP/OpenVSP_3.52.2/src/vsp_aero/Solver/VSP_Edge.H",
+      "sha256": "f8533f4c605be9ada39fe4630af53b21266ab8f37270d7bfbde44b2c7b50eaae",
+      "bytes": 48221
+    },
+    {
+      "name": "VSP_Geom.C",
+      "url": "https://raw.githubusercontent.com/OpenVSP/OpenVSP/OpenVSP_3.52.2/src/vsp_aero/Solver/VSP_Geom.C",
+      "sha256": "8cd3080ed8ff4385fc8b06b981c8b8cb70b84ee4249f372452ac5d2ddf3ced4c",
+      "bytes": 292474
+    },
+    {
+      "name": "VSP_Geom.H",
+      "url": "https://raw.githubusercontent.com/OpenVSP/OpenVSP/OpenVSP_3.52.2/src/vsp_aero/Solver/VSP_Geom.H",
+      "sha256": "e8c1a49393a59fe0f829dccba25e4b679cbf474bb2d6acd37017f2682cb6a20e",
+      "bytes": 26817
+    },
+    {
+      "name": "VSP_Grid.C",
+      "url": "https://raw.githubusercontent.com/OpenVSP/OpenVSP/OpenVSP_3.52.2/src/vsp_aero/Solver/VSP_Grid.C",
+      "sha256": "af965d1b9129ec265c2002ceed0e58d2ad2b1da5176849f75c7dcf192498a2b7",
+      "bytes": 47443
+    },
+    {
+      "name": "VSP_Grid.H",
+      "url": "https://raw.githubusercontent.com/OpenVSP/OpenVSP/OpenVSP_3.52.2/src/vsp_aero/Solver/VSP_Grid.H",
+      "sha256": "ba0442e5764324f8011fb3bf26cb801d924b7921e38f712b12c93d4918b6079f",
+      "bytes": 7973
+    },
+    {
+      "name": "VSP_Loop.C",
+      "url": "https://raw.githubusercontent.com/OpenVSP/OpenVSP/OpenVSP_3.52.2/src/vsp_aero/Solver/VSP_Loop.C",
+      "sha256": "4542fcf0fe8d94aa35b3fceb7494517c9331a043aa33cea810bb49e1d20b9043",
+      "bytes": 15358
+    },
+    {
+      "name": "VSP_Loop.H",
+      "url": "https://raw.githubusercontent.com/OpenVSP/OpenVSP/OpenVSP_3.52.2/src/vsp_aero/Solver/VSP_Loop.H",
+      "sha256": "faf972cc977ebf6446c0a73ca28a986dcfe0c8ca6b4c7662cd50adcf44c1f2c6",
+      "bytes": 22142
+    },
+    {
+      "name": "VSP_Node.C",
+      "url": "https://raw.githubusercontent.com/OpenVSP/OpenVSP/OpenVSP_3.52.2/src/vsp_aero/Solver/VSP_Node.C",
+      "sha256": "f1d245490d7d005c5a9690f2f4fa9f64b3f7e777f36e18ee4d75f084c5726323",
+      "bytes": 12345
+    },
+    {
+      "name": "VSP_Node.H",
+      "url": "https://raw.githubusercontent.com/OpenVSP/OpenVSP/OpenVSP_3.52.2/src/vsp_aero/Solver/VSP_Node.H",
+      "sha256": "ca521f918d10b543048094ab7a1873db985459c07523e9411f13ba438c6c11b0",
+      "bytes": 44785
+    },
+    {
+      "name": "VSP_Solver.C",
+      "url": "https://raw.githubusercontent.com/OpenVSP/OpenVSP/OpenVSP_3.52.2/src/vsp_aero/Solver/VSP_Solver.C",
+      "sha256": "4619daa33e67cab8fcba2849788a8c799e09e012800aba9512eb5aceeed021ba",
+      "bytes": 1554836
+    },
+    {
+      "name": "VSP_Solver.H",
+      "url": "https://raw.githubusercontent.com/OpenVSP/OpenVSP/OpenVSP_3.52.2/src/vsp_aero/Solver/VSP_Solver.H",
+      "sha256": "002b1eb1710ad97b2001b6acbe04546df4c47efa70cb4f8370d7755d3f721a54",
+      "bytes": 100231
+    },
+    {
+      "name": "VortexSheetInteractionLoop.C",
+      "url": "https://raw.githubusercontent.com/OpenVSP/OpenVSP/OpenVSP_3.52.2/src/vsp_aero/Solver/VortexSheetInteractionLoop.C",
+      "sha256": "72e1b20ae6d3275230b0dc7e35cadbbfaeedf851528178592053c2b3f5720f16",
+      "bytes": 5812
+    },
+    {
+      "name": "VortexSheetInteractionLoop.H",
+      "url": "https://raw.githubusercontent.com/OpenVSP/OpenVSP/OpenVSP_3.52.2/src/vsp_aero/Solver/VortexSheetInteractionLoop.H",
+      "sha256": "0107af5cdef1d85a2f61513d72e0a632663e5131e87b7a63b3f8e07a20c48126",
+      "bytes": 2533
+    },
+    {
+      "name": "VortexSheetVortex_To_VortexInteractionSet.C",
+      "url": "https://raw.githubusercontent.com/OpenVSP/OpenVSP/OpenVSP_3.52.2/src/vsp_aero/Solver/VortexSheetVortex_To_VortexInteractionSet.C",
+      "sha256": "7e31d25448a92aef5967e95423c21e2d1b4285b1b983ba2a1da25e4e0ef9c18d",
+      "bytes": 4183
+    },
+    {
+      "name": "VortexSheetVortex_To_VortexInteractionSet.H",
+      "url": "https://raw.githubusercontent.com/OpenVSP/OpenVSP/OpenVSP_3.52.2/src/vsp_aero/Solver/VortexSheetVortex_To_VortexInteractionSet.H",
+      "sha256": "544beb396d26fff8ea0f2d7247c9655fb37c50cda07b88da51adc9ab4c0ae4ce",
+      "bytes": 2128
+    },
+    {
+      "name": "Vortex_Sheet.C",
+      "url": "https://raw.githubusercontent.com/OpenVSP/OpenVSP/OpenVSP_3.52.2/src/vsp_aero/Solver/Vortex_Sheet.C",
+      "sha256": "55cd06160ede55d5ebd36cc3e27d6a5ecd3d2731379ca81350a8bf3e17d3e9ea",
+      "bytes": 22769
+    },
+    {
+      "name": "Vortex_Sheet.H",
+      "url": "https://raw.githubusercontent.com/OpenVSP/OpenVSP/OpenVSP_3.52.2/src/vsp_aero/Solver/Vortex_Sheet.H",
+      "sha256": "3d6b299292bec6387f2df8d9bd3804f69d9d4272a654bd2b966d2d26472caafe",
+      "bytes": 6596
+    },
+    {
+      "name": "Vortex_Trail.C",
+      "url": "https://raw.githubusercontent.com/OpenVSP/OpenVSP/OpenVSP_3.52.2/src/vsp_aero/Solver/Vortex_Trail.C",
+      "sha256": "13f48292e4a15b361c90bff5bfa0ea1edb26e555daae99721b445d0496a97425",
+      "bytes": 33029
+    },
+    {
+      "name": "Vortex_Trail.H",
+      "url": "https://raw.githubusercontent.com/OpenVSP/OpenVSP/OpenVSP_3.52.2/src/vsp_aero/Solver/Vortex_Trail.H",
+      "sha256": "9c3d75fd326db64be03093a2ccad9926ae046aa7df7837a0664da238299221f9",
+      "bytes": 17973
+    },
+    {
+      "name": "WOPWOP.C",
+      "url": "https://raw.githubusercontent.com/OpenVSP/OpenVSP/OpenVSP_3.52.2/src/vsp_aero/Solver/WOPWOP.C",
+      "sha256": "6406a74a452ffe276104457c0ec2cf40aed853476b8876afe7d4ea73875f4bc8",
+      "bytes": 194577
+    },
+    {
+      "name": "WOPWOP.H",
+      "url": "https://raw.githubusercontent.com/OpenVSP/OpenVSP/OpenVSP_3.52.2/src/vsp_aero/Solver/WOPWOP.H",
+      "sha256": "594092a10fa49ad4318256d93bd05b0042f2c90cdf02043804fe45961eef6d34",
+      "bytes": 8712
+    },
+    {
+      "name": "WakeEdgeData.C",
+      "url": "https://raw.githubusercontent.com/OpenVSP/OpenVSP/OpenVSP_3.52.2/src/vsp_aero/Solver/WakeEdgeData.C",
+      "sha256": "186744e776b387c7660195301d1755623da1358ba1ecbc0b5df4daf8629a3743",
+      "bytes": 2923
+    },
+    {
+      "name": "WakeEdgeData.H",
+      "url": "https://raw.githubusercontent.com/OpenVSP/OpenVSP/OpenVSP_3.52.2/src/vsp_aero/Solver/WakeEdgeData.H",
+      "sha256": "5d81e5263d3eeb0e50e7d2e58562f70cb1c946b323d84d990cb3d053efff4141",
+      "bytes": 2850
+    },
+    {
+      "name": "binaryio.C",
+      "url": "https://raw.githubusercontent.com/OpenVSP/OpenVSP/OpenVSP_3.52.2/src/vsp_aero/Solver/binaryio.C",
+      "sha256": "d77a73f86feb8772ad3589cbb9e078cc72dfaf2562d2d6b8c39cb4aa2dfd4ea3",
+      "bytes": 10784
+    },
+    {
+      "name": "binaryio.H",
+      "url": "https://raw.githubusercontent.com/OpenVSP/OpenVSP/OpenVSP_3.52.2/src/vsp_aero/Solver/binaryio.H",
+      "sha256": "93b24d4e92b8518f6f8ff1e74a1ed5fcdab593d497a947f157829f705b7f96eb",
+      "bytes": 2244
+    },
+    {
+      "name": "matrix.C",
+      "url": "https://raw.githubusercontent.com/OpenVSP/OpenVSP/OpenVSP_3.52.2/src/vsp_aero/Solver/matrix.C",
+      "sha256": "a575dacc442c54d46c997fceca5262f9bbc2e614779b3026a5fa8518780ac00b",
+      "bytes": 36436
+    },
+    {
+      "name": "matrix.H",
+      "url": "https://raw.githubusercontent.com/OpenVSP/OpenVSP/OpenVSP_3.52.2/src/vsp_aero/Solver/matrix.H",
+      "sha256": "90cc8d41a7a295b65bc1b63c2d90bce7b2a5613e0d1a9ce963901090570c3277",
+      "bytes": 3421
+    },
+    {
+      "name": "memory.C",
+      "url": "https://raw.githubusercontent.com/OpenVSP/OpenVSP/OpenVSP_3.52.2/src/vsp_aero/Solver/memory.C",
+      "sha256": "acc4118254317025737e92791109fcbb964e91b3df6ada221471cef62e365fd0",
+      "bytes": 704
+    },
+    {
+      "name": "memory.H",
+      "url": "https://raw.githubusercontent.com/OpenVSP/OpenVSP/OpenVSP_3.52.2/src/vsp_aero/Solver/memory.H",
+      "sha256": "ec0952711fd1198d495ae0e05f54a3aba37e0c2fa6efbe069e9b03ef287b9a39",
+      "bytes": 212
+    },
+    {
+      "name": "quat.C",
+      "url": "https://raw.githubusercontent.com/OpenVSP/OpenVSP/OpenVSP_3.52.2/src/vsp_aero/Solver/quat.C",
+      "sha256": "09441fdb47d3a10332a90724545ee9e7c781ccc606eb077016df2293286ffa0f",
+      "bytes": 8205
+    },
+    {
+      "name": "quat.H",
+      "url": "https://raw.githubusercontent.com/OpenVSP/OpenVSP/OpenVSP_3.52.2/src/vsp_aero/Solver/quat.H",
+      "sha256": "3192051da1a4d69364eff0e69fe37651e442aa1a885c61057016cd4a5cb7ce51",
+      "bytes": 2109
+    },
+    {
+      "name": "time.C",
+      "url": "https://raw.githubusercontent.com/OpenVSP/OpenVSP/OpenVSP_3.52.2/src/vsp_aero/Solver/time.C",
+      "sha256": "57ac8af2bd80a801c40cefe2f2758ba2c8e5736d94173aa261a4b6b8316628f1",
+      "bytes": 1401
+    },
+    {
+      "name": "time.H",
+      "url": "https://raw.githubusercontent.com/OpenVSP/OpenVSP/OpenVSP_3.52.2/src/vsp_aero/Solver/time.H",
+      "sha256": "5964d2067507c8c86a9ea37d4dc9134eaee24630463868bd25679977efd98e46",
+      "bytes": 276
+    },
+    {
+      "name": "utils.C",
+      "url": "https://raw.githubusercontent.com/OpenVSP/OpenVSP/OpenVSP_3.52.2/src/vsp_aero/Solver/utils.C",
+      "sha256": "05aee9ced6d0854f7028818c13d14abbbe8d91bbe758ff85ea872792a29dd245",
+      "bytes": 48313
+    },
+    {
+      "name": "utils.H",
+      "url": "https://raw.githubusercontent.com/OpenVSP/OpenVSP/OpenVSP_3.52.2/src/vsp_aero/Solver/utils.H",
+      "sha256": "c87ac5152314cfdadad355e83375d359e09aead63e092a5c6c00687f5450c8df",
+      "bytes": 5348
+    },
+    {
+      "name": "vspaero.C",
+      "url": "https://raw.githubusercontent.com/OpenVSP/OpenVSP/OpenVSP_3.52.2/src/vsp_aero/Solver/vspaero.C",
+      "sha256": "586e683b5eeea7c4c9691bf59de6752fd9e6b71381fa356dcd55b8f2e823f7b3",
+      "bytes": 339443
+    },
+    {
+      "name": "vspaero.H",
+      "url": "https://raw.githubusercontent.com/OpenVSP/OpenVSP/OpenVSP_3.52.2/src/vsp_aero/Solver/vspaero.H",
+      "sha256": "af04e24ce198399fafa2993fa400cac5c388988c5324167b0b1f2d1646c55af0",
+      "bytes": 10344
+    },
+    {
+      "name": "vspaero_opt.i",
+      "url": "https://raw.githubusercontent.com/OpenVSP/OpenVSP/OpenVSP_3.52.2/src/vsp_aero/Solver/vspaero_opt.i",
+      "sha256": "bbb31cde6deea743d51982f3f4ae5449caf8d506ecca8cb0b3c001edc8009442",
+      "bytes": 538
+    }
+  ]
+}
