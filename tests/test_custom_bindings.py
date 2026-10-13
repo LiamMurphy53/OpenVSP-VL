@@ -64,4 +64,23 @@ class ExternalCustomBindings(unittest.TestCase):
             cold,_=self.worker(dict(action='state'),path)
             self.assertEqual(next(c for c in cold['components'] if c['id']==gid)['customExternalControls'],next(c for c in state['components'] if c['id']==gid)['customExternalControls'])
 
+    def test_external_wing_dimension_follows_native_driver_activity(self):
+        v=self.v;wing=self.gid;v.SetDriverGroup(wing,1,v.SPAN_WSECT_DRIVER,v.ROOTC_WSECT_DRIVER,v.TIPC_WSECT_DRIVER);v.Update();v.WriteVSPFile(str(self.model),v.SET_ALL)
+        text=self.template().replace('int LengthSlider;','int WingChord;\nint LengthSlider;')
+        text=text.replace('void InitGui()\n{','void InitGui()\n{\n WingChord=AddGui(GDEV_INPUT,"Wing average chord");')
+        text=text.replace('void UpdateGui()\n{','void UpdateGui()\n{\n UpdateGui(WingChord,GetParm(GetGeomParent(GetCurrCustomGeom()),"Avg_Chord","XSec_1"));')
+        state,path=self.worker(dict(action='mutate',operation='geometry-import',format='CUSTOM_SCRIPT',name='Wing control',parent=wing,content=base64.b64encode(text.encode()).decode()))
+        child=next(c for c in state['components'] if c['name']=='Wing control');gid=child['id'];control=next(r for r in child['customExternalControls'] if r['parameter']['label']=='Wing average chord')
+        self.assertTrue(control['parameter']['displayReadOnly'])
+        self.rejected_file_is_unchanged(dict(action='mutate',operation='custom-control-parameter',geom=gid,index=control['index'],id=control['parameter']['id'],value=5),path)
+        drivers=[v.SPAN_WSECT_DRIVER,v.AVEC_WSECT_DRIVER,v.TAPER_WSECT_DRIVER]
+        state,path=self.worker(dict(action='mutate',operation='drivers',geom=wing,surface=0,index=1,drivers=drivers),path)
+        control=next(r for r in next(c for c in state['components'] if c['id']==gid)['customExternalControls'] if r['index']==control['index'])
+        self.assertFalse(control['parameter']['displayReadOnly']);self.assertTrue(control['parameter']['active'])
+        v.ClearVSPModel();v.ReadVSPFile(str(path));v.Update();v.SetParmValUpdate(control['parameter']['id'],5);v.Update();reference=self.path/'wing-reference.vsp3';v.WriteVSPFile(str(reference),v.SET_ALL)
+        expected,_=self.worker(dict(action='state'),reference)
+        state,saved=self.worker(dict(action='mutate',operation='custom-control-parameter',geom=gid,index=control['index'],id=control['parameter']['id'],value=5),path)
+        cold,_=self.worker(dict(action='state'),saved)
+        for result in (state,cold):self.assertEqual({c['id']:c['surfaces'] for c in result['components']},{c['id']:c['surfaces'] for c in expected['components']})
+
 if __name__=='__main__':unittest.main()

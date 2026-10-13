@@ -33,3 +33,5 @@ Existing custom tests cover compiler/package import, nested helpers, choices, tr
 ## External binding workflow
 
 Custom controls bound through original UpdateGui to another component's parameter now appear in Properties with their owner name. The native parameter remains owned by its original component. Edits resolve the current GUI binding and reject stale parameter IDs, disconnected bindings and output widgets before the normal native parameter validation/setter runs. Selected parent-owned scalar/index, choice labels, output protection and row/column rebinding are verified; browser owner labels, physical-unit edit, index stepping, rebinding and five Undo restorations pass. Global/structural owner combinations and the full custom runtime scope remain unproven.
+
+An external wing average-chord input also preserves its owning section's native driver activity: calculated edits reject atomically, selecting Average chord enables editing, and full native geometry/saved reopening match an independent SDK reference. This is selected wing-driver coverage, not proof of every owner/driver combination.
