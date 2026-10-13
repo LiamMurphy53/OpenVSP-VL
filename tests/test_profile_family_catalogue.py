@@ -47,4 +47,16 @@ class ProfileCatalogue(unittest.TestCase):
         state,_=self.worker(dict(action='state'));row=next(c for c in state['components'] if c['id']==prop)
         self.assertNotIn('XS_POINT',row['profileShapes']);self.assertEqual(len(row['profileShapes']),19)
 
+    def test_legacy_propeller_point_record_is_preserved_and_can_be_repaired(self):
+        v=self.v;v.ClearVSPModel();prop=v.AddGeom('PROP');surf=v.GetXSecSurf(prop,0);v.ChangeXSecShape(surf,1,v.XS_POINT);v.Update();xid=v.GetXSec(surf,1);v.WriteVSPFile(str(self.model),v.SET_ALL)
+        baseline,_=self.worker(dict(action='state'))
+        self.assertEqual(baseline['components'][0]['sections'][1]['shape'],v.XS_POINT)
+        renamed,path=self.worker(dict(action='mutate',operation='rename',geom=prop,name='Legacy propeller'))
+        section=renamed['components'][0]['sections'][1];self.assertEqual(section['id'],xid);self.assertEqual(section['shape'],v.XS_POINT)
+        cold,_=self.worker(dict(action='state'),path);self.assertEqual(cold['components'][0]['sections'][1]['shape'],v.XS_POINT)
+        repaired,path=self.worker(dict(action='mutate',operation='shape',geom=prop,surface=0,index=1,shape=v.XS_FOUR_SERIES),path)
+        self.assertEqual(repaired['components'][0]['sections'][1]['shape'],v.XS_FOUR_SERIES)
+        reopened,_=self.worker(dict(action='state'),path)
+        self.assertEqual(reopened['components'][0]['surfaces'],repaired['components'][0]['surfaces'])
+
 if __name__=='__main__':unittest.main()
