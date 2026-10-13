@@ -75,4 +75,24 @@ class CurveInitialization(unittest.TestCase):
         self.assertEqual(next(self.path.glob('*/aircraft.vsp3')).read_bytes(),before)
 
 
+    def test_rebuild_preserves_presets_expressions_design_vars_and_attributes(self):
+        import native_files
+        v=self.v
+        for kind,message in [('preset','preset Point preset'),('expression','expression Point expression'),('design','design variable'),('attribute','parameter reference Point reference')]:
+            with self.subTest(kind=kind):
+                v.ClearVSPModel();gid=v.AddGeom('WING');surf=v.GetXSecSurf(gid,0);v.ChangeXSecShape(surf,1,v.XS_EDIT_CURVE);x=v.GetXSec(surf,1);v.Update()
+                pid=v.GetXSecParm(x,'X_3')
+                if kind=='preset':
+                    group=v.AddVarPresetGroup('Point preset');v.AddVarPresetParm(group,pid);setting=v.AddVarPresetSetting(group,'Original point');v.SaveVarPresetParmVals(group,setting)
+                elif kind=='expression':
+                    v.AddAdvLink('Point expression');index=v.GetLinkIndex('Point expression')
+                    v.AddAdvLinkInput(index,pid,'point_x');v.AddAdvLinkOutput(index,v.FindParm(gid,'X_Rel_Location','XForm'),'position_x');v.SetAdvLinkCode(index,'position_x = point_x;');v.BuildAdvLinkScript(index)
+                elif kind=='design':v.AddDesignVar(pid,v.XDDM_VAR);native_files.save_design(v)
+                else:v.AddAttributeParm(v.GetChildCollection(v.GetVehicleID()),'Point reference',pid)
+                v.Update();v.WriteVSPFile(str(self.model),v.SET_ALL);before=self.model.read_bytes();existing=set(self.path.glob('*/aircraft.vsp3'))
+                with self.assertRaisesRegex(ValueError,message):
+                    self.worker(dict(action='mutate',operation='curve-init',geom=gid,surface=0,index=1,shape='EDIT_XSEC_RECTANGLE'))
+                candidate=next(iter(set(self.path.glob('*/aircraft.vsp3'))-existing));self.assertEqual(candidate.read_bytes(),before)
+
+
 if __name__=='__main__':unittest.main()

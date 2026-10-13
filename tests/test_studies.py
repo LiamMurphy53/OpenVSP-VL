@@ -46,6 +46,30 @@ class NativeStudies(unittest.TestCase):
             time.sleep(.03)
         self.fail('The verified native study did not reach a terminal state.')
 
+    def test_curve_rebuild_preserves_frozen_study_and_requires_explicit_rebind(self):
+        v=self.v;surf=v.GetXSecSurf(self.gid,0);v.ChangeXSecShape(surf,1,v.XS_EDIT_CURVE);x=v.GetXSec(surf,1)
+        v.SetParmValUpdate(v.GetXSecParm(x,'SymType'),v.SYM_NONE);v.Update();v.WriteVSPFile(str(self.model),v.SET_ALL)
+        candidates={v.GetXSecParm(x,name) for name in ('X_1','Y_1','X_2','Y_2','X_4','Y_4')}
+        schema=studies.study_schema()
+        field=next(p for p in schema['parameters'] if p['id'] in candidates and p.get('editable') is not False)
+        pid=field['id'];value=v.GetParmVal(pid)
+        plan=self.save([dict(kind='parameter',id=pid,values=[value])])
+        baseline=studies.study_folder(plan['id'])/'aircraft.vsp3';before=baseline.read_bytes()
+        service.mutation(dict(revision=service.REVISION,operation='curve-init',geom=self.gid,surface=0,index=1,shape='EDIT_XSEC_RECTANGLE'))
+        self.assertEqual(baseline.read_bytes(),before)
+        self.assertEqual(studies.definition(plan['id']),plan)
+        self.assertIn(pid,{p['id'] for p in studies.study_schema(plan['id'])['parameters']})
+        self.assertNotIn(pid,{p['id'] for p in studies.study_schema()['parameters']})
+        current=self.model.read_bytes()
+        batch=studies.launch(plan['id']);batch=self.wait(plan['id'],batch['id'])
+        self.assertEqual(batch['status'],'complete')
+        self.assertEqual(self.model.read_bytes(),current)
+        self.assertEqual(baseline.read_bytes(),before)
+        with self.assertRaisesRegex(ValueError,'replacement explicitly'):
+            studies.rebind_current_aircraft(dict(id=plan['id'],definitionVersion=plan['version'],revision=service.REVISION))
+        self.assertEqual(baseline.read_bytes(),before)
+        self.assertEqual(studies.definition(plan['id']),plan)
+
     def test_native_reference_model_and_table_studies_preserve_effective_axes_and_csv(self):
         v=self.v;before=self.model.read_bytes()
         models=[v.ATMOS_TYPE_US_STANDARD_1976,v.ATMOS_TYPE_HERRINGTON_1966]
