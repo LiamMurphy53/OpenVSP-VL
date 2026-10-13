@@ -448,11 +448,14 @@ def mutate(v, req):
             native_section_copy.refresh_owner(v,gid)
         else:native_section_copy.replace(v,req)
     elif action in ('shape','insert-section','cut-section','split-section','drivers'):
-        index=int(req['index']); surf=v.GetXSecSurf(gid,int(req.get('surface',0)))
-        if not 0<=index<v.GetNumXSec(surf): raise ValueError('Invalid section index.')
+        gid,surf,index,_=native_tools.section(v,req)
         before_count=v.GetNumXSec(surf)
-        if action=='shape': v.ChangeXSecShape(surf,index,int(req['shape']))
-        elif action=='insert-section': v.InsertXSec(gid,index,int(req['shape']))
+        if action in ('shape','insert-section'):
+            from native_special import SHAPES
+            shape=req.get('shape')
+            if type(shape)!=int or shape not in [getattr(v,name) for name in SHAPES]:raise ValueError('Choose a supported native profile shape.')
+        if action=='shape': v.ChangeXSecShape(surf,index,shape)
+        elif action=='insert-section': v.InsertXSec(gid,index,shape)
         elif action=='cut-section': v.CutXSec(gid,index)
         elif action=='split-section': v.SplitWingXSec(gid,index)
         else:
