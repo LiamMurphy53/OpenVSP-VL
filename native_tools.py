@@ -251,6 +251,7 @@ def mutate(v,r):
             if not parameter_activity(v,[pid])[pid]:raise ValueError('This tangent is locked by OpenVSP.')
             v.SetParmValUpdate(pid,int(r['smooth']))
         elif op=='curve-delete':
+            if type(r.get('point'))!=int:raise ValueError('Choose a native curve point index.')
             point=one(r['point'],range(1,before-1),'The first and closing points cannot be removed.')
             typ=int(v.GetParmVal(v.GetXSecParm(xid,'CurveType')))
             if typ==v.CEDIT and point%3:raise ValueError('Remove a curve anchor, not a Bezier handle.')
@@ -259,6 +260,7 @@ def mutate(v,r):
             v.EditXSecDelPnt(xid,point);v.Update()
             if len(v.GetEditXSecCtrlVec(xid,True))>=before:raise ValueError('OpenVSP could not remove this point with the current curve constraints.')
         else:
+            if type(r.get('point'))!=int:raise ValueError('Choose a native curve point index.')
             flags=list(v.GetEditXSecFixedUVec(xid));point=one(r['point'],range(len(flags)))
             if not isinstance(r['fixed'],bool):raise ValueError('Choose whether the curve position is fixed.')
             flags[point]=r['fixed'];v.SetEditXSecFixedUVec(xid,flags)

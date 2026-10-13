@@ -28,4 +28,11 @@ class SectionRequests(unittest.TestCase):
             for shape in (2.5,True,-1,100000):self.reject(dict(operation=operation,index=1,shape=shape),'supported native profile')
 
 
+    def test_curve_constraint_and_delete_indices_are_strict(self):
+        v=self.v;surf=v.GetXSecSurf(self.gid,0);v.ChangeXSecShape(surf,1,v.XS_EDIT_CURVE);v.Update();v.WriteVSPFile(str(self.model),v.SET_ALL)
+        for operation in ('curve-delete','curve-fixed'):
+            for point in (True,False,3.0,3.5,'3'):
+                self.reject(dict(operation=operation,index=1,point=point,fixed=True),'native curve point index')
+
+
 if __name__=='__main__':unittest.main()
