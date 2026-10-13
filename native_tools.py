@@ -205,18 +205,16 @@ def mutate(v,r):
         gid,surf,index,xid=section(v,r)
         if v.GetGeomTypeName(gid).upper() not in ('WING','PROP','PROPELLER'):raise ValueError('CST editing requires an airfoil on a wing or propeller.')
         if op=='cst-fit':
-            degree=r['degree']
-            if isinstance(degree,bool) or not isinstance(degree,int) or not 1<=degree<=20:raise ValueError('Choose a fitting degree from 1 to 20.')
+            from native_cst_validation import fitting_degree
+            degree=fitting_degree(r.get('degree'))
             from native_editable_curves import guard_shape_replacement
             guard_shape_replacement(v,xid,v.XS_CST_AIRFOIL)
             v.FitCSTAirfoil(surf,index,degree)
         else:
             if v.GetXSecShape(xid)!=v.XS_CST_AIRFOIL:raise ValueError('Fit this section to CST first.')
             if op=='cst-coefficients':
-                for side in ('upper','lower'):
-                    coefficients=r[side]
-                    if not isinstance(coefficients,list) or not 1<=len(coefficients)<=31:raise ValueError('Use 1–31 coefficients per surface.')
-                    for x in coefficients:finite(x)
+                from native_cst_validation import coefficients
+                coefficients(v,v.GetXSecParmIDs(xid),r)
                 v.SetUpperCST(xid,len(r['upper'])-1,r['upper']);v.SetLowerCST(xid,len(r['lower'])-1,r['lower'])
             else:
                 side=one(r['side'],('upper','lower'));direction=one(r['direction'],('promote','demote'))

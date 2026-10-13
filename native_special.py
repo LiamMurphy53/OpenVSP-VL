@@ -132,7 +132,8 @@ def mutate(v,r):
             if v.GetBORXSecShape(g) not in [getattr(v,n) for n in BOR_CST_FIT_SHAPES]:raise ValueError('Choose a supported airfoil profile before fitting CST.')
             from native_editable_curves import guard_bor_shape_replacement
             guard_bor_shape_replacement(v,g,v.XS_CST_AIRFOIL)
-            v.FitBORAfCST(g,one(r['degree'],range(1,21)))
+            from native_cst_validation import fitting_degree
+            v.FitBORAfCST(g,fitting_degree(r.get('degree')))
         elif op=='bor-cst-degree':
             if v.GetBORXSecShape(g)!=v.XS_CST_AIRFOIL:raise ValueError('Choose a CST profile before changing its degree.')
             side=one(r['side'],['upper','lower']);direction=one(r['direction'],['promote','demote'])
@@ -141,10 +142,8 @@ def mutate(v,r):
             getattr(v,('Promote' if direction=='promote' else 'Demote')+'BORCST'+side.title())(g)
         elif op=='bor-cst-coefficients':
             if v.GetBORXSecShape(g)!=v.XS_CST_AIRFOIL:raise ValueError('Fit the profile to CST first.')
-            for side in ['upper','lower']:
-                values=r[side]
-                if not isinstance(values,list) or not 1<=len(values)<=31:raise ValueError('Use 1–31 coefficients per side.')
-                for value in values:finite(value)
+            from native_cst_validation import coefficients
+            coefficients(v,v.GetGeomParmIDs(g),r)
             v.SetBORUpperCST(g,len(r['upper'])-1,r['upper']);v.SetBORLowerCST(g,len(r['lower'])-1,r['lower'])
         else:return False,None
     elif op=='section-copy-from':
