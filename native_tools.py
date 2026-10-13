@@ -185,11 +185,15 @@ def mutate(v,r):
                     coords.append(pair)
             if len(coords)<4: raise ValueError('No airfoil coordinate sequence was found.')
             path=Path.cwd()/'uploaded-airfoil.dat';path.write_text(text)
+            from native_editable_curves import guard_shape_replacement
+            guard_shape_replacement(v,xid,v.XS_FILE_AIRFOIL)
             v.ChangeXSecShape(surf,index,v.XS_FILE_AIRFOIL);xid=v.GetXSec(surf,index)
             v.ReadFileAirfoil(xid,str(path))
             if len(v.GetAirfoilUpperPnts(xid))<2 or len(v.GetAirfoilLowerPnts(xid))<2: raise ValueError('OpenVSP could not read the airfoil.')
         elif op=='curve-convert':
             if r.get('surface',0)!=0: raise ValueError('Curve conversion currently supports the first cross-section surface.')
+            from native_editable_curves import guard_shape_replacement
+            guard_shape_replacement(v,xid,v.XS_EDIT_CURVE)
             v.ConvertXSecToEdit(gid,index)
         else:
             if v.GetXSecShape(xid)!=v.XS_EDIT_CURVE: raise ValueError('Convert this section to an editable curve first.')
@@ -203,6 +207,8 @@ def mutate(v,r):
         if op=='cst-fit':
             degree=r['degree']
             if isinstance(degree,bool) or not isinstance(degree,int) or not 1<=degree<=20:raise ValueError('Choose a fitting degree from 1 to 20.')
+            from native_editable_curves import guard_shape_replacement
+            guard_shape_replacement(v,xid,v.XS_CST_AIRFOIL)
             v.FitCSTAirfoil(surf,index,degree)
         else:
             if v.GetXSecShape(xid)!=v.XS_CST_AIRFOIL:raise ValueError('Fit this section to CST first.')

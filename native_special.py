@@ -183,7 +183,10 @@ def mutate(v,r):
                     values=r[label]
                     if not isinstance(values,list) or len(values)!=4:raise ValueError('Enter top, right, bottom, and left constraints.')
                     fn(x,side,*[finite(value) for value in values])
-        elif op=='section-profile-import':v.ChangeXSecShape(s,i,v.XS_FILE_FUSE);v.ReadFileXSec(v.GetXSec(s,i),text_file(r['content'],'section.fxs'))
+        elif op=='section-profile-import':
+            from native_editable_curves import guard_shape_replacement
+            guard_shape_replacement(v,x,v.XS_FILE_FUSE)
+            v.ChangeXSecShape(s,i,v.XS_FILE_FUSE);v.ReadFileXSec(v.GetXSec(s,i),text_file(r['content'],'section.fxs'))
         else:
             if v.GetXSecShape(x)!=v.XS_EDIT_CURVE:raise ValueError('Choose an editable curve.')
             v.ReparameterizeEditXSec(x)

@@ -455,7 +455,10 @@ def mutate(v, req):
             from native_special import SHAPES
             shape=req.get('shape')
             if type(shape)!=int or shape not in [getattr(v,name) for name in SHAPES]:raise ValueError('Choose a supported native profile shape.')
-        if action=='shape': v.ChangeXSecShape(surf,index,shape)
+        if action=='shape':
+            from native_editable_curves import guard_shape_replacement
+            guard_shape_replacement(v,v.GetXSec(surf,index),shape)
+            v.ChangeXSecShape(surf,index,shape)
         elif action=='insert-section': v.InsertXSec(gid,index,shape)
         elif action=='cut-section': v.CutXSec(gid,index)
         elif action=='split-section': v.SplitWingXSec(gid,index)
