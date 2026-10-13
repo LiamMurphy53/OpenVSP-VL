@@ -15,7 +15,7 @@ void InitGui(){}
 void UpdateGui(){}
 void UpdateSurf(){string s=GetXSecSurf(GetCurrCustomGeom(),0);ReadFileXSec(GetXSec(s,0),"profile.dat");ReadFileXSec(GetXSec(s,1),"profile.dat");SetCustomXSecLoc(GetXSec(s,1),vec3d(8,0,0));SkinXSecSurf();}
 '''
-PROFILE='OPENVSP_XSEC_FILE_V1\n1 0\n0 1\n-1 0\n0 -1\n1 0\n'
+PROFILE='OPENVSP_XSEC_FILE_V1\n1 0\n0 -1\n-1 0\n0 1\n1 0\n'
 
 
 @unittest.skipUnless(sys.version_info[:2]==(3,11),'Use matching native Python.')
@@ -33,7 +33,8 @@ class CustomAssets(unittest.TestCase):
 
     def test_profile_package_reopens_without_original_files(self):
         # Direct original compiler/reader reference with the file in native cwd.
-        v=self.v;source=self.path/'direct.vsppart';source.write_text(SCRIPT);(self.path/'profile.dat').write_text(PROFILE)
+        script=SCRIPT.replace('AppendCustomXSec(s,XS_FILE_FUSE);AppendCustomXSec(s,XS_FILE_FUSE);','AppendCustomXSec(s,XS_POINT);AppendCustomXSec(s,XS_FILE_FUSE);AppendCustomXSec(s,XS_FILE_FUSE);AppendCustomXSec(s,XS_POINT);').replace('ReadFileXSec(GetXSec(s,0)','ReadFileXSec(GetXSec(s,2)').replace('SetCustomXSecLoc(GetXSec(s,1),vec3d(8,0,0));','SetCustomXSecLoc(GetXSec(s,2),vec3d(8,0,0));SetCustomXSecLoc(GetXSec(s,3),vec3d(8,0,0));')
+        v=self.v;source=self.path/'direct.vsppart';source.write_text(script);(self.path/'profile.dat').write_text(PROFILE)
         direct=import_script(v,source,'DirectProfileReference');v.Update()
         expected=[]
         for i in range(v.GetTotalNumSurfs(direct)):
@@ -41,7 +42,7 @@ class CustomAssets(unittest.TestCase):
             points=[[p.x(),p.y(),p.z()] for p in v.CompVecPnt01(direct,i,[a for a in u for _ in w],[b for _ in u for b in w])]
             expected.append(dict(index=i,rows=len(u),cols=len(w),points=points))
         source.unlink();(self.path/'profile.dat').unlink()
-        state,saved=self.worker(dict(action='mutate',operation='geometry-import',format='CUSTOM_PACKAGE',name='File body',content=base64.b64encode(self.package()).decode()))
+        state,saved=self.worker(dict(action='mutate',operation='geometry-import',format='CUSTOM_PACKAGE',name='File body',content=base64.b64encode(self.package(script)).decode()))
         c=next(c for c in state['components'] if c['name']=='File body')
         self.assertEqual(c['surfaces'],expected)
         self.assertFalse(any(a['name']=='Studio.CustomAssets' for a in state['tools']['attributes']))
@@ -117,6 +118,16 @@ class CustomAssets(unittest.TestCase):
         before=self.model.read_bytes()
         with self.assertRaises(ValueError):
             self.worker(dict(action='mutate',operation='geometry-import',format='CUSTOM_PACKAGE',content=base64.b64encode(self.package(script)).decode()))
+        self.assertEqual(next(self.path.glob('*/aircraft.vsp3')).read_bytes(),before)
+
+    def test_unsafe_section_order_is_rejected_without_saving(self):
+        unsafe=PROFILE.replace('0 -1','0 TEMP').replace('0 1','0 -1').replace('0 TEMP','0 1')
+        raw=io.BytesIO()
+        with zipfile.ZipFile(raw,'w') as archive:
+            archive.writestr('Main.vsppart',SCRIPT);archive.writestr('profile.dat',unsafe)
+        before=self.model.read_bytes()
+        with self.assertRaisesRegex(ValueError,'point order'):
+            self.worker(dict(action='mutate',operation='geometry-import',format='CUSTOM_PACKAGE',content=base64.b64encode(raw.getvalue()).decode()))
         self.assertEqual(next(self.path.glob('*/aircraft.vsp3')).read_bytes(),before)
 
     def test_missing_profile_rejects_without_saving(self):

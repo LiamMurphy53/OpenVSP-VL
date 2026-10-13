@@ -41,6 +41,11 @@ def mutate(v,r):
 
 def section_vector(v,raw):
     points=vector(v,raw,4)
+    validate_section_rows(raw)
+    return points
+
+
+def validate_section_rows(raw):
     # FileXSec::UpdateCurve uses bottom-index * 2 for the left quarter.
     # Validate that original indexing before handing user rows to it.
     rows=raw;n=len(rows)-int(rows[0]==rows[-1]);bottom=top=0
@@ -48,4 +53,3 @@ def section_vector(v,raw):
         if rows[i][1]<0 and abs(rows[i][0])<abs(rows[bottom][0]):bottom=i
         if rows[i][1]>0 and abs(rows[i][0])<abs(rows[top][0]):top=i
     if not 0<bottom<2*bottom<top<n:raise ValueError('Use native cross-section point order: right side, bottom, left side, top, then close the outline. Keep the original quarter-point layout.')
-    return points
