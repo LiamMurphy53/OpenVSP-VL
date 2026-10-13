@@ -207,6 +207,9 @@ def snapshot(v):
             custom_actions=actions(v,gid)
         components.append(dict(customActions=custom_actions,designAssist=design_assist,id=gid, name=v.GetGeomName(gid), type=kind, params=params,attachment=attachment,endCaps=end_caps,profileControls=profile_controls,humanControls=human_controls,familyControls=family_controls,conformalSource=conformal_source,
                                parent=v.GetGeomParent(gid), shown=v.GetSetFlag(gid,v.SET_SHOWN), mainSurfaceCount=v.GetNumMainSurfs(gid), surfaces=surfaces, referenceDrawings=reference_drawings,featureLines=features, paths=paths, points=isolated_points, wireSettings=wire_settings, mesh=mesh, sections=sections))
+    import native_custom_bindings
+    binding_parameters={p['id']:{**p,'bindingOwner':c['name']} for c in components for p in c['params']}
+    for c in components:c['customExternalControls']=native_custom_bindings.external_controls(v,c,binding_parameters)
     tools=native_tools.snapshot(v,parameter)
     for c in components:
         cloud=next((p for p in tools['pointClouds'] if p['id']==c['id']),None)
@@ -324,6 +327,10 @@ def mutate(v, req):
     if action=='custom-trigger':
         import native_custom_scripts
         native_custom_scripts.trigger(v,gid,req.get('index'))
+    elif action=='custom-control-parameter':
+        import native_custom_bindings
+        pid=native_custom_bindings.require_current_binding(v,req)
+        return mutate(v,{**req,'operation':'parameter','id':pid})
     elif action=='custom-index-step':
         import native_custom_scripts
         native_custom_scripts.index_step(v,gid,req.get('index'),req.get('delta'))
