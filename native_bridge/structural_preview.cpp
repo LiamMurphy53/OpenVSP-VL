@@ -1309,3 +1309,25 @@ extern "C" const char* studio_edit_curve_point_list(const char* engine,const cha
     }catch(const std::exception& error){output="{\"error\":"+quote(error.what())+"}";}
     if(library)dlclose(library);return output.c_str();
 }
+
+// Evaluate the original native equations before committing a driver choice.
+extern "C" const char* studio_evaluate_wing_drivers(const char* engine,const char* geom,int section,const int* choices) {
+    static thread_local std::string output;void* library=nullptr;
+    try {
+        library=dlopen(engine,RTLD_NOW);if(!library)throw std::runtime_error(dlerror());
+        void* wing=symbol<void*(*)(const std::string&,const std::string&)>(library,"_ZN3vsp13FindGeomForOpERKNSt3__112basic_stringIcNS0_11char_traitsIcEENS0_9allocatorIcEEEES8_")(std::string(geom),"Studio wing driver evaluation");
+        if(!wing)throw std::runtime_error("Native wing unavailable.");
+        void* sect=symbol<void*(*)(void*,int)>(library,"_ZN8WingGeom11GetWingSectEi")(wing,section);
+        if(!sect||!choices)throw std::runtime_error("Native wing section unavailable.");
+        auto ids=symbol<std::vector<std::string>(*)(void*)>(library,"_ZN8WingSect14GetDriverParmsEv")(sect);
+        alignas(WingDriverGroup) unsigned char storage[sizeof(WingDriverGroup)];
+        auto destroy=local_symbol<void(*)(void*)>(library,engine,"_ZN15WingDriverGroupD1Ev");
+        symbol<void(*)(void*)>(library,"_ZN15WingDriverGroupC1Ev")(storage);
+        try {
+            symbol<void(*)(void*,const std::vector<int>&)>(library,"_ZN11DriverGroup10SetChoicesERKNSt3__16vectorIiNS0_9allocatorIiEEEE")(storage,{choices[0],choices[1],choices[2]});
+            symbol<void(*)(void*,std::vector<std::string>)>(library,"_ZN15WingDriverGroup11UpdateGroupENSt3__16vectorINS0_12basic_stringIcNS0_11char_traitsIcEENS0_9allocatorIcEEEENS5_IS7_EEEE")(storage,ids);
+        }catch(...){destroy(storage);throw;}
+        destroy(storage);output="{}";
+    }catch(const std::exception& error){output="{\"error\":"+quote(error.what())+"}";}
+    if(library)dlclose(library);return output.c_str();
+}

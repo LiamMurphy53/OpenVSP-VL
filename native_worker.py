@@ -689,6 +689,9 @@ def run(req, model):
         from native_editable_curves import referenced_parameters,require_reference_survival
         copy_refs=referenced_parameters(v) if req.get('operation') in ('section-copy-from','bor-profile-copy','region-curve-copy-from','auxiliary-profile-copy') else {}
         changed=mutate(v,req)
+        import native_wing_controls
+        if req.get('operation')=='drivers' and v.GetGeomTypeName(req['geom']).upper()=='WING':native_wing_controls.evaluate_selected_drivers(v,req['geom'],req['index'])
+        native_wing_controls.validate_finite_dimensions(v)
         import native_wave_controls
         native_wave_controls.refresh(v)
         import native_parasite_controls

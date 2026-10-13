@@ -81,3 +81,29 @@ def validate_drivers(v,gid,surface,index,choices):
     if v.GetGeomTypeName(gid).upper()!='WING' or surface!=0 or index<1:raise ValueError('Choose wing section 1 or later for independent section drivers.')
     if not isinstance(choices,list) or len(choices)!=3 or any(type(x)!=int for x in choices) or sorted(choices) not in native_preview.wing_driver_combinations(v):
         raise ValueError('OpenVSP does not support these three drivers. Choose three different independent section dimensions.')
+
+
+def validate_finite_dimensions(v):
+    """Reject undefined native wing-driver results before writing a candidate."""
+    import math
+    for gid in v.FindGeoms():
+        if v.GetGeomTypeName(gid).upper()!='WING':continue
+        surf=v.GetXSecSurf(gid,0)
+        count=v.GetNumXSec(surf)
+        for index in list(range(1,count))+([0] if count else []):
+            ids=native_preview.wing_driver_parameters(v,gid,index)
+            if any(not math.isfinite(v.GetParmVal(pid)) for pid in ids[:8]):
+                choices=set(v.GetDriverGroup(gid,index))
+                if choices=={v.AREA_WSECT_DRIVER,v.ROOTC_WSECT_DRIVER,v.SECSWEEP_WSECT_DRIVER}:
+                    raise ValueError('OpenVSP returned undefined wing dimensions for Area / Root chord / Secondary sweep. Choose another section driver set before editing. The edit was not saved.')
+                raise ValueError('OpenVSP returned undefined wing section dimensions. Review the section drivers and values. The edit was not saved.')
+
+
+def evaluate_selected_drivers(v,gid,index):
+    import ctypes,json
+    choices=list(v.GetDriverGroup(gid,index));_,engine,bridge=native_preview.adapter(v)
+    fn=bridge.studio_evaluate_wing_drivers;fn.argtypes=[ctypes.c_char_p,ctypes.c_char_p,ctypes.c_int,ctypes.POINTER(ctypes.c_int)];fn.restype=ctypes.c_char_p
+    native_choices=(ctypes.c_int*3)(*choices)
+    result=json.loads(fn(engine,gid.encode(),index,native_choices))
+    if result.get('error'):raise ValueError(result['error'])
+    validate_finite_dimensions(v);v.UpdateGeom(gid);v.Update()
