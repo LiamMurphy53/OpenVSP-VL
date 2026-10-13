@@ -104,7 +104,7 @@ def mutate(v,r):
     if op=='rotor-disk-drivers':
         native_prop_drivers.mutate(v,r)
         return True,None
-    if op in ('region-curve-point','region-curve-fixed','region-curve-smooth','region-curve-type','region-curve-split','region-curve-delete','region-curve-reparameterize'):
+    if op in ('region-curve-init','region-curve-point','region-curve-fixed','region-curve-smooth','region-curve-type','region-curve-split','region-curve-delete','region-curve-reparameterize'):
         import native_region_curves
         return native_region_curves.mutate_edit(v,r)
     if op in ('region-curve-shape','region-curve-convert','region-curve-copy-from','region-curve-import'):

@@ -666,6 +666,7 @@ extern "C" const char* studio_region_edit_curve(const char* engine,const char* g
         // Match MoveEditXSecPnt's final native update after setting X/Y/Z.
         else if(operation==5)symbol<void(*)(void*,void*,int)>(library,"_ZN13EditCurveXSec11ParmChangedEP4Parmi")(curve,nullptr,2);
         else if(operation==6)symbol<void(*)(void*,int)>(library,"_ZN13EditCurveXSec14SetSelectPntIDEi")(curve,argument);
+        else if(operation==7)symbol<void(*)(void*)>(library,"_ZN13EditCurveXSec9InitShapeEv")(curve);
         else if(operation!=0)throw std::runtime_error("Unknown editable curve operation.");
         auto points=symbol<std::vector<vec3d>(*)(void*,bool,bool)>(library,"_ZN13EditCurveXSec13GetCtrlPntVecEbb")(curve,true,false);
         auto positions=symbol<std::vector<double>(*)(void*)>(library,"_ZN13EditCurveXSec7GetUVecEv")(curve);
@@ -929,6 +930,7 @@ static const char* studio_geometry_edit_curve(const char* engine,const char* geo
         // Match MoveEditXSecPnt's final native update after setting X/Y/Z.
         else if(operation==5)symbol<void(*)(void*,void*,int)>(library,"_ZN13EditCurveXSec11ParmChangedEP4Parmi")(curve,nullptr,2);
         else if(operation==6)symbol<void(*)(void*,int)>(library,"_ZN13EditCurveXSec14SetSelectPntIDEi")(curve,argument);
+        else if(operation==7)symbol<void(*)(void*)>(library,"_ZN13EditCurveXSec9InitShapeEv")(curve);
         else if(operation!=0)throw std::runtime_error("Unknown editable curve operation.");
         auto points=symbol<std::vector<vec3d>(*)(void*,bool,bool)>(library,"_ZN13EditCurveXSec13GetCtrlPntVecEbb")(curve,true,false);
         auto positions=symbol<std::vector<double>(*)(void*)>(library,"_ZN13EditCurveXSec7GetUVecEv")(curve);

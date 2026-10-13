@@ -217,11 +217,14 @@ def mutate(v,r):
                 degree=(v.GetUpperCSTDegree if side=='upper' else v.GetLowerCSTDegree)(xid)
                 if (direction=='demote' and degree<=0) or (direction=='promote' and degree>=30):raise ValueError('The supported CST degree range is 0–30.')
                 getattr(v,('Promote' if direction=='promote' else 'Demote')+'CST'+side.title())(xid)
-    elif op in ('curve-type','curve-split','curve-delete','curve-fixed','curve-smooth','curve-reparameterize'):
+    elif op in ('curve-init','curve-type','curve-split','curve-delete','curve-fixed','curve-smooth','curve-reparameterize'):
         gid,surf,index,xid=section(v,r)
         if v.GetXSecShape(xid)!=v.XS_EDIT_CURVE:raise ValueError('Convert this section to an editable curve first.')
         before=len(v.GetEditXSecCtrlVec(xid,True))
-        if op=='curve-type':v.EditXSecConvertTo(xid,getattr(v,one(r['type'],('LINEAR','PCHIP','CEDIT'))))
+        if op=='curve-init':
+            shape=one(r.get('shape'),('EDIT_XSEC_CIRCLE','EDIT_XSEC_ELLIPSE','EDIT_XSEC_RECTANGLE'))
+            v.SetParmVal(v.GetXSecParm(xid,'ShapeType'),getattr(v,shape));v.EditXSecInitShape(xid)
+        elif op=='curve-type':v.EditXSecConvertTo(xid,getattr(v,one(r['type'],('LINEAR','PCHIP','CEDIT'))))
         elif op=='curve-split':
             u=finite(r['u'])
             if not 0<u<1:raise ValueError('Split position must be strictly between 0 and 1.')
