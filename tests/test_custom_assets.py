@@ -1,6 +1,7 @@
 """Packaged native profile files survive job/source relocation."""
 import base64
 import io
+import os
 import shutil
 import sys
 import unittest
@@ -75,6 +76,39 @@ class CustomAssets(unittest.TestCase):
             points=[[p.x(),p.y(),p.z()] for p in v.CompVecPnt01(reference,i,[a for a in u for _ in w],[b for _ in u for b in w])]
             self.assertEqual(surface['points'],points)
         (self.path/'profile.dat').unlink();(self.path/'alternate.dat').unlink();source.unlink()
+        reopened,_=self.worker(dict(action='state'),saved)
+        self.assertEqual(next(c for c in reopened['components'] if c['id']==gid)['surfaces'],c['surfaces'])
+
+    def test_helper_selected_airfoil_files_match_original_after_reopen(self):
+        airfoil="Independent airfoil\n1 0\n.5 .1\n0 0\n.5 -.1\n1 0\n"
+        alternate=airfoil.replace('.1','.2')
+        main=SCRIPT.replace('XS_FILE_FUSE','XS_FILE_AIRFOIL')
+        main=main.replace('void Init(){','void Init(){string p=AddParm(PARM_BOOL_TYPE,"AlternateProfile","Design");SetParmVal(p,0);')
+        main=main.replace('ReadFileXSec(GetXSec(s,0),"profile.dat");ReadFileXSec(GetXSec(s,1),"profile.dat");','LoadProfiles(s,GetParmVal(GetCurrCustomGeom(),"AlternateProfile","Design")>0?"alternate.dat":"profile.dat");')
+        helper='void LoadProfiles(const string &in s,const string &in filename){ReadFileAirfoil(GetXSec(s,0),"././../profiles/"+filename);ReadFileAirfoil(GetXSec(s,1),"././../profiles/"+filename);}'
+        raw=io.BytesIO()
+        with zipfile.ZipFile(raw,'w') as archive:
+            archive.writestr('part/Main.vsppart','#include "helpers/read.as"\n'+main)
+            archive.writestr('part/helpers/read.as',helper)
+            archive.writestr('part/profiles/profile.dat',airfoil);archive.writestr('part/profiles/alternate.dat',alternate)
+        state,path=self.worker(dict(action='mutate',operation='geometry-import',format='CUSTOM_PACKAGE',name='Helper airfoil',content=base64.b64encode(raw.getvalue()).decode()))
+        c=next(c for c in state['components'] if c['name']=='Helper airfoil');gid=c['id']
+        pid=next(p['id'] for p in c['params'] if p['name']=='AlternateProfile')
+        shutil.rmtree(path.parent/'component-package');shutil.rmtree(path.parent/'.studio-custom-assets')
+        state,saved=self.worker(dict(action='mutate',operation='parameter',id=pid,value=1),path)
+        c=next(c for c in state['components'] if c['id']==gid)
+        profiles=self.path/'profiles';profiles.mkdir();(profiles/'profile.dat').write_text(airfoil);(profiles/'alternate.dat').write_text(alternate)
+        direct=self.path/'helpers';direct.mkdir();source=direct/'direct.vsppart';source.write_text(helper+'\n'+main)
+        previous=os.getcwd()
+        try:
+            os.chdir(direct);v=self.v;reference=import_script(v,source,'OriginalHelperAirfoil')
+            v.SetParmValUpdate(reference,'AlternateProfile','Design',1);v.Update()
+            for surface in c['surfaces']:
+                i=surface['index'];u,w=v.GetUWTess01(reference,i%v.GetNumMainSurfs(reference))
+                points=[[p.x(),p.y(),p.z()] for p in v.CompVecPnt01(reference,i,[a for a in u for _ in w],[b for _ in u for b in w])]
+                self.assertEqual(surface['points'],points)
+        finally:os.chdir(previous)
+        shutil.rmtree(profiles);shutil.rmtree(direct)
         reopened,_=self.worker(dict(action='state'),saved)
         self.assertEqual(next(c for c in reopened['components'] if c['id']==gid)['surfaces'],c['surfaces'])
 

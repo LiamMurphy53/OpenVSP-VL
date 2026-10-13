@@ -68,13 +68,13 @@ def rewrite_reads(text,source,base,asset_root):
             target=(asset_root/file.relative_to(base)).relative_to(Path.cwd()).as_posix()
             for key in {file.relative_to(base).as_posix(),Path(os.path.relpath(file,source.parent)).as_posix()}:
                 choices.setdefault(key,set()).add(target)
-        cases=''.join('if(filename=='+json.dumps(key)+')return '+json.dumps(next(iter(paths)))+';\n' for key,paths in sorted(choices.items()) if len(paths)==1)
+        cases=''.join('if(normalized=='+json.dumps(key)+')return '+json.dumps(next(iter(paths)))+';\n' for key,paths in sorted(choices.items()) if len(paths)==1)
         missing_path=asset_root/'.unavailable-profile'
         while (base/missing_path.relative_to(asset_root)).exists():missing_path=Path(str(missing_path)+'_')
         missing=missing_path.relative_to(Path.cwd()).as_posix()
         # Unknown computed names go through the native reader's missing-file
         # diagnostic rather than accessing an unrelated file in the job.
-        text+='\nstring '+helper+'(const string &in filename){\n'+cases+'return '+json.dumps(missing)+';\n}\n'
+        text+='\nstring '+helper+'(const string &in filename){\nstring normalized=filename;\nwhile(normalized.length()>=2 && normalized.substr(0,2)=="./")normalized=normalized.substr(2);\n'+cases+'return '+json.dumps(missing)+';\n}\n'
     return text
 
 
