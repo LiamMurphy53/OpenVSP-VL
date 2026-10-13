@@ -209,7 +209,8 @@ def editable_activity(v,parameters,count):
     activity=parameter_activity(v,[p['id'] for p in parameters])
     for p in parameters:p['active']=activity[p['id']]
     by_name={p['name']:p['active'] for p in parameters}
-    return dict(pointActivity=[[by_name[f'{axis}_{i}'] for axis in 'XYZ'] for i in range(count)],
+    ids={p['name']:p['id'] for p in parameters}
+    return dict(rounding=[v.GetParmVal(ids[f'R_{i}']) for i in range(count)],pointActivity=[[by_name[f'{axis}_{i}'] for axis in 'XYZ'] for i in range(count)],
                 smoothActivity=[by_name[f'G1_{i}'] for i in range(count)],
                 fixedActivity=[by_name[f'FixedU_{i}'] for i in range(count)])
 

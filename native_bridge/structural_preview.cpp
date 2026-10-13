@@ -1290,3 +1290,22 @@ extern "C" const char* studio_surface_topology(const char* engine,const char* ge
     }catch(const std::exception& error){output="{\"error\":"+quote(error.what())+"}";}
     if(library)dlclose(library);return output.c_str();
 }
+
+// Python validates owner/type, row topology, native limits and references first.
+// Match original SetEditXSecPnts: native SetPntVecs owns all curve evaluation.
+extern "C" const char* studio_edit_curve_point_list(const char* engine,const char* container,int type,int count,const double* rows) {
+    static thread_local std::string output;void* library=nullptr;
+    try {
+        if(count<2||count>10000||!rows)throw std::runtime_error("Invalid native point-list size.");
+        library=dlopen(engine,RTLD_NOW);if(!library)throw std::runtime_error(dlerror());
+        void* manager=symbol<void*>(library,"_ZZN16ParmMgrSingleton11getInstanceEvE8instance");
+        void* curve=symbol<void*(*)(void*,const std::string&)>(library,"_ZN16ParmMgrSingleton17FindParmContainerERKNSt3__112basic_stringIcNS0_11char_traitsIcEENS0_9allocatorIcEEEE")(manager,std::string(container));
+        if(!curve)throw std::runtime_error("Native editable profile unavailable.");
+        std::vector<double> u,x,y,z,r;
+        for(int i=0;i<count;++i){u.push_back(rows[5*i]);x.push_back(rows[5*i+1]);y.push_back(rows[5*i+2]);z.push_back(rows[5*i+3]);r.push_back(rows[5*i+4]);}
+        symbol<void(*)(void*,int)>(library,"_ZN13EditCurveXSec9ConvertToEi")(curve,type);
+        symbol<void(*)(void*,const std::vector<double>&,const std::vector<double>&,const std::vector<double>&,const std::vector<double>&,const std::vector<double>&,std::vector<bool>,std::vector<bool>,bool)>(library,"_ZN13EditCurveXSec10SetPntVecsERKNSt3__16vectorIdNS0_9allocatorIdEEEES6_S6_S6_S6_NS1_IbNS2_IbEEEES8_b")(curve,u,x,y,z,r,{}, {},true);
+        output="{}";
+    }catch(const std::exception& error){output="{\"error\":"+quote(error.what())+"}";}
+    if(library)dlclose(library);return output.c_str();
+}

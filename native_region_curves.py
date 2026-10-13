@@ -111,7 +111,10 @@ def mutate_edit_native(v,r,cid,invoke):
         i=r.get('point')
         if isinstance(i,bool) or not isinstance(i,int):raise ValueError('Choose a native point index.')
         return one(i,range(count),'Choose an existing curve point.')
-    if op=='region-curve-point':
+    if op=='region-curve-replace-points':
+        from native_editable_curves import replace_container_points
+        replace_container_points(v,cid,parms,r);invoke()
+    elif op=='region-curve-point':
         i=point();p=r.get('xyz')
         if not isinstance(p,list) or len(p)!=3:raise ValueError('Enter three coordinates.')
         values=[finite(x) for x in p]

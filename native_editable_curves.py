@@ -2,9 +2,8 @@
 import re
 
 
-def replace_control_points(v,xid,request):
+def validated_control_points(v,parameters,request):
     from native_tools import finite,one
-    if v.GetXSecShape(xid)!=v.XS_EDIT_CURVE:raise ValueError('Convert this section to an editable curve first.')
     typ=getattr(v,one(request.get('type'),('LINEAR','PCHIP','CEDIT')))
     raw=request.get('rows')
     if not isinstance(raw,list) or not 2<=len(raw)<=10000:raise ValueError('Use 2–10000 control-point rows.')
@@ -13,12 +12,28 @@ def replace_control_points(v,xid,request):
     if rows[0][0]!=0 or rows[-1][0]!=1 or any(a[0]>=b[0] for a,b in zip(rows,rows[1:])):raise ValueError('Curve U positions must increase from 0 to 1.')
     if typ==v.CEDIT and (len(rows)<4 or (len(rows)-1)%3):raise ValueError('Cubic Bezier curves need 3n+1 rows, including their handles.')
     for column,name in [(1,'X_0'),(2,'Y_0'),(3,'Z_0'),(4,'R_0')]:
-        pid=v.GetXSecParm(xid,name)
+        pid=parameters[name]
         if any(not v.GetParmLowerLimit(pid)<=row[column]<=v.GetParmUpperLimit(pid) for row in rows):raise ValueError('Control-point values exceed native coordinate or rounding limits.')
-    guard_rebuild(v,[dict(id=p,name=v.GetParmName(p)) for p in v.GetXSecParmIDs(xid)])
+    guard_rebuild(v,[dict(id=p,name=name) for name,p in parameters.items()])
+    return typ,rows
+
+
+def replace_control_points(v,xid,request):
+    if v.GetXSecShape(xid)!=v.XS_EDIT_CURVE:raise ValueError('Convert this section to an editable curve first.')
+    typ,rows=validated_control_points(v,{v.GetParmName(p):p for p in v.GetXSecParmIDs(xid)},request)
     v.EditXSecConvertTo(xid,typ)
     v.SetEditXSecPnts(xid,[row[0] for row in rows],[v.vec3d(*row[1:4]) for row in rows],[row[4] for row in rows])
     v.Update()
+
+
+def replace_container_points(v,cid,parameters,request):
+    import ctypes,json,native_preview
+    typ,rows=validated_control_points(v,parameters,request)
+    _,engine,bridge=native_preview.adapter(v);fn=bridge.studio_edit_curve_point_list
+    fn.argtypes=[ctypes.c_char_p,ctypes.c_char_p,ctypes.c_int,ctypes.c_int,ctypes.POINTER(ctypes.c_double)];fn.restype=ctypes.c_char_p
+    values=(ctypes.c_double*(len(rows)*5))(*(x for row in rows for x in row))
+    result=json.loads(fn(engine,cid.encode(),typ,len(rows),values))
+    if result.get('error'):raise ValueError(result['error'])
 
 
 def guard_rebuild(v,parameters,indices=None):
