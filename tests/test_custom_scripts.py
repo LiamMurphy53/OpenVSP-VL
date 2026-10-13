@@ -210,3 +210,26 @@ class CustomScripts(unittest.TestCase):
         from native_custom_scripts import gui_definitions
         v=self.v;v.ClearVSPModel();v.ReadVSPFile(str(path));v.Update();index=next(d['index'] for d in gui_definitions(v,c['id']) if d['type']==v.GDEV_INDEX_SELECTOR)
         self.rejected_file_is_unchanged(dict(action='mutate',operation='custom-index-step',geom=c['id'],index=index,delta=1),path)
+
+    def test_index_selector_tracks_rebound_native_parameter_after_reopening(self):
+        text=self.template('BoxGroup').replace('int LengthSlider;','int TestSelector;\nint LengthSlider;')
+        text=text.replace('void Init()\n{','void Init()\n{\n string selector_mode=AddParm(PARM_BOOL_TYPE,"SelectColumns","Design");SetParmVal(selector_mode,0);')
+        text=text.replace('AddGui( GDEV_COUNTER, "Num Row"','TestSelector=AddGui( GDEV_INDEX_SELECTOR, "Num Row"')
+        text=text.replace('void InitGui()\n{','void InitGui()\n{\n AddGui(GDEV_TOGGLE_BUTTON,"Use columns","SelectColumns","Design");')
+        text=text.replace('void UpdateGui()\n{','void UpdateGui()\n{\n string selector_owner=GetCurrCustomGeom();\n if(GetBoolParmVal(GetParm(selector_owner,"SelectColumns","Design")))UpdateGui(TestSelector,GetParm(selector_owner,"NumCol","Design"));\n else UpdateGui(TestSelector,GetParm(selector_owner,"NumRow","Design"));')
+        _,path,c=self.import_component(text);gid=c['id'];fields=self.fields(c);index=fields['NumRow']['customIndexSelector'];mode=fields['SelectColumns']['id']
+        for choose_columns,rows,columns in [(False,2,1),(True,2,2),(False,3,2)]:
+            state,path=self.worker(dict(action='mutate',operation='parameter',id=mode,value=int(choose_columns)),path)
+            cold,path=self.worker(dict(action='state'),path)
+            fields=self.fields(next(c for c in cold['components'] if c['id']==gid));target='NumCol' if choose_columns else 'NumRow'
+            self.assertEqual(fields[target]['customIndexSelector'],index)
+            state,path=self.worker(dict(action='mutate',operation='custom-index-step',geom=gid,index=index,delta=1),path)
+            c=next(c for c in state['components'] if c['id']==gid);fields=self.fields(c)
+            self.assertEqual((fields['NumRow']['value'],fields['NumCol']['value']),(rows,columns))
+            v=self.v;v.ClearVSPModel();v.ReadVSPFile(str(path));v.Update();reference=v.AddGeom('BoxGroup')
+            for name,value in [('NumRow',rows),('NumCol',columns)]:v.SetParmValUpdate(v.FindParm(reference,name,'Design'),value)
+            self.assertEqual(v.GetTotalNumSurfs(gid),v.GetTotalNumSurfs(reference))
+            for surface in c['surfaces']:
+                i=surface['index'];u,w=v.GetUWTess01(reference,i%v.GetNumMainSurfs(reference))
+                expected=[[p.x(),p.y(),p.z()] for p in v.CompVecPnt01(reference,i,[a for a in u for _ in w],[b for _ in u for b in w])]
+                self.assertEqual(surface['points'],expected)
