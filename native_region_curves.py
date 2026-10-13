@@ -86,6 +86,8 @@ def details(v,region,refs,parameter):
         # Structural evaluation can refresh derived native curve parameters.
         result['params']=[parameter(v,p) for p in v.FindContainerParmIDs(curve['curveID'])]
         result['curveType']=int(next(p['value'] for p in result['params'] if p['name']=='CurveType'))
+        from native_editable_curves import initialization_shape
+        result['initShape']=initialization_shape(v,result['params'])
         from native_preview import editable_activity
         result.update(editable_activity(v,result['params'],len(result['controlPoints'])))
     return dict(sectionCurve=result)

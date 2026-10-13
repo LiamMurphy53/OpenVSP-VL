@@ -86,6 +86,8 @@ def metadata(v,gid):
             from native_preview import editable_activity
             result['profile'].update(edit(v,gid))
             parameters=[dict(id=p,name=v.GetParmName(p)) for p in v.FindContainerParmIDs(cid)]
+            from native_editable_curves import initialization_shape
+            result['profile']['initShape']=initialization_shape(v,parameters)
             result['profile'].update(editable_activity(v,parameters,len(result['profile']['controlPoints'])))
             result['profile']['curveType']=int(v.GetParmVal(next(p['id'] for p in parameters if p['name']=='CurveType')))
     return result

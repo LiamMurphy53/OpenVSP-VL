@@ -129,7 +129,8 @@ def snapshot(v):
                         curve_parameters=[parameter(v,p) for p in v.GetXSecParmIDs(xid)]
                         from native_preview import editable_activity
                         entry.update(editable_activity(v,curve_parameters,len(entry['controlPoints'])))
-                        from native_editable_curves import tangent_controls
+                        from native_editable_curves import tangent_controls,initialization_shape
+                        entry['initShape']=initialization_shape(v,curve_parameters)
                         entry['tangentControls']=tangent_controls(v,curve_parameters,entry['controlPoints'])
                         active={p['id']:p['active'] for p in curve_parameters}
                         for p in params:

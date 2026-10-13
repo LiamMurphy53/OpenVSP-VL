@@ -23,6 +23,8 @@ def details(v,gid,parameter):
     data=edit(v,gid);cid=container(v,gid);fields=[parameter(v,p) for p in v.FindContainerParmIDs(cid)]
     data.update(id=cid,type=v.XS_EDIT_CURVE,params=fields,curveType=int(v.GetParmVal(v.FindParm(cid,'CurveType','XSecCurve'))))
     data.update(editable_activity(v,fields,len(data['controlPoints'])))
+    from native_editable_curves import initialization_shape
+    data['initShape']=initialization_shape(v,fields)
     return data
 
 

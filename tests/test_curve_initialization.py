@@ -23,9 +23,11 @@ class CurveInitialization(unittest.TestCase):
                     expected,_=self.worker(dict(action='state'),reference)
                     actual,saved=self.worker(dict(action='mutate',operation='curve-init',geom=gid,surface=0,index=1,shape=shape))
                     expected=expected['components'][0]
+                    self.assertEqual(actual['components'][0]['sections'][1]['initShape'],shape)
                     self.assertEqual(actual['components'][0]['surfaces'],expected['surfaces'])
                     self.assertEqual(actual['components'][0]['sections'][1]['controlPoints'],expected['sections'][1]['controlPoints'])
                     reopened,_=self.worker(dict(action='state'),saved)
+                    self.assertEqual(reopened['components'][0]['sections'][1]['initShape'],shape)
                     self.assertEqual(reopened['components'][0]['surfaces'],expected['surfaces'])
 
 
@@ -40,9 +42,10 @@ class CurveInitialization(unittest.TestCase):
         for convert,initialize,key in cases:
             _,path=self.worker(dict(action='mutate',**convert))
             state,saved=self.worker(dict(action='mutate',shape='EDIT_XSEC_RECTANGLE',**initialize),path)
-            if key=='bor':points=next(c for c in state['tools']['bodiesOfRevolution'] if c['id']==bor)['editable']['controlPoints']
-            else:points=next(c for c in state['tools'][key] if c['id']==initialize['id'])['sectionCurve']['controlPoints']
-            self.assertEqual(points,expected)
+            if key=='bor':curve=next(c for c in state['tools']['bodiesOfRevolution'] if c['id']==bor)['editable']
+            else:curve=next(c for c in state['tools'][key] if c['id']==initialize['id'])['sectionCurve']
+            self.assertEqual(curve['initShape'],'EDIT_XSEC_RECTANGLE')
+            self.assertEqual(curve['controlPoints'],expected)
             reopened,_=self.worker(dict(action='state'),saved)
             self.assertEqual({c['id']:c['surfaces'] for c in reopened['components']},{c['id']:c['surfaces'] for c in state['components']})
 
@@ -57,6 +60,7 @@ class CurveInitialization(unittest.TestCase):
         v.SetParmVal(v.GetXSecParm(x,'ShapeType'),v.EDIT_XSEC_RECTANGLE);v.EditXSecInitShape(x);v.Update()
         expected=[[p.x(),p.y(),p.z()] for p in v.GetEditXSecCtrlVec(x,True)]
         profile=next(a for a in state['tools']['auxiliary'] if a['id']==self.aux)['controls']['profile']
+        self.assertEqual(profile['initShape'],'EDIT_XSEC_RECTANGLE')
         self.assertEqual(profile['controlPoints'],expected)
         reopened,_=self.worker(dict(action='state'),saved)
         self.assertEqual({c['id']:c['surfaces'] for c in reopened['components']},{c['id']:c['surfaces'] for c in state['components']})

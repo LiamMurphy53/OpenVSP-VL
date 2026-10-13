@@ -1,6 +1,13 @@
 """Name native Bezier handles; geometry and tangent enforcement stay in OpenVSP."""
 
 
+def initialization_shape(v,parameters):
+    pid=next((p['id'] for p in parameters if p['name']=='ShapeType'),None)
+    if not pid:return None
+    value=v.GetParmVal(pid)
+    return next((name for name in ('EDIT_XSEC_CIRCLE','EDIT_XSEC_ELLIPSE','EDIT_XSEC_RECTANGLE') if value==getattr(v,name)),None)
+
+
 def tangent_controls(v, parameters, points):
     by_name = {p['name']: p for p in parameters}
     if int(by_name['CurveType']['value']) != v.CEDIT:
