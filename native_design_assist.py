@@ -2,6 +2,19 @@
 import math
 
 
+def body_stations(v,gid):
+    """Eligible axial stations for a compound fuselage end-length edit."""
+    if v.GetGeomTypeName(gid).upper()!='FUSELAGE':return None
+    surf=v.GetXSecSurf(gid,0)
+    sections=[v.GetXSec(surf,i) for i in range(v.GetNumXSec(surf))]
+    if len(sections)<4 or any(v.GetXSecShape(x)!=v.XS_POINT for x in (sections[0],sections[-1])) or any(v.GetXSecShape(x)==v.XS_POINT for x in sections[1:-1]):return None
+    ids=[v.GetXSecParm(x,'XLocPercent') for x in sections]
+    positions=[v.GetParmVal(p) for p in ids]
+    length=v.GetParmVal(gid,'Length','Design')
+    if length<=0 or any(b<=a for a,b in zip(positions,positions[1:])):return None
+    return ids,positions,length
+
+
 def metadata(v,gid):
     kind=v.GetGeomTypeName(gid).upper()
     if kind=='WING':
@@ -34,7 +47,12 @@ def metadata(v,gid):
             for i in range(v.GetNumXSec(s)):
                 x=v.GetXSec(s,i)
                 if v.GetXSecShape(x)!=v.XS_POINT:widths.append(v.GetXSecWidth(x));heights.append(v.GetXSecHeight(x))
-        return dict(kind='body',width=max(widths,default=0),height=max(heights,default=0))
+        result=dict(kind='body',width=max(widths,default=0),height=max(heights,default=0))
+        stations=body_stations(v,gid)
+        if stations:
+            _,positions,length=stations
+            result.update(noseLength=length*(positions[1]-positions[0]),tailLength=length*(positions[-1]-positions[-2]))
+        return result
     return None
 
 
@@ -97,6 +115,19 @@ def apply(v,r):
             if not ids or any(not v.GetParmLowerLimit(p)<=ratio<=v.GetParmUpperLimit(p) for p in ids):raise ValueError('Use thickness within the native radial-curve limits.')
             stations=list(v.PCurveGetTVec(gid,v.PROP_THICK));typ=v.PCurveGetType(gid,v.PROP_THICK)
             v.SetPCurve(gid,v.PROP_THICK,stations,[ratio]*len(stations),typ)
+    elif action in ('body-nose','body-tail'):
+        stations=body_stations(v,gid)
+        if not stations:raise ValueError('Use a fuselage with point ends and at least two ordered interior sections. Configure stations in Pro.')
+        ids,positions,length=stations
+        a,b=positions[1],positions[-2]
+        new_a=positions[0]+value/length if action=='body-nose' else a
+        new_b=positions[-1]-value/length if action=='body-tail' else b
+        if value<=0 or not positions[0]<new_a<new_b<positions[-1]:raise ValueError('Nose and tail lengths must leave space between the interior body stations.')
+        targets=[(ids[i],new_a+(p-a)*(new_b-new_a)/(b-a)) for i,p in enumerate(positions[1:-1],1)]
+        if new_a>a or new_b>b:targets.reverse()
+        for pid,target in targets:set_value(pid,target)
+        v.Update()
+        if any(not math.isclose(v.GetParmVal(pid),target,abs_tol=1e-10,rel_tol=1e-9) for pid,target in targets):raise ValueError('Native station limits prevent this end length. The edit was not saved; configure stations in Pro.')
     elif action in ('body-width','body-height'):
         if kind not in ('FUSELAGE','STACK'):raise ValueError('Choose a fuselage or stack.')
         if value<=0:raise ValueError('Enter a positive body dimension.')
@@ -125,7 +156,7 @@ def apply(v,r):
         x=v.GetXSec(v.GetXSecSurf(gid,si),index)
         if not math.isclose(v.GetXSecWidth(x),width,rel_tol=1e-9,abs_tol=1e-10) or not math.isclose(v.GetXSecHeight(x),height,rel_tol=1e-9,abs_tol=1e-10):
             raise ValueError('A native section limit prevents proportional resizing. The edit was not saved; adjust that section in Pro.')
-    field={'wing-sweep':'sweep','wing-dihedral':'dihedral','wing-thickness':'thicknessPercent','wing-camber':'camberPercent','prop-pitch':'pitch','prop-blades':'blades','prop-thickness':'thicknessPercent','body-width':'width','body-height':'height'}[action]
+    field={'wing-sweep':'sweep','wing-dihedral':'dihedral','wing-thickness':'thicknessPercent','wing-camber':'camberPercent','prop-pitch':'pitch','prop-blades':'blades','prop-thickness':'thicknessPercent','body-width':'width','body-height':'height','body-nose':'noseLength','body-tail':'tailLength'}[action]
     actual=metadata(v,gid).get(field)
     if actual is None or not math.isclose(actual,value,rel_tol=1e-9,abs_tol=1e-10):
         raise ValueError('OpenVSP could not apply the requested value consistently under these native limits or constraints. The edit was not saved; configure the individual controls in Pro.')
