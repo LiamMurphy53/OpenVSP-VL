@@ -124,6 +124,7 @@ def snapshot(v):
                     if entry['shape']==v.XS_EDIT_CURVE:
                         entry['controlPoints']=[[p.x(),p.y(),p.z()] for p in v.GetEditXSecCtrlVec(xid,True)]
                         entry['curveU']=list(v.GetEditXSecUVec(xid));entry['fixedU']=list(v.GetEditXSecFixedUVec(xid))
+                        entry['rounding']=[v.GetParmVal(v.GetXSecParm(xid,f'R_{i}')) for i in range(len(entry['controlPoints']))]
                         entry['curveType']=int(v.GetParmVal(v.GetXSecParm(xid,'CurveType')))
                         entry['smooth']=[bool(v.GetParmVal(v.GetXSecParm(xid,f'G1_{i}'))) for i in range(len(entry['controlPoints']))]
                         curve_parameters=[parameter(v,p) for p in v.GetXSecParmIDs(xid)]

@@ -2,6 +2,25 @@
 import re
 
 
+def replace_control_points(v,xid,request):
+    from native_tools import finite,one
+    if v.GetXSecShape(xid)!=v.XS_EDIT_CURVE:raise ValueError('Convert this section to an editable curve first.')
+    typ=getattr(v,one(request.get('type'),('LINEAR','PCHIP','CEDIT')))
+    raw=request.get('rows')
+    if not isinstance(raw,list) or not 2<=len(raw)<=10000:raise ValueError('Use 2–10000 control-point rows.')
+    if any(not isinstance(row,list) or len(row)!=5 for row in raw):raise ValueError('Use five values per row: U X Y Z rounding.')
+    rows=[[finite(value) for value in row] for row in raw]
+    if rows[0][0]!=0 or rows[-1][0]!=1 or any(a[0]>=b[0] for a,b in zip(rows,rows[1:])):raise ValueError('Curve U positions must increase from 0 to 1.')
+    if typ==v.CEDIT and (len(rows)<4 or (len(rows)-1)%3):raise ValueError('Cubic Bezier curves need 3n+1 rows, including their handles.')
+    for column,name in [(1,'X_0'),(2,'Y_0'),(3,'Z_0'),(4,'R_0')]:
+        pid=v.GetXSecParm(xid,name)
+        if any(not v.GetParmLowerLimit(pid)<=row[column]<=v.GetParmUpperLimit(pid) for row in rows):raise ValueError('Control-point values exceed native coordinate or rounding limits.')
+    guard_rebuild(v,[dict(id=p,name=v.GetParmName(p)) for p in v.GetXSecParmIDs(xid)])
+    v.EditXSecConvertTo(xid,typ)
+    v.SetEditXSecPnts(xid,[row[0] for row in rows],[v.vec3d(*row[1:4]) for row in rows],[row[4] for row in rows])
+    v.Update()
+
+
 def guard_rebuild(v,parameters,indices=None):
     """Native initialization recreates point IDs; protect saved references."""
     ids={p['id'] for p in parameters if re.fullmatch(r'(?:[UXYZR]|G1|FixedU)_\d+',p['name']) and (indices is None or int(p['name'].rsplit('_',1)[1]) in indices)}

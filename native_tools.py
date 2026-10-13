@@ -223,11 +223,14 @@ def mutate(v,r):
                 degree=(v.GetUpperCSTDegree if side=='upper' else v.GetLowerCSTDegree)(xid)
                 if (direction=='demote' and degree<=0) or (direction=='promote' and degree>=30):raise ValueError('The supported CST degree range is 0–30.')
                 getattr(v,('Promote' if direction=='promote' else 'Demote')+'CST'+side.title())(xid)
-    elif op in ('curve-init','curve-type','curve-split','curve-delete','curve-fixed','curve-smooth','curve-reparameterize'):
+    elif op in ('curve-replace-points','curve-init','curve-type','curve-split','curve-delete','curve-fixed','curve-smooth','curve-reparameterize'):
         gid,surf,index,xid=section(v,r)
         if v.GetXSecShape(xid)!=v.XS_EDIT_CURVE:raise ValueError('Convert this section to an editable curve first.')
         before=len(v.GetEditXSecCtrlVec(xid,True))
-        if op=='curve-init':
+        if op=='curve-replace-points':
+            from native_editable_curves import replace_control_points
+            replace_control_points(v,xid,r)
+        elif op=='curve-init':
             from native_editable_curves import guard_rebuild
             guard_rebuild(v,[dict(id=p,name=v.GetParmName(p)) for p in v.GetXSecParmIDs(xid)])
             shape=one(r.get('shape'),('EDIT_XSEC_CIRCLE','EDIT_XSEC_ELLIPSE','EDIT_XSEC_RECTANGLE'))
