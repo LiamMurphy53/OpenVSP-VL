@@ -35,8 +35,7 @@ class SpecializedNative(unittest.TestCase):
         self.assertEqual(reopened['curve'],route['curve']);self.assertEqual(reopened['copies'],route['copies'])
         self.assertEqual([(p['id'],p['parent'],p['point']) for p in reopened['points']],[(p['id'],p['parent'],p['point']) for p in route['points']])
         for a,b in zip(reopened['points'],route['points']):
-            # Three inactive coordinate limits differ on reopening; cause unresolved.
-            self.assertEqual({p['id']:(p['name'],p['value'],p['type']) for p in a['params']},{p['id']:(p['name'],p['value'],p['type']) for p in b['params']})
+            self.assertEqual({p['id']:p for p in a['params']},{p['id']:p for p in b['params']})
 
     def test_routing_all_physical_copies_and_empty_routes_match_native(self):
         v=self.v;a=v.AddGeom('POD');b=v.AddGeom('POD')

@@ -14,6 +14,19 @@ def text_file(content,filename):
     return str(path)
 def containers(v):
     return [p for g in v.FindGeoms() for p in (v.GetAllRoutingPtIds(g) if v.GetGeomTypeName(g).upper()=='ROUTING' else v.GetAllBogies(g) if v.GetGeomTypeName(g).upper()=='GEAR' else [])]
+
+def refresh_routing_anchors(v):
+    # Decode can update a route before a later parent surface is ready. A
+    # second vehicle Update does not dirty these attachment limits. Rebind the
+    # unchanged native parent after all geometry loads to evaluate native limits.
+    geoms=set(v.FindGeoms())
+    for g in geoms:
+        if v.GetGeomTypeName(g).upper()!='ROUTING':continue
+        for p in v.GetAllRoutingPtIds(g):
+            parent=v.GetRoutingPtParentID(p)
+            if parent in geoms:v.SetRoutingPtParentID(p,parent)
+    v.Update()
+
 def snapshot(v,parameter):
     def params(cid):return [parameter(v,p) for p in v.FindContainerParmIDs(cid)]
     routes=[];gears=[];bors=[];aux=[];clouds=[]

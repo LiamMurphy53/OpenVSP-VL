@@ -619,6 +619,8 @@ def run(req, model):
         import native_gear_retraction
         native_gear_retraction.refresh(v)
         native_gear_controls.refresh_auxiliary(v)
+        import native_special
+        native_special.refresh_routing_anchors(v)
         errors(v)
     v.SetVSP3FileName(str(model))
     import native_wave_controls
