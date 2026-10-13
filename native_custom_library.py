@@ -28,8 +28,13 @@ def enrich(v,gid,params):
     by_id={p['id']:p for p in params}
     by_key={(p['rawGroup'],p['name']):p for p in params}
     choice=None
+    tab=None
     for definition in definitions:
         kind=definition['type']
+        if kind in (v.GDEV_TAB,v.GDEV_SCROLL_TAB):
+            tab=definition['label'] or None
+            choice=None
+            continue
         original=by_key.get((definition['group'],definition['parameter'])) or by_id.get(previous.get(definition['index']))
         if original and definition['index'] in bindings and original['id'] not in bound_ids:
             original.update(displayReadOnly=True,readOnlyReason='Disconnected by the custom script in this configuration.')
@@ -48,6 +53,7 @@ def enrich(v,gid,params):
         p=mapped
         if p is None:continue
         p['customControl']=True
+        if tab:p.update(customTab=tab,group=tab)
         if p['name'] in LABELS:p['label']=LABELS[p['name']]
         if p['name'] in LENGTHS:p['dimension']='length'
         if p['description'] in ('Default Description','Custom Descript'):p['description']=''

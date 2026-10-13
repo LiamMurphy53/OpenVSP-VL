@@ -185,6 +185,21 @@ class CustomScripts(unittest.TestCase):
         self.assertEqual(reopened['surfaces'],actual['surfaces']);self.assertTrue(self.fields(reopened)['Length']['customParmButton'])
         self.assertTrue(any(l['source']==source['id'] and l['target']==self.fields(c)['Width']['id'] for l in cold['tools']['links']))
 
+    def test_script_tabs_group_controls_without_changing_native_ownership(self):
+        text=self.template().replace('GDEV_TAB, "Design"','GDEV_TAB, "Primary dimensions"').replace('WidthSlider = AddGui','AddGui(GDEV_SCROLL_TAB,"Cross-section");\n WidthSlider = AddGui')
+        self.assertNotEqual(text,self.template())
+        _,path,c=self.import_component(text);gid=c['id'];fields=self.fields(c)
+        self.assertEqual(fields['Length']['customTab'],'Primary dimensions')
+        self.assertEqual(fields['Width']['customTab'],'Cross-section')
+        for name,tab in [('Length','Primary dimensions'),('Width','Cross-section'),('Height','Cross-section')]:
+            self.assertEqual(fields[name]['group'],tab)
+            self.assertEqual(fields[name]['rawGroup'],'Design')
+        state,path=self.worker(dict(action='mutate',operation='parameter',id=fields['Length']['id'],value=9),path)
+        c=next(c for c in state['components'] if c['id']==gid);self.compare_box(c,path,9)
+        cold,_=self.worker(dict(action='state'),path);reopened=next(c for c in cold['components'] if c['id']==gid)
+        self.assertEqual(reopened['surfaces'],c['surfaces'])
+        self.assertEqual({n:(p['id'],p.get('customTab'),p['rawGroup']) for n,p in self.fields(reopened).items()},{n:(p['id'],p.get('customTab'),p['rawGroup']) for n,p in self.fields(c).items()})
+
     def test_index_steps_clamp_and_match_original_native_array_geometry(self):
         text=self.template('BoxGroup').replace('GDEV_COUNTER, "Num Row"','GDEV_INDEX_SELECTOR, "Num Row"')
         self.assertNotEqual(text,self.template('BoxGroup'));_,path,c=self.import_component(text);gid=c['id'];index=self.fields(c)['NumRow']['customIndexSelector']
