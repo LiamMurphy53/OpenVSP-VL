@@ -106,6 +106,38 @@ class SpecializedNative(unittest.TestCase):
         self.assertEqual(section['skin']['continuity'],v.GetXSecContinuity(x));self.assertEqual(section['skin']['sides']['XSEC_LEFT_SIDE']['angles'],list(v.GetXSecTanAngles(x,v.XSEC_LEFT_SIDE)))
         self.assertIn('XS_VKT_AIRFOIL',state['shapes']);self.assertEqual(len(state['shapes']),20)
 
+    def test_profile_only_copy_refreshes_viewport_and_preserves_placement(self):
+        v=self.v;source=v.AddGeom('STACK');target=v.AddGeom('STACK')
+        sx=v.GetXSec(v.GetXSecSurf(source,0),1);tx=v.GetXSec(v.GetXSecSurf(target,0),1)
+        v.SetXSecWidthHeight(sx,7,4)
+        v.SetParmValUpdate(v.GetXSecParm(tx,'XDelta'),5)
+        v.Update();v.WriteVSPFile(str(self.model),v.SET_ALL)
+
+        # Independent public SDK reference includes the native saved lifecycle.
+        # Immediate surface caches can remain stale after a profile-only paste.
+        v.ClearVSPModel();v.ReadVSPFile(str(self.model));v.Update()
+        v.CopyXSecCurve(source,1);v.PasteXSecCurve(target,1);v.Update()
+        reference=self.path/'reference.vsp3';v.WriteVSPFile(str(reference),v.SET_ALL)
+        v.ClearVSPModel();v.ReadVSPFile(str(reference));v.Update()
+        def surfaces():
+            result=[]
+            for i in range(v.GetTotalNumSurfs(target)):
+                u,w=v.GetUWTess01(target,i%v.GetNumMainSurfs(target))
+                points=[[p.x(),p.y(),p.z()] for p in v.CompVecPnt01(target,i,[a for a in u for _ in w],[b for _ in u for b in w])]
+                result.append(dict(index=i,rows=len(u),cols=len(w),points=points))
+            return result
+        expected=surfaces()
+        state,path=self.worker(dict(action='mutate',operation='section-copy-from',geom=target,
+                                   surface=0,index=1,sourceGeom=source,sourceSurface=0,
+                                   sourceIndex=1,curveOnly=True))
+        actual=next(c for c in state['components'] if c['id']==target)
+        self.assertEqual(actual['surfaces'],expected)
+        v.ClearVSPModel();v.ReadVSPFile(str(path));v.Update()
+        self.assertEqual(surfaces(),expected)
+        tx=v.GetXSec(v.GetXSecSurf(target,0),1)
+        self.assertEqual(v.GetParmVal(v.GetXSecParm(tx,'XDelta')),5)
+        self.assertEqual((v.GetXSecWidth(tx),v.GetXSecHeight(tx)),(7,4))
+
     def test_cloud_native_hull_and_projection(self):
         v=self.v;g=v.AddGeom('POD');v.Update();v.WriteVSPFile(str(self.model),v.SET_ALL)
         points=[[0,0,0],[1,0,0],[0,1,0],[0,0,1],[.1,.1,.1]]
