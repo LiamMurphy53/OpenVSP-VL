@@ -32,8 +32,8 @@ def guard_parameter_replacement(v,ids,label='native point IDs'):
     for i in range(v.GetNumParmLinks()):
         link=v.GetParmLinkID(i)
         if ids & {v.GetParmLinkAParm(link),v.GetParmLinkBParm(link)}:users.append('parameter link')
-    for i,label in enumerate(v.GetAdvLinkNames()):
-        if ids & (set(v.GetAdvLinkInputParms(i))|set(v.GetAdvLinkOutputParms(i))):users.append('expression '+label)
+    for i,link_name in enumerate(v.GetAdvLinkNames()):
+        if ids & (set(v.GetAdvLinkInputParms(i))|set(v.GetAdvLinkOutputParms(i))):users.append('expression '+link_name)
     for group in v.GetVarPresetGroups():
         if ids & set(v.GetVarPresetParmIDs(group)):users.append('preset '+v.GetGroupName(group))
     if ids & {v.GetDesignVar(i) for i in range(v.GetNumDesignVars())}:users.append('design variable')
@@ -122,3 +122,8 @@ def move_tangent(v, xid, request):
     # Selecting/moving the actual native handle establishes its driving side.
     # SetSelectPntID, MovePnt and EnforceG1 run inside the official engine.
     v.MoveEditXSecPnt(xid, index, v.vec3d(*values))
+
+
+def guard_container_shape_replacement(v,cid,current,target):
+    if current==target:return
+    guard_parameter_replacement(v,set(v.FindContainerParmIDs(cid)),'native profile parameter IDs')

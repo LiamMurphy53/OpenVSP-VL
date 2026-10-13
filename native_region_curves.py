@@ -187,6 +187,10 @@ def mutate(v,r):
     from native_special import SHAPES
     import native_preview
     geom,index,region_index=owner(v,r)
+    import native_references
+    from native_editable_curves import guard_container_shape_replacement
+    ref=native_references.references(v)[r['id']]
+    def protect(target):guard_container_shape_replacement(v,ref['curveID'],ref['curveType'],target)
     _,engine,bridge=native_preview.adapter(v)
     change=bridge.studio_region_curve_shape if r['operation']=='region-curve-shape' else bridge.studio_region_curve_operation
     change.argtypes=[ctypes.c_char_p,ctypes.c_char_p,ctypes.c_int,ctypes.c_int,ctypes.c_int];change.restype=ctypes.c_char_p
@@ -195,9 +199,12 @@ def mutate(v,r):
         if response.get('error'):raise ValueError(response['error'])
     if r['operation']=='region-curve-shape':
         shape=one(r.get('shape'),[n for n in SHAPES if hasattr(v,n)],'Choose a native curve shape.')
-        call(geom,index,region_index,getattr(v,shape))
-    elif r['operation']=='region-curve-convert':call(geom,index,region_index,1)
+        protect(getattr(v,shape));call(geom,index,region_index,getattr(v,shape))
+    elif r['operation']=='region-curve-convert':
+        protect(v.XS_EDIT_CURVE);call(geom,index,region_index,1)
     elif r['operation']=='region-curve-import':
+        fmt=one(r.get('format'),('airfoil','section'))
+        protect(v.XS_FILE_AIRFOIL if fmt=='airfoil' else v.XS_FILE_FUSE)
         import_profile(v,r);call(geom,index,region_index,3)
     elif r['operation']=='region-curve-copy-from':
         source=r.get('source')

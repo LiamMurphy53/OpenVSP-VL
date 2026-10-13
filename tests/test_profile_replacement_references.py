@@ -63,5 +63,44 @@ class ProfileReferences(unittest.TestCase):
         curve=next(c for c in reopened['components'] if c['id']==g)
         self.assertIn(before_ref[0],{p['id'] for p in curve['params'] if p['name']=='Theta' and p['rawGroup']=='XSecCurve'})
 
+    def test_region_and_auxiliary_profile_replacement_guards(self):
+        import native_references
+        import native_auxiliary_controls as auxiliary
+        v=self.v
+        region=v.AddSubSurf(self.gid,v.SS_XSEC_CURVE)
+        index=v.AddFeaStruct(self.gid);sid=v.GetFeaStructID(self.gid,index)
+        structural=v.AddFeaSubSurf(self.gid,index,v.SS_XSEC_CURVE)
+        aux=v.AddGeom('AUXILIARY');v.SetParmValUpdate(aux,'AuxiliaryGeomType','Design',v.AUX_GEOM_SUPER_CONE)
+        v.Update();refs=native_references.references(v)
+        cases=[('region-curve-',dict(geom=self.gid,id=region),refs[region]['curveID'],refs[region]['curveType']),('region-curve-',dict(structure=sid,id=structural),refs[structural]['curveID'],refs[structural]['curveType']),('auxiliary-profile-',dict(geom=aux),auxiliary.curve_container(v,aux),auxiliary.curve(v,aux)['type'])]
+        for prefix,owner,cid,current in cases:
+            pid=next(p for p in v.FindContainerParmIDs(cid) if v.GetParmName(p)=='Theta')
+            v.AddAttributeParm(v.GetChildCollection(v.GetVehicleID()),prefix+cid,pid)
+        v.Update();v.WriteVSPFile(str(self.model),v.SET_ALL);before=self.model.read_bytes()
+        for prefix,owner,cid,current in cases:
+            requests=[dict(operation=prefix+'shape',shape='XS_ELLIPSE' if current!=v.XS_ELLIPSE else 'XS_CIRCLE'),dict(operation=prefix+'convert'),dict(operation=prefix+'import',format='section',content='OPENVSP_XSEC_FILE_V1\n1 0\n0 -1\n-1 0\n0 1\n1 0\n'),dict(operation=prefix+'import',format='airfoil',content='Airfoil\n1 0\n.5 .1\n0 0\n.5 -.1\n1 0\n')]
+            for request in requests:
+                existing=set(self.path.glob('*/aircraft.vsp3'))
+                with self.assertRaisesRegex(ValueError,'profile parameter IDs used by parameter reference'):
+                    self.worker(dict(action='mutate',**owner,**request))
+                candidate=next(iter(set(self.path.glob('*/aircraft.vsp3'))-existing));self.assertEqual(candidate.read_bytes(),before)
+            from native_special import SHAPES
+            shape=next(name for name in SHAPES if getattr(v,name)==current)
+            baseline,_=self.worker(dict(action='state'))
+            state,path=self.worker(dict(action='mutate',operation=prefix+'shape',shape=shape,**owner))
+            cold,_=self.worker(dict(action='state'),path)
+            def reference(data):return next(a['values'] for a in data['tools']['attributes'] if a['name']==prefix+cid)
+            self.assertEqual(reference(state),reference(baseline));self.assertEqual(reference(cold),reference(baseline))
+
+    def test_unrelated_expression_does_not_change_reference_error_label(self):
+        g,pid,shape=self.fixture();v=self.v
+        v.AddAdvLink('Unrelated expression');index=v.GetLinkIndex('Unrelated expression')
+        v.AddAdvLinkInput(index,v.FindParm(self.gid,'X_Rel_Location','XForm'),'source_x')
+        v.AddAdvLinkOutput(index,v.FindParm(g,'X_Rel_Location','XForm'),'target_x')
+        v.SetAdvLinkCode(index,'target_x = source_x;');v.BuildAdvLinkScript(index)
+        v.Update();v.WriteVSPFile(str(self.model),v.SET_ALL)
+        with self.assertRaisesRegex(ValueError,'native profile parameter IDs used by parameter reference'):
+            self.worker(dict(action='mutate',operation='shape',geom=g,surface=0,index=1,shape=v.XS_ROUNDED_RECTANGLE))
+
 
 if __name__=='__main__':unittest.main()

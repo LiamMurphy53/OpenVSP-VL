@@ -137,7 +137,9 @@ def set_drivers(v,r):
 
 def mutate(v,r):
     from native_tools import one
-    gid=r['geom'];curve(v,gid)
+    gid=r['geom'];current=curve(v,gid)['type']
+    from native_editable_curves import guard_container_shape_replacement
+    def protect(target):guard_container_shape_replacement(v,curve_container(v,gid),current,target)
     if r['operation'].startswith('auxiliary-profile-edit-'):
         from native_region_curves import mutate_edit_native
         from native_tools import finite
@@ -163,7 +165,7 @@ def mutate(v,r):
     elif r['operation']=='auxiliary-profile-drivers':set_drivers(v,r)
     elif r['operation']=='auxiliary-profile-shape':
         from native_special import SHAPES
-        shape=one(r['shape'],SHAPES,'Choose a native profile family.');curve(v,gid,1,getattr(v,shape))
+        shape=one(r['shape'],SHAPES,'Choose a native profile family.');protect(getattr(v,shape));curve(v,gid,1,getattr(v,shape))
     elif r['operation']=='auxiliary-profile-copy':
         if isinstance(r.get('source'),dict):
             import native_bor_clipboard
@@ -177,7 +179,10 @@ def mutate(v,r):
         curve(v,gid,3)
     elif r['operation']=='auxiliary-profile-import':
         from native_region_curves import import_profile
+        fmt=one(r.get('format'),('airfoil','section'))
+        protect(v.XS_FILE_AIRFOIL if fmt=='airfoil' else v.XS_FILE_FUSE)
         import_profile(v,r);curve(v,gid,3)
-    elif r['operation']=='auxiliary-profile-convert':curve(v,gid,4)
+    elif r['operation']=='auxiliary-profile-convert':
+        protect(v.XS_EDIT_CURVE);curve(v,gid,4)
     else:raise ValueError('Unknown auxiliary profile operation.')
     v.Update()
