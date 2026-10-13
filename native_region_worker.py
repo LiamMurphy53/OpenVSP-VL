@@ -11,6 +11,8 @@ from vsp_runtime import load
 
 
 def compute(model,region,target,curve):
+    import native_custom_assets
+    native_custom_assets.restore(model)
     v=load();v.ClearVSPModel();v.ReadVSPFile(str(model));v.Update()
     import native_gear_retraction
     native_gear_retraction.refresh(v)

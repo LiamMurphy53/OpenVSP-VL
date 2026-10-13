@@ -38,6 +38,8 @@ def snapshot(v):
     getters={getattr(v,enum):getattr(v,'GetAttribute'+suffix+'Val') for enum,suffix in [value for key,value in KINDS.items() if key not in ('Parameter','Group')]}
     attrs=[]
     for a in v.FindAllAttributes():
+        # Binary package storage is managed internally, not an editable note.
+        if v.GetAttributeName(a)=='Studio.CustomAssets':continue
         typ=v.GetAttributeType(a);kind=next((key for key,(enum,suffix) in KINDS.items() if getattr(v,enum)==typ),v.GetAttributeTypeName(a));values=[]
         if typ==v.PARM_REFERENCE_DATA:values=list(v.GetAttributeParmID(a))
         elif typ in getters:

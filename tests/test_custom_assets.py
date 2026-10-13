@@ -1,0 +1,61 @@
+"""Packaged native profile files survive job/source relocation."""
+import base64
+import io
+import shutil
+import sys
+import unittest
+import zipfile
+import test_native
+from native_custom_scripts import import_script
+from native_custom_assets import restore
+
+SCRIPT='''void Init(){string s=AddXSecSurf();AppendCustomXSec(s,XS_FILE_FUSE);AppendCustomXSec(s,XS_FILE_FUSE);}
+void InitGui(){}
+void UpdateGui(){}
+void UpdateSurf(){string s=GetXSecSurf(GetCurrCustomGeom(),0);ReadFileXSec(GetXSec(s,0),"profile.dat");ReadFileXSec(GetXSec(s,1),"profile.dat");SetCustomXSecLoc(GetXSec(s,1),vec3d(8,0,0));SkinXSecSurf();}
+'''
+PROFILE='OPENVSP_XSEC_FILE_V1\n1 0\n0 1\n-1 0\n0 -1\n1 0\n'
+
+
+@unittest.skipUnless(sys.version_info[:2]==(3,11),'Use matching native Python.')
+class CustomAssets(unittest.TestCase):
+    setUpClass=classmethod(test_native.NativeIntegration.setUpClass.__func__)
+    setUp=test_native.NativeIntegration.setUp
+    tearDown=test_native.NativeIntegration.tearDown
+    worker=test_native.NativeIntegration.worker
+
+    def package(self,script=SCRIPT):
+        data=io.BytesIO()
+        with zipfile.ZipFile(data,'w') as archive:
+            archive.writestr('part/Main.vsppart',script);archive.writestr('part/profile.dat',PROFILE)
+        return data.getvalue()
+
+    def test_profile_package_reopens_without_original_files(self):
+        # Direct original compiler/reader reference with the file in native cwd.
+        v=self.v;source=self.path/'direct.vsppart';source.write_text(SCRIPT);(self.path/'profile.dat').write_text(PROFILE)
+        direct=import_script(v,source,'DirectProfileReference');v.Update()
+        expected=[]
+        for i in range(v.GetTotalNumSurfs(direct)):
+            u,w=v.GetUWTess01(direct,i%v.GetNumMainSurfs(direct))
+            points=[[p.x(),p.y(),p.z()] for p in v.CompVecPnt01(direct,i,[a for a in u for _ in w],[b for _ in u for b in w])]
+            expected.append(dict(index=i,rows=len(u),cols=len(w),points=points))
+        source.unlink();(self.path/'profile.dat').unlink()
+        state,saved=self.worker(dict(action='mutate',operation='geometry-import',format='CUSTOM_PACKAGE',name='File body',content=base64.b64encode(self.package()).decode()))
+        c=next(c for c in state['components'] if c['name']=='File body')
+        self.assertEqual(c['surfaces'],expected)
+        self.assertFalse(any(a['name']=='Studio.CustomAssets' for a in state['tools']['attributes']))
+        shutil.rmtree(saved.parent/'component-package');shutil.rmtree(saved.parent/'.studio-custom-assets')
+        reopened,path=self.worker(dict(action='state'),saved)
+        self.assertEqual(next(c for c in reopened['components'] if c['name']=='File body')['surfaces'],expected)
+        self.assertTrue((path.parent/'.studio-custom-assets').is_dir())
+        restore(path);v.ClearVSPModel();v.ReadVSPFile(str(path));v.Update()
+        self.assertEqual(v.GetXSecShape(v.GetXSec(v.GetXSecSurf(c['id'],0),1)),v.XS_FILE_FUSE)
+
+    def test_missing_profile_rejects_without_saving(self):
+        before=self.model.read_bytes()
+        with self.assertRaisesRegex(ValueError,'in-package profile'):
+            self.worker(dict(action='mutate',operation='geometry-import',format='CUSTOM_PACKAGE',content=base64.b64encode(self.package(SCRIPT.replace('profile.dat','missing.dat'))).decode()))
+        self.assertEqual(next(self.path.glob('*/aircraft.vsp3')).read_bytes(),before)
+
+
+if __name__=='__main__':unittest.main()

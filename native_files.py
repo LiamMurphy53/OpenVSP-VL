@@ -92,12 +92,15 @@ def import_geometry(v,r):
         if parent:one(parent,v.FindGeoms())
         if fmt=='CUSTOM_PACKAGE':
             path=unpack_package(raw,Path.cwd()/'component-package')
+            import native_custom_assets
+            asset_root,_,_=native_custom_assets.stage(raw)
         else:
             if len(raw)>5_000_000:raise ValueError('Choose a custom component script smaller than 5 MB.')
             path=Path.cwd()/'imported.vsppart';path.write_bytes(raw)
         try:path.read_text(encoding='utf-8')
         except UnicodeDecodeError:raise ValueError('Custom component scripts must be UTF-8 text.')
-        gid=import_script(v,path,'StudioPart_'+hashlib.sha256(raw).hexdigest()[:16],parent,Path.cwd()/'component-package' if fmt=='CUSTOM_PACKAGE' else None)
+        gid=import_script(v,path,'StudioPart_'+hashlib.sha256(raw).hexdigest()[:16],parent,Path.cwd()/'component-package' if fmt=='CUSTOM_PACKAGE' else None,asset_root if fmt=='CUSTOM_PACKAGE' else None)
+        if fmt=='CUSTOM_PACKAGE':native_custom_assets.save(v,gid,raw)
         if r.get('name'):v.SetGeomName(gid,name(r['name']))
         v.Update()
         if v.GetGeomParent(gid)!=(parent or 'NONE'):raise ValueError('OpenVSP did not apply the chosen script component parent.')

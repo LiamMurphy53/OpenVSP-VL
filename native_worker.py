@@ -576,6 +576,8 @@ def run(req, model):
     action=req['action']
     v.ClearVSPModel()
     if model.exists():
+        import native_custom_assets
+        native_custom_assets.restore(model)
         v.ReadVSPFile(str(model))
         errors(v)
         # Synchronize derived values and edit baselines before applying edits.

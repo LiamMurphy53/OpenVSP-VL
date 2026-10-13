@@ -3,7 +3,7 @@ import ctypes,json
 from pathlib import Path
 import native_preview
 
-def import_script(v,path,name,parent="",package_root=None):
+def import_script(v,path,name,parent="",package_root=None,asset_root=None):
     path=Path(path).resolve()
     if not path.is_file():raise ValueError('Choose an existing custom component script.')
     import re
@@ -26,7 +26,7 @@ def import_script(v,path,name,parent="",package_root=None):
     _,engine,bridge=native_preview.adapter(v)
     f=bridge.studio_custom_script_import
     f.argtypes=[ctypes.c_char_p,ctypes.c_char_p,ctypes.c_char_p,ctypes.c_char_p];f.restype=ctypes.c_char_p
-    if len(ordered)>1:
+    if len(ordered)>1 or asset_root is not None:
         import tempfile
         expand=bridge.studio_custom_script_expand
         expand.argtypes=[ctypes.c_char_p,ctypes.c_char_p];expand.restype=ctypes.c_char_p
@@ -35,7 +35,11 @@ def import_script(v,path,name,parent="",package_root=None):
             for source in ordered:
                 destination=staged/source.relative_to(base)
                 destination.parent.mkdir(parents=True,exist_ok=True)
-                destination.write_text(source.read_text(encoding='utf-8'),encoding='utf-8')
+                text=source.read_text(encoding='utf-8')
+                if asset_root is not None:
+                    from native_custom_assets import rewrite_reads
+                    text=rewrite_reads(text,source,base,asset_root)
+                destination.write_text(text,encoding='utf-8')
                 expanded=json.loads(expand(engine,str(destination).encode()))
                 if isinstance(expanded,dict):raise ValueError(expanded.get('error','Native include expansion failed.'))
                 # Original ReplaceIncludes retains a commented #include line.
