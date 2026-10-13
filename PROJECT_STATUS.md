@@ -91,3 +91,8 @@ Resolved the previously noted U0N/R0N/L0Len limit mismatch on the last routing a
 ### 2026-10-13 — script-defined property tabs
 
 Custom TAB/SCROLL_TAB declarations now supply display groups for their bound own-component controls in Properties. Original raw parameter groups, IDs, dynamic bindings and geometry remain native. A two-tab script regression verifies labeled groups, parameter ownership, complete edited geometry and cold reopening. All 17 custom-script/external-binding regressions pass (21.681s). Evidence: `.workspace/evidence/custom-tab-native-tests.log`, `.workspace/evidence/custom-tab-regression-tests.log`. Browser rendering of this new grouping has not yet been verified; divider/spacing layout and external-owner grouping remain outside this selected change. W05 and full modeling remain open.
+
+
+### 2026-10-13 — custom tab browser ordering
+
+Pro Properties places script-defined control groups first, in original TAB/SCROLL_TAB declaration order. Streamlined retains combined guided controls. Browser shows Primary dimensions before Cross-section, edits Length5→9ft, retains the edit and groups on page reload, and restores Length5 plus the original Wing/Wing/BOR aircraft with two Undo operations. The focused native tab/ownership/full-geometry/reopening regression passes after adding declaration indices; web syntax checks pass. Evidence: `.workspace/evidence/custom-tab-browser.png`, `.workspace/evidence/custom-tab-order-test.log`. This supplies the previously missing selected browser evidence; wider custom layout and W05 closure remain open.

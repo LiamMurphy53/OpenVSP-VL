@@ -29,10 +29,12 @@ def enrich(v,gid,params):
     by_key={(p['rawGroup'],p['name']):p for p in params}
     choice=None
     tab=None
+    tab_index=None
     for definition in definitions:
         kind=definition['type']
         if kind in (v.GDEV_TAB,v.GDEV_SCROLL_TAB):
             tab=definition['label'] or None
+            tab_index=definition['index']
             choice=None
             continue
         original=by_key.get((definition['group'],definition['parameter'])) or by_id.get(previous.get(definition['index']))
@@ -53,7 +55,7 @@ def enrich(v,gid,params):
         p=mapped
         if p is None:continue
         p['customControl']=True
-        if tab:p.update(customTab=tab,group=tab)
+        if tab:p.update(customTab=tab,customTabIndex=tab_index,group=tab)
         if p['name'] in LABELS:p['label']=LABELS[p['name']]
         if p['name'] in LENGTHS:p['dimension']='length'
         if p['description'] in ('Default Description','Custom Descript'):p['description']=''

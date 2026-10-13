@@ -191,6 +191,7 @@ class CustomScripts(unittest.TestCase):
         _,path,c=self.import_component(text);gid=c['id'];fields=self.fields(c)
         self.assertEqual(fields['Length']['customTab'],'Primary dimensions')
         self.assertEqual(fields['Width']['customTab'],'Cross-section')
+        self.assertLess(fields['Length']['customTabIndex'],fields['Width']['customTabIndex'])
         for name,tab in [('Length','Primary dimensions'),('Width','Cross-section'),('Height','Cross-section')]:
             self.assertEqual(fields[name]['group'],tab)
             self.assertEqual(fields[name]['rawGroup'],'Design')
