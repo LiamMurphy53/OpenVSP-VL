@@ -110,6 +110,27 @@ class CustomScripts(unittest.TestCase):
             expected=[[p.x(),p.y(),p.z()] for p in v.CompVecPnt01(reference,i,[a for a in u for _ in w],[b for _ in u for b in w])]
             self.assertEqual(surface['points'],expected)
 
+    def test_script_controls_in_custom_groups_remain_editable_after_reload(self):
+        text=self.template().replace('"Design"','"Dimensions"')
+        _,path,c=self.import_component(text);gid=c['id']
+        fields={p['name']:p for p in c['params'] if p['rawGroup']=='Dimensions'}
+        for name in ('Length','Width','Height','SquareFlag'):self.assertTrue(fields[name]['customControl'])
+        state,saved=self.worker(dict(action='mutate',operation='parameter',id=fields['Length']['id'],value=11),path)
+        c=next(c for c in state['components'] if c['id']==gid)
+        v=self.v;v.ClearVSPModel();v.ReadVSPFile(str(saved));v.Update()
+        reference=v.AddGeom('Box');v.SetParmValUpdate(reference,'Length','Design',11);v.Update()
+        for surface in c['surfaces']:
+            i=surface['index'];u,w=v.GetUWTess01(reference,i%v.GetNumMainSurfs(reference))
+            expected=[[p.x(),p.y(),p.z()] for p in v.CompVecPnt01(reference,i,[a for a in u for _ in w],[b for _ in u for b in w])]
+            self.assertEqual(surface['points'],expected)
+        reopened,_=self.worker(dict(action='state'),saved)
+        fields={p['name']:p for p in next(c for c in reopened['components'] if c['id']==gid)['params'] if p['rawGroup']=='Dimensions'}
+        self.assertTrue(fields['Length']['customControl']);self.assertEqual(fields['Length']['value'],11)
+        state,_=self.worker(dict(action='mutate',operation='parameter',id=fields['SquareFlag']['id'],value=1),saved)
+        fields={p['name']:p for p in next(c for c in state['components'] if c['id']==gid)['params'] if p['rawGroup']=='Dimensions'}
+        for name in ('Width','Height'):
+            self.assertTrue(fields[name]['customControl']);self.assertTrue(fields[name]['displayReadOnly']);self.assertEqual(fields[name]['dimension'],'length')
+
     def test_empty_native_surface_rejects_without_saving(self):
         text='void Init(){string s=AddXSecSurf();AppendCustomXSec(s,XS_ELLIPSE);} void InitGui(){} void UpdateGui(){} void UpdateSurf(){SkinXSecSurf();}'
         before=self.model.read_bytes()

@@ -34,6 +34,11 @@ def enrich(v,gid,params):
         if original and definition['index'] in bindings and original['id'] not in bound_ids:
             original.update(displayReadOnly=True,readOnlyReason='Disconnected by the custom script in this configuration.')
         mapped=by_id.get(bindings.get(definition['index'])) if definition['index'] in bindings else original
+        if mapped is None and original:
+            original['customControl']=True
+            if original['name'] in LABELS:original['label']=LABELS[original['name']]
+            if original['name'] in LENGTHS:original['dimension']='length'
+            if original['description'] in ('Default Description','Custom Descript'):original['description']=''
         if kind==v.GDEV_ADD_CHOICE_ITEM:
             if choice is not None:choice['choices'].append([len(choice['choices']),definition['label']])
             continue
@@ -42,6 +47,10 @@ def enrich(v,gid,params):
             if choice is not None:choice['choices']=[]
         p=mapped
         if p is None:continue
+        p['customControl']=True
+        if p['name'] in LABELS:p['label']=LABELS[p['name']]
+        if p['name'] in LENGTHS:p['dimension']='length'
+        if p['description'] in ('Default Description','Custom Descript'):p['description']=''
         if definition['label'] and p['name'] not in LABELS:p['label']=definition['label'].rstrip(':')
         if kind==v.GDEV_OUTPUT:p.update(displayReadOnly=True,readOnlyReason='Calculated output from the custom script.')
         if kind==v.GDEV_TRIGGER_BUTTON:
