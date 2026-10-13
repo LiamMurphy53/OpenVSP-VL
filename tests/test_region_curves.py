@@ -103,7 +103,7 @@ class RegionCurves(unittest.TestCase):
         import xml.etree.ElementTree as ET
         from vsp_runtime import distribution
         self.fixture();baseline,_=self.worker(dict(action='state'))
-        samples=[('section','OPENVSP_XSEC_FILE_V1\n0.2 0\n0 0.15\n-0.2 0\n0 -0.15\n0.2 0\n')]
+        samples=[('section','OPENVSP_XSEC_FILE_V1\n0.2 0\n0 -0.15\n-0.2 0\n0 0.15\n0.2 0\n')]
         samples += [('airfoil',(distribution()/'airfoil'/f).read_text()) for f in ('e205_Selig.dat','clarky_Lednicer.dat','N0012_VSP.af')]
         for fmt,text in samples:
             v=self.v;v.ClearVSPModel();v.ReadVSPFile(str(self.model));v.Update()

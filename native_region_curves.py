@@ -28,6 +28,9 @@ def import_profile(v,r):
         raise ValueError('Choose an OPENVSP_XSEC_FILE_V1 section with at least three distinct coordinate points.')
     if fmt=='airfoil' and len(coordinates)<4:raise ValueError('No airfoil coordinate sequence was found.')
     path=Path.cwd()/('region-profile.fxs' if fmt=='section' else 'region-profile.dat');path.write_text(text)
+    if fmt=='section':
+        from native_section_file_validation import validate_profile_file
+        validate_profile_file(path)
     geom=v.AddGeom('STACK')
     try:
         surf=v.GetXSecSurf(geom,0)

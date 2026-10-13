@@ -224,7 +224,7 @@ class NativeAuxiliaryControls(unittest.TestCase):
         for drivers in ([0,0],[0],[True,2],[0,7]):
             with self.assertRaises(ValueError):self.worker(dict(action='mutate',operation='auxiliary-profile-drivers',geom=self.aux,drivers=drivers),path)
             self.assertEqual(path.read_bytes(),before)
-        for fmt,text,shape in [('section','OPENVSP_XSEC_FILE_V1\n1 0\n0 1\n-1 0\n0 -1\n1 0\n',v.XS_FILE_FUSE),('airfoil','Independent airfoil\n1 0\n.5 .1\n0 0\n.5 -.1\n1 0\n',v.XS_FILE_AIRFOIL)]:
+        for fmt,text,shape in [('section','OPENVSP_XSEC_FILE_V1\n1 0\n0 -1\n-1 0\n0 1\n1 0\n',v.XS_FILE_FUSE),('airfoil','Independent airfoil\n1 0\n.5 .1\n0 0\n.5 -.1\n1 0\n',v.XS_FILE_AIRFOIL)]:
             with self.subTest(format=fmt):
                 f=self.path/('independent.fxs' if fmt=='section' else 'independent.dat');f.write_text(text)
                 source=v.AddGeom('STACK');surf=v.GetXSecSurf(source,0);v.ChangeXSecShape(surf,1,shape);xid=v.GetXSec(surf,1)

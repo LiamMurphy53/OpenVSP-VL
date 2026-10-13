@@ -8,7 +8,10 @@ SHAPES=['XS_POINT','XS_CIRCLE','XS_ELLIPSE','XS_SUPER_ELLIPSE','XS_ROUNDED_RECTA
 def xyz(p):return [p.x(),p.y(),p.z()]
 def text_file(content,filename):
     if not isinstance(content,str) or not content.strip() or len(content.encode())>5_000_000 or '\x00' in content:raise ValueError('Choose a nonempty coordinate file smaller than 5 MB.')
-    path=Path.cwd()/filename;path.write_text(content);return str(path)
+    path=Path.cwd()/filename;path.write_text(content)
+    from native_section_file_validation import validate_profile_file
+    validate_profile_file(path)
+    return str(path)
 def containers(v):
     return [p for g in v.FindGeoms() for p in (v.GetAllRoutingPtIds(g) if v.GetGeomTypeName(g).upper()=='ROUTING' else v.GetAllBogies(g) if v.GetGeomTypeName(g).upper()=='GEAR' else [])]
 def snapshot(v,parameter):
