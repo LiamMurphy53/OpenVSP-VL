@@ -167,3 +167,20 @@ class CustomScripts(unittest.TestCase):
                 reopened,saved=self.worker(dict(action='state'),path);cold=next(c for c in reopened['components'] if c['id']==gid)
                 self.assertEqual(self.fields(cold)['Length']['id'],field['id']);self.compare_box(cold,saved,value)
                 self.rejected_file_is_unchanged(dict(action='mutate',operation='parameter',id=field['id'],value=field['max']+1),path)
+
+    def test_parameter_button_and_native_link_drive_custom_geometry(self):
+        text=self.template().replace('void InitGui()\n{','void InitGui()\n{\n AddGui(GDEV_PARM_BUTTON,"Length","Length","Design");')
+        self.assertNotEqual(text,self.template());_,path,c=self.import_component(text);gid=c['id'];source=self.fields(c)['Length']
+        self.assertTrue(source['customParmButton']);self.assertEqual(source['id'],self.fields(c)['Length']['id'])
+        state,path=self.worker(dict(action='mutate',operation='link-add',source=source['id'],target=self.fields(c)['Width']['id'],scale=.5,offset=1),path)
+        state,path=self.worker(dict(action='mutate',operation='parameter',id=source['id'],value=12),path)
+        actual=next(c for c in state['components'] if c['id']==gid);self.assertEqual(self.fields(actual)['Width']['value'],7)
+        v=self.v;v.ClearVSPModel();v.ReadVSPFile(str(path));v.Update();reference=v.AddGeom('Box')
+        v.SetParmValUpdate(v.FindParm(reference,'Length','Design'),12);v.SetParmValUpdate(v.FindParm(reference,'Width','Design'),7)
+        for surface in actual['surfaces']:
+            i=surface['index'];u,w=v.GetUWTess01(reference,i%v.GetNumMainSurfs(reference))
+            expected=[[p.x(),p.y(),p.z()] for p in v.CompVecPnt01(reference,i,[a for a in u for _ in w],[b for _ in u for b in w])]
+            self.assertEqual(surface['points'],expected)
+        cold,_=self.worker(dict(action='state'),path);reopened=next(c for c in cold['components'] if c['id']==gid)
+        self.assertEqual(reopened['surfaces'],actual['surfaces']);self.assertTrue(self.fields(reopened)['Length']['customParmButton'])
+        self.assertTrue(any(l['source']==source['id'] and l['target']==self.fields(c)['Width']['id'] for l in cold['tools']['links']))

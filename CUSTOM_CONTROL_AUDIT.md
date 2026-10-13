@@ -17,7 +17,7 @@ Sources: [CustomScreen.cpp](https://github.com/OpenVSP/OpenVSP/blob/8782f46d4399
 | TRIGGER_BUTTON | Parameter-backed buttons and unbound Component actions | Existing tests cover script choice-driven parameter triggers, event-only actions, once-per-click consumption, persistence and native geometry. |
 | CHOICE, ADD_CHOICE_ITEM | Named native option lists in original declaration order | Existing custom BoxGroup tests verify option labels/codes and resulting native array geometry. |
 | COUNTER, INDEX_SELECTOR | Native parameter number fields with native bounds and integer stepping when applicable | Dedicated counter/index scripts now verify native-compatible edits, limits, retained parameter IDs, complete geometry and saved reopening. Counter decimal and index integer cases are covered; native index-button increments and integer presentation remain unverified. |
-| PARM_BUTTON | Parameter field plus Modeling tools links/presets/expressions | Native parameter access exists; equivalent linked-parameter workflow from a custom component still needs dedicated end-to-end verification. |
+| PARM_BUTTON | Properties Link parameter shortcut opens Links & presets with the native source ID selected | Native custom script test proves affine link updates, complete geometry and reopened links. Browser shortcut/source selection, link creation, dependent edit and three Undo restorations pass in an isolated aircraft. Other link/preset/expression combinations remain unverified. |
 | TAB, SCROLL_TAB, YGAP, DIVIDER_BOX, BEGIN_SAME_LINE, END_SAME_LINE, FORCE_WIDTH, SET_FORMAT | Studio property groups and modern workspace layout | These organize/present the old GUI. Script-defined tab/group layout is not reconstructed. Generic numeric formatting preserves operational editing; script layout/usability parity remains an explicit audit item. |
 
 ## Declared but absent from native CustomScreen
@@ -28,4 +28,4 @@ Studio additionally recognizes declared OUTPUT fields as read-only computed outp
 
 ## Current verification limits
 
-Existing custom tests cover compiler/package import, nested helpers, choices, trigger modes, disconnected bindings, arbitrary parameter groups, companion profiles and native geometry. They do not prove every supported custom widget or every script/runtime API. Native index-button interaction/presentation and custom linked-parameter workflows remain checks inside W05; unsupported enum entries should not generate new implementation requirements.
+Existing custom tests cover compiler/package import, nested helpers, choices, trigger modes, disconnected bindings, arbitrary parameter groups, companion profiles and native geometry. They do not prove every supported custom widget or every script/runtime API. Native index-button interaction/presentation and broader custom link/preset/expression combinations remain checks inside W05; unsupported enum entries should not generate new implementation requirements.
