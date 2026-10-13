@@ -134,6 +134,8 @@ def mutate_edit_native(v,r,cid,invoke):
         if not isinstance(r.get('smooth'),bool):raise ValueError('Choose whether the anchor has a smooth tangent.')
         v.SetParmValUpdate(parms[f'G1_{i}'],int(r['smooth']))
     elif op=='region-curve-init':
+        from native_editable_curves import guard_rebuild
+        guard_rebuild(v,[dict(id=pid,name=name) for name,pid in parms.items()])
         shape=one(r.get('shape'),('EDIT_XSEC_CIRCLE','EDIT_XSEC_ELLIPSE','EDIT_XSEC_RECTANGLE'))
         v.SetParmVal(parms['ShapeType'],getattr(v,shape));invoke(7)
     elif op=='region-curve-type':invoke(1,getattr(v,one(r.get('type'),('LINEAR','PCHIP','CEDIT'))))

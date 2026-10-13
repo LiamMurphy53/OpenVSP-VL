@@ -1,4 +1,22 @@
 """Name native Bezier handles; geometry and tangent enforcement stay in OpenVSP."""
+import re
+
+
+def guard_rebuild(v,parameters):
+    """Native initialization recreates point IDs; protect saved references."""
+    ids={p['id'] for p in parameters if re.fullmatch(r'(?:[UXYZR]|G1|FixedU)_\d+',p['name'])}
+    users=[]
+    for i in range(v.GetNumParmLinks()):
+        link=v.GetParmLinkID(i)
+        if ids & {v.GetParmLinkAParm(link),v.GetParmLinkBParm(link)}:users.append('parameter link')
+    for i,label in enumerate(v.GetAdvLinkNames()):
+        if ids & (set(v.GetAdvLinkInputParms(i))|set(v.GetAdvLinkOutputParms(i))):users.append('expression '+label)
+    for group in v.GetVarPresetGroups():
+        if ids & set(v.GetVarPresetParmIDs(group)):users.append('preset '+v.GetGroupName(group))
+    if ids & {v.GetDesignVar(i) for i in range(v.GetNumDesignVars())}:users.append('design variable')
+    for attr in v.FindAllAttributes():
+        if v.GetAttributeType(attr)==v.PARM_REFERENCE_DATA and ids & set(v.GetAttributeParmID(attr)):users.append('parameter reference '+v.GetAttributeName(attr))
+    if users:raise ValueError('Rebuilding recreates native point IDs used by '+', '.join(sorted(set(users)))+'. Reassign or remove those references before rebuilding. The edit was not saved.')
 
 
 def initialization_shape(v,parameters):

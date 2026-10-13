@@ -222,6 +222,8 @@ def mutate(v,r):
         if v.GetXSecShape(xid)!=v.XS_EDIT_CURVE:raise ValueError('Convert this section to an editable curve first.')
         before=len(v.GetEditXSecCtrlVec(xid,True))
         if op=='curve-init':
+            from native_editable_curves import guard_rebuild
+            guard_rebuild(v,[dict(id=p,name=v.GetParmName(p)) for p in v.GetXSecParmIDs(xid)])
             shape=one(r.get('shape'),('EDIT_XSEC_CIRCLE','EDIT_XSEC_ELLIPSE','EDIT_XSEC_RECTANGLE'))
             v.SetParmVal(v.GetXSecParm(xid,'ShapeType'),getattr(v,shape));v.EditXSecInitShape(xid)
         elif op=='curve-type':v.EditXSecConvertTo(xid,getattr(v,one(r['type'],('LINEAR','PCHIP','CEDIT'))))

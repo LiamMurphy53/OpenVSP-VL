@@ -66,4 +66,13 @@ class CurveInitialization(unittest.TestCase):
         self.assertEqual({c['id']:c['surfaces'] for c in reopened['components']},{c['id']:c['surfaces'] for c in state['components']})
 
 
+    def test_rebuild_rejects_linked_point_without_changing_saved_file(self):
+        v=self.v;surf=v.GetXSecSurf(self.gid,0);v.ChangeXSecShape(surf,1,v.XS_EDIT_CURVE);x=v.GetXSec(surf,1);v.Update()
+        point=v.GetXSecParm(x,'X_3');target=v.FindParm(self.gid,'X_Rel_Location','XForm');v.AddParmLink(point,target);v.Update();v.WriteVSPFile(str(self.model),v.SET_ALL)
+        before=self.model.read_bytes()
+        with self.assertRaisesRegex(ValueError,'point IDs used by parameter link'):
+            self.worker(dict(action='mutate',operation='curve-init',geom=self.gid,surface=0,index=1,shape='EDIT_XSEC_RECTANGLE'))
+        self.assertEqual(next(self.path.glob('*/aircraft.vsp3')).read_bytes(),before)
+
+
 if __name__=='__main__':unittest.main()
