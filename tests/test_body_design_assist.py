@@ -1,9 +1,11 @@
 """Compound station controls compared with saved, direct native geometry."""
+import sys
 import unittest
 import test_native
 from native_design_assist import metadata
 
 
+@unittest.skipUnless(sys.version_info[:2]==(3,11),'Use matching native Python.')
 class BodyDesignAssist(unittest.TestCase):
     setUpClass=classmethod(test_native.NativeIntegration.setUpClass.__func__)
     setUp=test_native.NativeIntegration.setUp

@@ -15,6 +15,19 @@ def body_stations(v,gid):
     return ids,positions,length
 
 
+def wing_twist_stations(v,gid):
+    surf=v.GetXSecSurf(gid,0)
+    sections=[v.GetXSec(surf,i) for i in range(v.GetNumXSec(surf))]
+    spans=[v.GetParmVal(v.GetXSecParm(x,'Span')) for x in sections[1:]]
+    if not spans or any(span<=0 for span in spans):return None
+    positions=[0]
+    for span in spans:positions.append(positions[-1]+span)
+    twists=[v.GetParmVal(v.GetXSecParm(x,'Twist')) for x in sections]
+    if v.GetParmVal(gid,'RelativeTwistFlag','WingGeom'):
+        for i in range(1,len(twists)):twists[i]+=twists[i-1]
+    return sections,[p/positions[-1] for p in positions],twists
+
+
 def metadata(v,gid):
     kind=v.GetGeomTypeName(gid).upper()
     if kind=='WING':
@@ -35,7 +48,12 @@ def metadata(v,gid):
         from native_preview import parameter_activity
         thickness_available=len(thickness)==v.GetNumXSec(surf) and all(parameter_activity(v,thickness_ids).values())
         camber_available=len(camber)==v.GetNumXSec(surf) and camber_drivers==v.GetNumXSec(surf)
-        return dict(kind='wing',thicknessAvailable=thickness_available,camberAvailable=camber_available,sweep=uniform(angles['sweep']) if all(abs(r-.25)<1e-10 for r in references) else None,dihedral=uniform(angles['dihedral']) if not v.GetParmVal(v.FindParm(gid,'RelativeDihedralFlag','WingGeom')) else None,thicknessPercent=100*uniform(thickness) if uniform(thickness) is not None else None,camberPercent=100*uniform(camber) if uniform(camber) is not None else None)
+        stations=wing_twist_stations(v,gid);washout=None
+        if stations:
+            sections,fractions,twists=stations
+            difference=twists[0]-twists[-1]
+            if all(math.isclose(t,twists[0]-difference*f,abs_tol=1e-9) for t,f in zip(twists,fractions)) and all(math.isclose(v.GetParmVal(v.GetXSecParm(x,'Twist_Location')),.25,abs_tol=1e-10) for x in sections):washout=difference
+        return dict(kind='wing',washoutAvailable=bool(stations),washout=washout,thicknessAvailable=thickness_available,camberAvailable=camber_available,sweep=uniform(angles['sweep']) if all(abs(r-.25)<1e-10 for r in references) else None,dihedral=uniform(angles['dihedral']) if not v.GetParmVal(v.FindParm(gid,'RelativeDihedralFlag','WingGeom')) else None,thicknessPercent=100*uniform(thickness) if uniform(thickness) is not None else None,camberPercent=100*uniform(camber) if uniform(camber) is not None else None)
     if kind in ('PROP','PROPELLER'):
         values=list(v.PCurveGetValVec(gid,v.PROP_THICK))
         thickness=values[0]*100 if values and all(abs(a-values[0])<1e-10 for a in values) else None
@@ -60,7 +78,7 @@ def apply(v,r):
     gid=r['geom'];action=r['control'];value=r['value']
     if gid not in v.FindGeoms():raise ValueError('Choose an existing component.')
     if isinstance(value,bool) or not isinstance(value,(float,int)) or not math.isfinite(value):raise ValueError('Enter a finite value.')
-    kind=v.GetGeomTypeName(gid).upper();section_targets=[]
+    kind=v.GetGeomTypeName(gid).upper();section_targets=[];parameter_targets=[]
     def set_value(pid,val):
         if not v.ValidParm(pid) or not v.GetParmLowerLimit(pid)<=val<=v.GetParmUpperLimit(pid):raise ValueError('The requested value is outside a native parameter limit.')
         v.SetParmValUpdate(pid,val)
@@ -77,7 +95,18 @@ def apply(v,r):
         for name,val in [('Eta_Attach_Location',value/100),('M_Attach_Location',.5),('N_Attach_Location',.5)]:set_value(v.FindParm(gid,name,'Attach'),val)
         for axis in 'XYZ':set_value(v.FindParm(gid,axis+'_Rel_Location','XForm'),0)
         v.Update();return
-    if action in ('wing-sweep','wing-dihedral','wing-thickness','wing-camber'):
+    if action=='wing-washout':
+        if kind!='WING':raise ValueError('Choose a wing.')
+        stations=wing_twist_stations(v,gid)
+        if not stations:raise ValueError('Every wing section needs positive span for distributed washout. Configure sections in Pro.')
+        sections,fractions,twists=stations
+        for x,fraction in zip(sections,fractions):
+            parameter_targets.extend([(v.GetXSecParm(x,'Twist_Location'),.25),(v.GetXSecParm(x,'Twist'),twists[0]-value*fraction)])
+        # Check the whole recipe before changing its reference mode.
+        if any(not v.GetParmLowerLimit(p)<=target<=v.GetParmUpperLimit(p) for p,target in parameter_targets):raise ValueError('Requested washout exceeds a native section twist limit.')
+        set_value(v.FindParm(gid,'RelativeTwistFlag','WingGeom'),0)
+        for pid,target in parameter_targets:set_value(pid,target)
+    elif action in ('wing-sweep','wing-dihedral','wing-thickness','wing-camber'):
         if kind!='WING':raise ValueError('Choose a wing.')
         s=v.GetXSecSurf(gid,0)
         if action=='wing-dihedral':set_value(v.FindParm(gid,'RelativeDihedralFlag','WingGeom'),0)
@@ -152,11 +181,12 @@ def apply(v,r):
         v.Update()
     else:raise ValueError('Choose a supported design control.')
     v.Update()
+    if any(not math.isclose(v.GetParmVal(pid),target,rel_tol=1e-9,abs_tol=1e-10) for pid,target in parameter_targets):raise ValueError('Native twist constraints prevent distributed washout. The edit was not saved; configure sections in Pro.')
     for si,index,width,height in section_targets:
         x=v.GetXSec(v.GetXSecSurf(gid,si),index)
         if not math.isclose(v.GetXSecWidth(x),width,rel_tol=1e-9,abs_tol=1e-10) or not math.isclose(v.GetXSecHeight(x),height,rel_tol=1e-9,abs_tol=1e-10):
             raise ValueError('A native section limit prevents proportional resizing. The edit was not saved; adjust that section in Pro.')
-    field={'wing-sweep':'sweep','wing-dihedral':'dihedral','wing-thickness':'thicknessPercent','wing-camber':'camberPercent','prop-pitch':'pitch','prop-blades':'blades','prop-thickness':'thicknessPercent','body-width':'width','body-height':'height','body-nose':'noseLength','body-tail':'tailLength'}[action]
+    field={'wing-washout':'washout','wing-sweep':'sweep','wing-dihedral':'dihedral','wing-thickness':'thicknessPercent','wing-camber':'camberPercent','prop-pitch':'pitch','prop-blades':'blades','prop-thickness':'thicknessPercent','body-width':'width','body-height':'height','body-nose':'noseLength','body-tail':'tailLength'}[action]
     actual=metadata(v,gid).get(field)
     if actual is None or not math.isclose(actual,value,rel_tol=1e-9,abs_tol=1e-10):
         raise ValueError('OpenVSP could not apply the requested value consistently under these native limits or constraints. The edit was not saved; configure the individual controls in Pro.')

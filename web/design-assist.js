@@ -10,6 +10,7 @@ export function designAssistMarkup(c,E,parameterField){
   d.kind==='wing'?
   field('wing-sweep','Quarter-chord sweep',d.sweep,'angle','Sets sweep and its quarter-chord reference on every wing section.')+
   field('wing-dihedral','Wing dihedral',d.dihedral,'angle','Sets every section to this absolute dihedral angle.')+
+  (d.washoutAvailable?field('wing-washout','Tip washout',d.washout,'angle','Positive values reduce tip twist relative to the root. Distributes twist by section span, preserves root twist, and sets absolute quarter-chord twist axes.'): '')+
   field('wing-thickness','Airfoil thickness (%)',d.thicknessPercent,null,'Sets thickness/chord on every wing profile. A value of 12 means 12% thickness.')+
   field('wing-camber','Airfoil camber (%)',d.camberPercent,null,'Sets maximum-camber input and camber/chord across compatible wing profiles.'):
   field('body-width','Maximum section width',d.width,'length','Scales section widths together, preserving their relative sizes. Circular sections change both dimensions.')+
