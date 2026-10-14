@@ -31,6 +31,31 @@ class CustomAssets(unittest.TestCase):
             archive.writestr('part/Main.vsppart',script);archive.writestr('part/profile.dat',PROFILE)
         return data.getvalue()
 
+    def test_bor_companion_readers_survive_source_removal_and_cold_load(self):
+        airfoil='Independent airfoil\n1 0\n.5 .1\n0 0\n.5 -.1\n1 0\n'
+        for reader,shape,profile,computed in [(r,s,p,c) for r,s,p in [('ReadBORFileXSec',self.v.XS_FILE_FUSE,PROFILE),('ReadBORFileAirfoil',self.v.XS_FILE_AIRFOIL,airfoil)] for c in (False,True)]:
+            with self.subTest(reader=reader,computed=computed):
+                v=self.v;v.ClearVSPModel();parent=v.AddGeom('BODYOFREVOLUTION');v.ChangeBORXSecShape(parent,shape);v.Update();v.WriteVSPFile(str(self.model),v.SET_ALL)
+                script='''void Init(){string s=AddXSecSurf();AppendCustomXSec(s,XS_POINT);AppendCustomXSec(s,XS_CIRCLE);AppendCustomXSec(s,XS_POINT);}
+void InitGui(){} void UpdateGui(){}
+void UpdateSurf(){string parent=GetGeomParent(GetCurrCustomGeom());if(parent!="NONE" && parent!="")READER(parent,"profile.dat");string s=GetXSecSurf(GetCurrCustomGeom(),0);SetCustomXSecLoc(GetXSec(s,1),vec3d(1,0,0));SetCustomXSecLoc(GetXSec(s,2),vec3d(2,0,0));SkinXSecSurf();}'''.replace('READER',reader)
+                if computed:script=script.replace('void UpdateSurf(){','void UpdateSurf(){string filename=\"./profile.dat\";').replace('parent,\"profile.dat\"','parent,filename')
+                # Original compiler and reader, with no package relocation.
+                source=self.path/'bor-reader.vsppart';source.write_text(script);data=self.path/'profile.dat';data.write_text(profile)
+                import_script(v,source,'Original BOR reader',parent=parent);v.Update()
+                expected=[[p.x(),p.y(),p.z()] for p in (v.ComputeBORXSecPnt(parent,i/100) for i in range(101))]
+                source.unlink();data.unlink()
+                raw=io.BytesIO()
+                with zipfile.ZipFile(raw,'w') as archive:
+                    archive.writestr('part/Main.vsppart',script);archive.writestr('part/profile.dat',profile)
+                state,saved=self.worker(dict(action='mutate',operation='geometry-import',format='CUSTOM_PACKAGE',name='BOR reader',parent=parent,content=base64.b64encode(raw.getvalue()).decode()))
+                bor=next(b for b in state['tools']['bodiesOfRevolution'] if b['id']==parent)
+                self.assertEqual(bor['profile'],expected)
+                shutil.rmtree(saved.parent/'component-package');shutil.rmtree(saved.parent/'.studio-custom-assets')
+                cold,_=self.worker(dict(action='state'),saved)
+                self.assertEqual(next(b for b in cold['tools']['bodiesOfRevolution'] if b['id']==parent)['profile'],expected)
+                self.assertEqual({c['id']:c['surfaces'] for c in cold['components']},{c['id']:c['surfaces'] for c in state['components']})
+
     def test_profile_package_reopens_without_original_files(self):
         # Direct original compiler/reader reference with the file in native cwd.
         script=SCRIPT.replace('AppendCustomXSec(s,XS_FILE_FUSE);AppendCustomXSec(s,XS_FILE_FUSE);','AppendCustomXSec(s,XS_POINT);AppendCustomXSec(s,XS_FILE_FUSE);AppendCustomXSec(s,XS_FILE_FUSE);AppendCustomXSec(s,XS_POINT);').replace('ReadFileXSec(GetXSec(s,0)','ReadFileXSec(GetXSec(s,2)').replace('SetCustomXSecLoc(GetXSec(s,1),vec3d(8,0,0));','SetCustomXSecLoc(GetXSec(s,2),vec3d(8,0,0));SetCustomXSecLoc(GetXSec(s,3),vec3d(8,0,0));')

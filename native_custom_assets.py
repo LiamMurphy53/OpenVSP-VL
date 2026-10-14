@@ -32,7 +32,7 @@ def rewrite_reads(text,source,base,asset_root):
     replacements=[];dynamic=False
     helper='StudioPackageProfile_'+hashlib.sha256((str(asset_root)+str(source.relative_to(base))).encode()).hexdigest()[:16]
     for i,token in enumerate(tokens):
-        if token[0] not in ('ReadFileAirfoil','ReadFileXSec') or i+1>=len(tokens) or tokens[i+1][0]!='(':continue
+        if token[0] not in ('ReadFileAirfoil','ReadFileXSec','ReadBORFileAirfoil','ReadBORFileXSec') or i+1>=len(tokens) or tokens[i+1][0]!='(':continue
         depth=1;j=i+2
         while j<len(tokens):
             part=tokens[j][0]
