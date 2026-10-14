@@ -19,9 +19,26 @@ class ExternalCustomBindings(unittest.TestCase):
         text=text.replace('void UpdateGui()\n{','void UpdateGui()\n{\n string parent_owner=GetGeomParent(GetCurrCustomGeom());\n if(GetBoolParmVal(GetParm(GetCurrCustomGeom(),"SelectColumns","Design")))UpdateGui(ParentSelector,GetParm(parent_owner,"NumCol","Design"));\n else UpdateGui(ParentSelector,GetParm(parent_owner,"NumRow","Design"));\n UpdateGui(ParentLength,GetParm(parent_owner,"Length","Design"));')
         if variant=='output':text=text.replace('GDEV_SLIDER_INPUT,"Parent length"','GDEV_OUTPUT,"Parent length"')
         if variant=='choice':text=text.replace('ParentSelector=AddGui(GDEV_INDEX_SELECTOR,"Parent count");','ParentSelector=AddGui(GDEV_CHOICE,"Parent count");AddGui(GDEV_ADD_CHOICE_ITEM,"Zero");AddGui(GDEV_ADD_CHOICE_ITEM,"One");AddGui(GDEV_ADD_CHOICE_ITEM,"Two");')
+        if variant=='tabs':
+            text=text.replace('ParentSelector=AddGui','AddGui(GDEV_TAB,"Array counts");ParentSelector=AddGui').replace('ParentLength=AddGui','AddGui(GDEV_SCROLL_TAB,"Parent dimensions");ParentLength=AddGui')
         state,path=self.worker(dict(action='mutate',operation='geometry-import',format='CUSTOM_SCRIPT',name='External controls',parent=parent,content=base64.b64encode(text.encode()).decode()))
         child=next(c for c in state['components'] if c['name']=='External controls')
         return parent,child,state,path,text
+
+    def test_external_script_tabs_preserve_owner_and_binding_after_edit(self):
+        parent,child,state,path,_=self.fixture('tabs');gid=child['id']
+        controls=child['customExternalControls'];row,length=controls
+        self.assertEqual([r['tab'] for r in controls],['Array counts','Parent dimensions'])
+        self.assertLess(row['tabIndex'],length['tabIndex'])
+        self.assertTrue(all(r['owner']=='Parent array' for r in controls))
+        self.assertTrue(all(r['parameter']['rawGroup']=='Design' for r in controls))
+        state,path=self.worker(dict(action='mutate',operation='custom-control-parameter',geom=gid,index=length['index'],id=length['parameter']['id'],value=9),path)
+        cold,_=self.worker(dict(action='state'),path)
+        self.assertEqual({c['id']:c['surfaces'] for c in cold['components']},{c['id']:c['surfaces'] for c in state['components']})
+        changed=next(c for c in state['components'] if c['id']==gid)['customExternalControls']
+        self.assertEqual(next(c for c in cold['components'] if c['id']==gid)['customExternalControls'],changed)
+        self.assertEqual([r['parameter']['id'] for r in changed],[r['parameter']['id'] for r in controls])
+        self.assertEqual(next(p['value'] for p in next(c for c in cold['components'] if c['id']==parent)['params'] if p['id']==length['parameter']['id']),9)
 
     def test_external_controls_edit_native_parent_and_reopen_with_exact_geometry(self):
         parent,child,state,path,text=self.fixture();gid=child['id'];controls={r['parameter']['label']:r for r in child['customExternalControls']}

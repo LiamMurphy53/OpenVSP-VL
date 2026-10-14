@@ -885,3 +885,8 @@ Custom TAB/SCROLL_TAB declarations now supply display groups for their bound own
 ### 2026-10-13 — custom tab browser ordering
 
 Pro Properties places script-defined control groups first, in original TAB/SCROLL_TAB declaration order. Streamlined retains combined guided controls. Browser shows Primary dimensions before Cross-section, edits Length5→9ft, retains the edit and groups on page reload, and restores Length5 plus the original Wing/Wing/BOR aircraft with two Undo operations. The focused native tab/ownership/full-geometry/reopening regression passes after adding declaration indices; web syntax checks pass. Evidence: `.workspace/evidence/custom-tab-browser.png`, `.workspace/evidence/custom-tab-order-test.log`. This supplies the previously missing selected browser evidence; wider custom layout and W05 closure remain open.
+
+
+### 2026-10-13 — external custom control groups
+
+Parent-owned custom controls retain original script TAB/SCROLL_TAB labels and declaration order in both Properties modes. Native owner labels and current parameter IDs remain visible; edit and index-step binding validation is unchanged. Five external-binding regressions pass (7.094s), including native parent geometry, stale-target rejection, choices, read-only outputs and wing-driver constraints. Browser shows separate Array counts/Parent dimensions groups, edits the actual parent Length5→9ft, verifies the parent field, and restores Length5 plus the original isolated aircraft with Undo. Evidence: `.workspace/evidence/external-custom-tab-tests.log`, `.workspace/evidence/external-custom-tab-browser.png`. Broader custom runtime/layout and full W05 closure remain open.

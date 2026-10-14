@@ -31,7 +31,13 @@ def external_controls(v,component,parameters):
     from native_worker import parameter
     from native_preview import parameter_activity
     definitions,bindings=definitions_and_bindings(v,component['id']);own={p['id'] for p in component['params']};rows=[];last_choice=None
+    tab=None
+    tab_index=None
     for d in definitions:
+        if d['type'] in (v.GDEV_TAB,v.GDEV_SCROLL_TAB):
+            tab=d['label'] or None
+            tab_index=d['index']
+            continue
         if d['type']==v.GDEV_ADD_CHOICE_ITEM:
             if last_choice is not None:last_choice['parameter']['choices'].append([len(last_choice['parameter']['choices']),d['label']])
             continue
@@ -48,6 +54,7 @@ def external_controls(v,component,parameters):
         if d['type']==v.GDEV_PARM_BUTTON:item['customParmButton']=True
         if d['type']==v.GDEV_CHOICE:item['choices']=[]
         row=dict(index=d['index'],parameter=item,owner=parameters.get(pid,{}).get('bindingOwner') or v.GetContainerName(v.GetParmContainer(pid)))
+        if tab:row.update(tab=tab,tabIndex=tab_index)
         item.pop('bindingOwner',None);rows.append(row)
         if d['type']==v.GDEV_CHOICE:last_choice=row
     return rows
