@@ -17,10 +17,10 @@ class DailyUsageGuard(unittest.TestCase):
         return result
 
     def test_threshold_and_repeated_checks(self):
-        self.assertEqual(self.check(11)['decision'], 'CONTINUE')
-        self.assertEqual(self.check(11)['spentPoints'], 6)
-        self.assertEqual(self.check(12)['decision'], 'STOP')
-        self.assertEqual(self.check(12)['decision'], 'STOP')
+        self.assertEqual(self.check(14)['decision'], 'CONTINUE')
+        self.assertEqual(self.check(14)['spentPoints'], 9)
+        self.assertEqual(self.check(15)['decision'], 'STOP')
+        self.assertEqual(self.check(15)['decision'], 'STOP')
 
     def test_reset_cannot_grant_more_same_day(self):
         self.check(10)
@@ -31,7 +31,7 @@ class DailyUsageGuard(unittest.TestCase):
         self.assertEqual(self.check(4)['decision'], 'STOP')
 
     def test_denver_midnight_new_day_no_carry(self):
-        self.check(12)
+        self.check(15)
         before = datetime(2026, 10, 14, 5, 59, tzinfo=timezone.utc)
         self.assertEqual(self.check(12, before)['decision'], 'STOP')
         after = datetime(2026, 10, 14, 6, 0, tzinfo=timezone.utc)

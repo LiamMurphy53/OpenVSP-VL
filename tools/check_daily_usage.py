@@ -40,13 +40,13 @@ def evaluate(state, sample, now, initialize=False):
         entry['stopReason'] = 'Weekly meter changed/reset; daily spend uncertain'
     elif day == state['lastDay']:
         entry['spentPoints'] += max(0, used - previous)
-    if entry['spentPoints'] >= 7:
-        entry['stopReason'] = 'Daily allowance reached (1-point shutdown reserve)'
+    if entry['spentPoints'] >= 10:
+        entry['stopReason'] = 'Daily allowance reached'
     state.update(lastUsedPercent=used, resetsAt=reset, lastDay=day,
                  lastCheckedAt=now.isoformat())
     result = {'decision': 'STOP' if entry['stopReason'] else 'CONTINUE',
-              'day': day, 'timezone': 'America/Denver', 'dailyCapPoints': 8,
-              'stopAtReportedPoints': 7, 'spentPoints': entry['spentPoints'],
+              'day': day, 'timezone': 'America/Denver', 'dailyCapPoints': 10,
+              'stopAtReportedPoints': 10, 'spentPoints': entry['spentPoints'],
               'baselinePercent': entry['baselinePercent'],
               'weeklyUsedPercent': used, 'reason': entry['stopReason']}
     return state, result
