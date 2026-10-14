@@ -920,3 +920,10 @@ Packaged DES/XDDM readers now preflight file record shape/count, finite bounded 
 ### 2026-10-14 — smooth surface shading
 
 Design now uses a depth-tested smooth surface shader for the original native mesh vertices, with blended display normals, directional lighting and restrained highlights. Shared shallow edges and closed seams blend; sharp corners retain separate normals. Wireframe remains available, and its button switches to Surface for returning to shading. GPU absence/context loss retains the existing flat renderer. Display-only tests verify unchanged source coordinates, triangle positions, smooth shared edges, sharp corners and selection/line handling. Browser verifies curved pods, both display modes and smooth rendering after reload without console errors; the original isolated aircraft was restored with Undo. Evidence: `.workspace/evidence/surface-shader-browser.png`; renderer tests: `tests/test_surface_shader.mjs`. This does not change native geometry or the remaining full-modeling scope.
+
+
+### 2026-10-14 — blank-reference display and broader audit
+
+Blank reference drawings now retain original native points/colors but express stable Studio selection policy: feature axes follow shown components, while origin/CG/attachment markers appear for the selected component. Transient native active-geometry flags no longer change saved/reopened snapshot semantics. The independent raw-drawing check, all import-record variants, attachment and component checks pass: four blank/import methods (38.134s) and twelve integration methods (26.465s). Evidence: `.workspace/evidence/blank-reference-import-regressions.log`, `.workspace/evidence/blank-reference-integration-tests.log`. The earlier PLOT3D metadata failure is resolved by this selected follow-up.
+
+The separate-process 42-module baseline audit is documented in MODELING_AUDIT.md: 39 modules passed, two metadata comparisons failed and the chevron module crashed. Fitting live-choice persistence and intermittent native chevron execution remain unresolved. No broad workflow or full-project completion is claimed.

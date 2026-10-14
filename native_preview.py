@@ -310,4 +310,11 @@ def blank_drawings(v,gid):
     fn.argtypes=[ctypes.c_char_p,ctypes.c_char_p];fn.restype=ctypes.c_char_p
     data=json.loads(fn(engine,gid.encode()))
     if isinstance(data,dict):raise ValueError(data.get('error','Native reference drawing unavailable.'))
+    # BlankGeom's active selection is transient engine GUI state, not saved
+    # geometry. Feature axes are normally shown; origin/CG/attachment markers
+    # belong to Studio's selected component. Keep all original drawing data.
+    shown=bool(v.GetSetFlag(gid,v.SET_SHOWN))
+    for drawing in data:
+        drawing['selectionOnly']=not drawing['nativeID'].startswith(gid+'_Feature_')
+        drawing['visible']=shown and not drawing['selectionOnly']
     return data

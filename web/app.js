@@ -135,7 +135,7 @@ function prepareMesh(){
  for(const c of model.components.filter(c=>c.shown!==false)){
   for(const s of c.surfaces)for(let i=0;i<s.rows-1;i++)for(let j=0;j<s.cols-1;j++){const n=i*s.cols+j;add(c,[s.points[n],s.points[n+s.cols],s.points[n+s.cols+1],s.points[n+1]],s.normals?.[n],{surfaceKey:c.id+':'+s.index});}
   for(const drawing of c.referenceDrawings||[]){
-   const style={selectionOnly:!drawing.visible,color:`rgb(${(drawing.color||[.15,.4,.3]).map(v=>Math.round(255*v)).join(',')})`};
+   const style={selectionOnly:drawing.selectionOnly??!drawing.visible,color:`rgb(${(drawing.color||[.15,.4,.3]).map(v=>Math.round(255*v)).join(',')})`};
    if(drawing.kind==='points')for(const p of drawing.points)add(c,[p],null,style);
    else if(drawing.kind==='triangles')for(let i=0;i+2<drawing.points.length;i+=3)add(c,drawing.points.slice(i,i+3),null,style);
    else for(let i=0;i+1<drawing.points.length;i+=2)add(c,drawing.points.slice(i,i+2),null,style);
