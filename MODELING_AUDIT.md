@@ -8,7 +8,7 @@ Forty-two test modules ran in separate processes. Thirty-nine modules passed, re
 | --- | --- | --- |
 | Chevron patterns | Native segmentation fault | Full/partial check passed alone; a two-method sequence terminated with SIGTRAP; an instrumented repeat passed both methods. Intermittent failure remains unresolved. |
 | Import records | PLOT3D parent drawing visibility differed after reopening | Blank drawing policy now follows Studio selection rather than transient engine activity; all four blank/import regressions pass. |
-| Surface fitting | Built-in material parameter IDs differed in live variable choices | Saved fitting-state versus live-choice comparison remains under investigation. |
+| Surface fitting | Built-in material parameter IDs differed in live variable choices | Built-in material choices now use stable owner/group/name references, resolved to current native IDs. All six fitting tests pass, including cold reload, read-only rejection, legacy selection removal and optimizer recovery. |
 
 Retained evidence: `.workspace/evidence/current-modeling-audit/summary.json`, per-module logs, `chevron-isolated-trace.log`, `chevron-sequence-trace.log`, `chevron-instrumented-sequence.log`, and `.workspace/evidence/blank-reference-import-regressions.log`.
 

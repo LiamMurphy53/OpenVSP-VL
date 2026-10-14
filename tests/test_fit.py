@@ -64,6 +64,29 @@ class FitNative(unittest.TestCase):
         state,path=self.worker(dict(action='mutate',operation='fit-target-delete',index=1),path);self.assertEqual(len(state['tools']['fit']['targets']),3)
         state,path=self.worker(dict(action='mutate',operation='fit-reset'),path);self.assertEqual(state['tools']['fit']['targets'],[]);self.assertEqual(state['tools']['fit']['variables'],[])
 
+    def test_builtin_material_variable_survives_fresh_workers(self):
+        state,path=self.worker(dict(action='state'))
+        choice=next(p for p in state['tools']['fit']['variableChoices'] if p['id'].startswith('@fit:'))
+        ref=choice['id']
+        before=path.read_bytes()
+        with self.assertRaisesRegex(ValueError,'built-in material'):self.worker(dict(action='mutate',operation='fit-variables',parameters=[ref]),path)
+        self.assertEqual(path.read_bytes(),before)
+        # Retain and permit removing a legacy native selection even though
+        # built-in materials correctly remain unavailable for new fitting.
+        from native_fit_variables import resolve
+        from native_fit import save
+        self.v.AddFitModelVar(resolve(self.v,ref));save(self.v)
+        self.v.WriteVSPFile(str(self.model),self.v.SET_ALL)
+        selected,path=self.worker(dict(action='state'))
+        self.assertEqual(selected['tools']['fit']['variables'],[ref])
+        reopened,path=self.worker(dict(action='state'),path)
+        self.assertEqual(reopened['tools']['fit'],selected['tools']['fit'])
+        removed,path=self.worker(dict(action='mutate',operation='fit-variable-delete',parameter=ref),path)
+        self.assertEqual(removed['tools']['fit']['variables'],[])
+        before=path.read_bytes()
+        with self.assertRaises(ValueError):self.worker(dict(action='mutate',operation='fit-variables',parameters=['@fit:["_missing","FeaMaterial","Thickness"]']),path)
+        self.assertEqual(path.read_bytes(),before)
+
     def test_underconstrained_fit_is_rejected_without_changing_model(self):
         v=self.v;g=self.pod();p=v.CompPnt01(g,0,.5,.25)
         state,path=self.worker(dict(action='mutate',operation='fit-targets-add',geom=g,surface=0,points=[[p.x(),p.y(),p.z()]],fixedU=False,fixedW=False))

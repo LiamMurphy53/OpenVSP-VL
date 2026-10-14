@@ -4,6 +4,7 @@ from native_tools import one,finite,name
 
 TARGETS='Studio.FitTargets';VARIABLE='Studio.FitVariable'
 REPORT='Studio.FitReport'
+VARIABLE_REF='Studio.FitVariableReference'
 TERMINATION={1:'Residual change reached native tolerance.',2:'Variable change reached native tolerance.',3:'Residual and variable changes reached native tolerance.',4:'Residual is orthogonal to the Jacobian within native tolerance.',5:'Function evaluation limit reached.',6:'Tolerance is too small for further residual reduction.',7:'Tolerance is too small for further variable improvement.',8:'Tolerance is too small for further orthogonality improvement.'}
 
 
@@ -32,8 +33,12 @@ def save(v):
         if records:v.AddAttributeString(coll,TARGETS,json.dumps(records))
     coll=v.GetChildCollection(v.GetVehicleID())
     for a in v.FindAttributesInCollection(coll):
-        if v.GetAttributeName(a)==VARIABLE:v.DeleteAttribute(a)
-    for p in v.GetFitModelVarVec():v.AddAttributeParm(coll,VARIABLE,p)
+        if v.GetAttributeName(a) in (VARIABLE,VARIABLE_REF):v.DeleteAttribute(a)
+    from native_fit_variables import key
+    for p in v.GetFitModelVarVec():
+        ref=key(v,p)
+        if ref==p:v.AddAttributeParm(coll,VARIABLE,p)
+        else:v.AddAttributeString(coll,VARIABLE_REF,ref)
 
 
 def restore(v):
@@ -51,6 +56,11 @@ def restore(v):
         ut=one(e['utype'],[v.FIT_MODEL_FIXED,v.FIT_MODEL_FREE]);wt=one(e['wtype'],[v.FIT_MODEL_FIXED,v.FIT_MODEL_FREE]);u=coord(e['u']);w=coord(e['w'])
         i=v.AddFitModelTargetPt(g,e['surface'],vector(v,e['point']),ut,wt,u,w);v.SetFitModelTargetPtUW(i,u,w)
     for a in v.FindAttributesInCollection(v.GetChildCollection(v.GetVehicleID())):
+        if v.GetAttributeName(a)==VARIABLE_REF:
+            from native_fit_variables import resolve
+            for ref in v.GetAttributeStringVal(a):
+                p=resolve(v,ref)
+                if p not in v.GetFitModelVarVec():v.AddFitModelVar(p)
         if v.GetAttributeName(a)==VARIABLE:
             for p in v.GetAttributeParmID(a):
                 if v.ValidParm(p) and p not in v.GetFitModelVarVec():v.AddFitModelVar(p)
@@ -61,7 +71,7 @@ def snapshot(v,parameter):
     native_measurements.refresh(v)
     measurementRefs=native_measurements.references(v)
     reports=[json.loads(content) for a in v.FindAttributesInCollection(v.GetChildCollection(v.GetVehicleID())) if v.GetAttributeName(a)==REPORT for content in v.GetAttributeStringVal(a)]
-    return dict(fit=dict(variableChoices=native_fit_variables.configuration(v,parameter),report=reports[-1] if reports else None,distance=v.UpdateFitModelDist() if v.GetNumFitModelTargetPts() else None,degreesOfFreedom=v.GetNumFitModelOptVars(),variables=list(v.GetFitModelVarVec()),targets=[dict(index=i,geom=v.GetFitModelTargetPtGeom(i),surface=v.GetFitModelTargetPtSurfIndx(i),point=xyz(v.GetFitModelTargetPt(i)),surfacePoint=xyz(v.GetFitModelTargetPtSurfPt(i)),distance=v.GetFitModelTargetPtDist(i),u=v.GetFitModelTargetPtU(i),w=v.GetFitModelTargetPtW(i),utype=v.GetFitModelTargetPtUType(i),wtype=v.GetFitModelTargetPtWType(i)) for i in range(v.GetNumFitModelTargetPts())]),
+    return dict(fit=dict(variableChoices=native_fit_variables.configuration(v,parameter),report=reports[-1] if reports else None,distance=v.UpdateFitModelDist() if v.GetNumFitModelTargetPts() else None,degreesOfFreedom=v.GetNumFitModelOptVars(),variables=[native_fit_variables.key(v,p) for p in v.GetFitModelVarVec()],targets=[dict(index=i,geom=v.GetFitModelTargetPtGeom(i),surface=v.GetFitModelTargetPtSurfIndx(i),point=xyz(v.GetFitModelTargetPt(i)),surfacePoint=xyz(v.GetFitModelTargetPtSurfPt(i)),distance=v.GetFitModelTargetPtDist(i),u=v.GetFitModelTargetPtU(i),w=v.GetFitModelTargetPtW(i),utype=v.GetFitModelTargetPtUType(i),wtype=v.GetFitModelTargetPtWType(i)) for i in range(v.GetNumFitModelTargetPts())]),
                 measurements=[dict(id=p,kind=kind,name=v.GetContainerName(p),references=measurementRefs.get(p,{}),params=[parameter(v,x) for x in v.FindContainerParmIDs(p)]) for kind,ids in [('ruler',v.GetAllRulers()),('probe',v.GetAllProbes()),('rst-probe',v.GetAllRSTProbes()),('protractor',v.GetAllProtractors())] for p in ids])
 
 
@@ -153,7 +163,9 @@ def mutate(v,r):
             i=one(r['index'],range(v.GetNumFitModelTargetPts()));g,s=surface(v,r)
             v.SetFitModelTargetPtGeom(i,g);v.SetFitModelTargetPtSurfIndx(i,s);v.SetFitModelTargetPt(i,vector(v,r['point']));v.SetFitModelTargetPtUType(i,v.FIT_MODEL_FIXED if r['fixedU'] else v.FIT_MODEL_FREE);v.SetFitModelTargetPtWType(i,v.FIT_MODEL_FIXED if r['fixedW'] else v.FIT_MODEL_FREE);v.SetFitModelTargetPtUW(i,coord(r['u']),coord(r['w']))
         elif op=='fit-target-delete':v.DelFitModelTargetPt(one(r['index'],range(v.GetNumFitModelTargetPts())))
-        elif op=='fit-variable-delete':v.DelFitModelVar(one(r['parameter'],v.GetFitModelVarVec(),'Choose a saved fitting variable.'))
+        elif op=='fit-variable-delete':
+            from native_fit_variables import resolve
+            v.DelFitModelVar(one(resolve(v,r['parameter']),v.GetFitModelVarVec(),'Choose a saved fitting variable.'))
         elif op=='fit-targets-sort':v.SortFitModelTargetPtsByDist()
         elif op=='fit-targets-clear':v.DelAllFitModelTargetPts()
         elif op=='fit-target-move':v.MoveFitModelTargetPt(one(r['index'],range(v.GetNumFitModelTargetPts())),one(r['direction'],[v.REORDER_MOVE_UP,v.REORDER_MOVE_DOWN,v.REORDER_MOVE_TOP,v.REORDER_MOVE_BOTTOM]))
@@ -161,6 +173,9 @@ def mutate(v,r):
             from native_tools import parameter_ids
             allowed=parameter_ids(v)|{p for g in v.FindGeoms() for p in v.GetGeomParmIDs(g)};ids=r['parameters']
             if not isinstance(ids,list) or len(ids)!=len(set(ids)) or len(ids)>1000:raise ValueError('Choose at most 1000 unique fit variables.')
+            from native_fit_variables import resolve
+            ids=[resolve(v,p) for p in ids]
+            if len(ids)!=len(set(ids)):raise ValueError('Choose unique fit variables.')
             for p in ids:one(p,allowed)
             from native_fit_variables import validate
             validate(v,ids)
