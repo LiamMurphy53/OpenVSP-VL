@@ -10,6 +10,36 @@ from native_section_file_validation import validate_profile_file
 
 ATTRIBUTE='Studio.CustomAssets'
 MISSING_ATTRIBUTE='Studio.MissingCustomAsset'
+INVALID_ATTRIBUTE='Studio.InvalidCustomAsset'
+
+
+def design_record_ids(path,fmt):
+    """Check file records only; the original reader still applies every value."""
+    import math
+    try:
+        text=path.read_text(encoding='utf-8')
+        if len(text.encode())>5_000_000 or '<!DOCTYPE' in text.upper():raise ValueError()
+        records=[]
+        if fmt=='DES':
+            rows=[line.strip() for line in text.splitlines() if line.strip()]
+            count=int(rows[0])
+            if not 0<=count<=10000 or len(rows)!=count+1:raise ValueError()
+            for row in rows[1:]:
+                label,separator,value=row.rpartition(':')
+                if not separator:raise ValueError()
+                records.append((label.split(':',1)[0],float(value)))
+        else:
+            root=ET.fromstring(text)
+            if root.tag!='Model':raise ValueError()
+            for node in root:
+                if node.tag in ('Variable','Constant'):
+                    records.append((node.attrib['VSPID'],float(node.attrib['Value'])))
+            if len(records)>10000:raise ValueError()
+        ids=[pid for pid,_ in records]
+        if len(set(ids))!=len(ids) or any(not pid or not math.isfinite(value) or abs(value)>1e12 for pid,value in records):raise ValueError()
+        return ids
+    except (ValueError,IndexError,KeyError,UnicodeError,ET.ParseError):
+        raise ValueError('Malformed custom '+fmt+' design file: '+path.name) from None
 
 
 def stage(raw):
@@ -70,7 +100,11 @@ def rewrite_reads(text,source,base,asset_root):
         candidates=[p for p in candidates if p.is_relative_to(base) and p.is_file()]
         if len(candidates)!=1:raise ValueError('Choose an unambiguous in-package profile file: '+filename)
         destination=asset_root/candidates[0].relative_to(base)
-        replacements.append((literal.start(),literal.end(),json.dumps(destination.relative_to(Path.cwd()).as_posix())))
+        if readers[token[0]]==0:
+            design_record_ids(candidates[0],'DES' if token[0]=='ReadApplyDESFile' else 'XDDM')
+            wrappers.add(token[0]);dynamic=True
+            replacements.append((token.start(),tokens[j+2].end(),helper+'_'+token[0]+'('+json.dumps(filename)+')'))
+        else:replacements.append((literal.start(),literal.end(),json.dumps(destination.relative_to(Path.cwd()).as_posix())))
     for start,end,replacement in reversed(replacements):text=text[:start]+replacement+text[end:]
     if dynamic:
         choices={}
@@ -90,7 +124,15 @@ def rewrite_reads(text,source,base,asset_root):
         # original reader untouched for resolved data, and skip unresolved
         # calls so the worker can reject the recorded failure before saving.
         for reader in sorted(wrappers):
-            text+='\nvoid '+helper+'_'+reader+'(const string &in filename){string path='+helper+'(filename);if(path!='+json.dumps(missing)+')'+reader+'(path);}\n'
+            valid=[]
+            for file in sorted(base.rglob('*')):
+                if not file.is_file():continue
+                try:ids=design_record_ids(file,'DES' if reader=='ReadApplyDESFile' else 'XDDM')
+                except ValueError:continue
+                target=(asset_root/file.relative_to(base)).relative_to(Path.cwd()).as_posix()
+                check=' && '.join('ValidParm('+json.dumps(pid)+')' for pid in ids) or 'true'
+                valid.append('if(path=='+json.dumps(target)+' && ('+check+')){'+reader+'(path);return;}')
+            text+='\nvoid '+helper+'_'+reader+'(const string &in filename){string path='+helper+'(filename);if(path=='+json.dumps(missing)+')return;'+''.join(valid)+'AddAttributeString(GetChildCollection(GetCurrCustomGeom()),'+json.dumps(INVALID_ATTRIBUTE)+',filename);}\n'
     return text
 
 
@@ -101,6 +143,9 @@ def require_reads(v):
             if v.GetAttributeName(aid)==MISSING_ATTRIBUTE:
                 names=v.GetAttributeStringVal(aid)
                 raise ValueError('Missing or ambiguous custom package file: '+(names[0] if names else 'unknown filename'))
+            if v.GetAttributeName(aid)==INVALID_ATTRIBUTE:
+                names=v.GetAttributeStringVal(aid)
+                raise ValueError('Malformed custom design file or unavailable parameter: '+(names[0] if names else 'unknown filename'))
 
 
 def save(v,gid,raw):

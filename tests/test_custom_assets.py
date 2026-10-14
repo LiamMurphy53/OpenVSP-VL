@@ -144,6 +144,26 @@ void UpdateSurf(){string s=GetXSecSurf(GetCurrCustomGeom(),0);SetCustomXSecLoc(G
                 self.assertEqual(len(candidates),1);self.assertEqual(next(iter(candidates)).read_bytes(),before)
                 self.assertEqual(saved.read_bytes(),before)
 
+    def test_invalid_design_companions_reject_before_saving(self):
+        pid=self.v.FindParm(self.gid,'TotalSpan','WingGeom')
+        des=pid+':ReferenceWing:WingGeom:TotalSpan: '
+        cases=[('ReadApplyDESFile','2\n'+des+'18\n'),('ReadApplyDESFile','1\n'+des+'nan\n'),('ReadApplyDESFile','2\n'+des+'18\n'+des+'20\n'),('ReadApplyDESFile','1\nNOTAPARM:Unknown:Design:Length: 18\n'),('ReadApplyXDDMFile','<Model><Variable VSPID=\"'+pid+'\" Value=\"inf\"/></Model>'),('ReadApplyXDDMFile','<Model><Variable/></Model>'),('ReadApplyXDDMFile','<!DOCTYPE Model><Model/>'),('ReadApplyXDDMFile','<Model><Variable VSPID=\"NOTAPARM\" Value=\"18\"/></Model>')]
+        for reader,payload in cases:
+            for computed in (False,True):
+                with self.subTest(reader=reader,payload=payload,computed=computed):
+                    call=reader+'(\"data.dat\");'
+                    if computed:call='string filename=\"data.dat\";'+reader+'(filename);'
+                    script=SCRIPT.replace('void Init(){','void Init(){'+call)
+                    raw=io.BytesIO()
+                    with zipfile.ZipFile(raw,'w') as archive:
+                        archive.writestr('part/Main.vsppart',script);archive.writestr('part/profile.dat',PROFILE);archive.writestr('part/data.dat',payload)
+                    before=self.model.read_bytes();existing=set(self.path.glob('*/aircraft.vsp3'))
+                    with self.assertRaisesRegex(ValueError,'Malformed custom|unavailable parameter'):
+                        self.worker(dict(action='mutate',operation='geometry-import',format='CUSTOM_PACKAGE',name='Invalid design reader',content=base64.b64encode(raw.getvalue()).decode()))
+                    candidates=set(self.path.glob('*/aircraft.vsp3'))-existing
+                    self.assertEqual(len(candidates),1);self.assertEqual(next(iter(candidates)).read_bytes(),before)
+                    self.assertEqual(self.model.read_bytes(),before)
+
     def test_profile_package_reopens_without_original_files(self):
         # Direct original compiler/reader reference with the file in native cwd.
         script=SCRIPT.replace('AppendCustomXSec(s,XS_FILE_FUSE);AppendCustomXSec(s,XS_FILE_FUSE);','AppendCustomXSec(s,XS_POINT);AppendCustomXSec(s,XS_FILE_FUSE);AppendCustomXSec(s,XS_FILE_FUSE);AppendCustomXSec(s,XS_POINT);').replace('ReadFileXSec(GetXSec(s,0)','ReadFileXSec(GetXSec(s,2)').replace('SetCustomXSecLoc(GetXSec(s,1),vec3d(8,0,0));','SetCustomXSecLoc(GetXSec(s,2),vec3d(8,0,0));SetCustomXSecLoc(GetXSec(s,3),vec3d(8,0,0));')
