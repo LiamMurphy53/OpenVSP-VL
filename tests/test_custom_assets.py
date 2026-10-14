@@ -91,6 +91,34 @@ void UpdateSurf(){string parent=GetGeomParent(GetCurrCustomGeom());if(parent!=\"
         actual=next(a for a in cold['tools']['auxiliary'] if a['id']==self.aux)
         self.assertEqual(actual['controls']['clearanceCoordinates']['points'],[[0,-3,0],[0,-2,1],[0,0,2],[0,2,1],[0,3,0]])
 
+    def test_design_file_companions_use_original_parameter_application(self):
+        for reader,writer,suffix,computed in [(r,w,s,c) for r,w,s in [('ReadApplyDESFile','WriteDESFile','des'),('ReadApplyXDDMFile','WriteXDDMFile','xddm')] for c in (False,True)]:
+            with self.subTest(reader=reader,computed=computed):
+                v=self.v;v.ClearVSPModel();parent=v.AddGeom('POD');pid=v.FindParm(parent,'Length','Design')
+                v.AddDesignVar(pid,v.XDDM_VAR);v.SetParmValUpdate(pid,18)
+                data=self.path/('dimensions.'+suffix);getattr(v,writer)(str(data));payload=data.read_text()
+                v.SetParmValUpdate(pid,10);v.Update();v.WriteVSPFile(str(self.model),v.SET_ALL)
+                script="""void Init(){string s=AddXSecSurf();AppendCustomXSec(s,XS_POINT);AppendCustomXSec(s,XS_CIRCLE);AppendCustomXSec(s,XS_POINT);READER(\"DATAFILE\");}
+void InitGui(){} void UpdateGui(){}
+void UpdateSurf(){string s=GetXSecSurf(GetCurrCustomGeom(),0);SetCustomXSecLoc(GetXSec(s,1),vec3d(1,0,0));SetCustomXSecLoc(GetXSec(s,2),vec3d(2,0,0));SkinXSecSurf();}""".replace('READER',reader).replace('DATAFILE',data.name)
+                if computed:script=script.replace('void Init(){','void Init(){string filename=\"./'+data.name+'\";').replace(reader+'(\"'+data.name+'\");',reader+'(filename);')
+                source=self.path/'design-reader.vsppart';source.write_text(script)
+                import_script(v,source,'Original design reader',parent=parent);v.Update();self.assertEqual(v.GetParmVal(pid),18)
+                expected=[]
+                for i in range(v.GetTotalNumSurfs(parent)):
+                    u,w=v.GetUWTess01(parent,i%v.GetNumMainSurfs(parent))
+                    points=[[p.x(),p.y(),p.z()] for p in v.CompVecPnt01(parent,i,[a for a in u for _ in w],[b for _ in u for b in w])]
+                    expected.append(dict(index=i,rows=len(u),cols=len(w),points=points))
+                source.unlink();data.unlink();raw=io.BytesIO()
+                with zipfile.ZipFile(raw,'w') as archive:
+                    archive.writestr('part/Main.vsppart',script);archive.writestr('part/'+data.name,payload)
+                state,saved=self.worker(dict(action='mutate',operation='geometry-import',format='CUSTOM_PACKAGE',name='Design reader',parent=parent,content=base64.b64encode(raw.getvalue()).decode()))
+                self.assertEqual(next(c for c in state['components'] if c['id']==parent)['surfaces'],expected)
+                shutil.rmtree(saved.parent/'component-package');shutil.rmtree(saved.parent/'.studio-custom-assets')
+                cold,_=self.worker(dict(action='state'),saved)
+                self.assertEqual(next(c for c in cold['components'] if c['id']==parent)['surfaces'],expected)
+                self.assertEqual(next(p['value'] for p in next(c for c in cold['components'] if c['id']==parent)['params'] if p['id']==pid),18)
+
     def test_profile_package_reopens_without_original_files(self):
         # Direct original compiler/reader reference with the file in native cwd.
         script=SCRIPT.replace('AppendCustomXSec(s,XS_FILE_FUSE);AppendCustomXSec(s,XS_FILE_FUSE);','AppendCustomXSec(s,XS_POINT);AppendCustomXSec(s,XS_FILE_FUSE);AppendCustomXSec(s,XS_FILE_FUSE);AppendCustomXSec(s,XS_POINT);').replace('ReadFileXSec(GetXSec(s,0)','ReadFileXSec(GetXSec(s,2)').replace('SetCustomXSecLoc(GetXSec(s,1),vec3d(8,0,0));','SetCustomXSecLoc(GetXSec(s,2),vec3d(8,0,0));SetCustomXSecLoc(GetXSec(s,3),vec3d(8,0,0));')

@@ -111,3 +111,8 @@ Custom ZIP packages now relocate original ReadBORFileXSec and ReadBORFileAirfoil
 ### 2026-10-13 — custom clearance-envelope companions
 
 Custom packages relocate the original ReadAuxiliaryGeomCCEFile argument and restore its embedded envelope before cold native script execution. Literal and computed filename cases remove original script/envelope plus temporary staging, then compare all generated auxiliary surface samples and saved envelope-local coordinates against the original compiler/reader. All nine custom companion regressions pass (6.781s), retaining ordinary/BOR profiles and existing failure checks. Evidence: `.workspace/evidence/custom-clearance-companion-regressions.log`. This adds selected runtime data coverage within W05; arbitrary script file I/O and full modeling closure remain unproved.
+
+
+### 2026-10-13 — custom design-file companions
+
+Custom packages now relocate original ReadApplyDESFile and ReadApplyXDDMFile single filename arguments, while preserving the original compiler and design-variable application. Four reader/literal/computed cases use files exported by the original SDK, verify parent Length10→18 and complete native surface geometry, remove all original data/staging, and verify cold reopening. All ten companion-file regressions pass (8.976s). Evidence: `.workspace/evidence/custom-design-companion-regressions.log`. Missing or malformed computed DES/XDDM data has no selected regression yet; original wrappers clear their last-call error flag, so prior profile-reader failure evidence must not be generalized to these readers. Remaining file-I/O and W05 closure stay open.

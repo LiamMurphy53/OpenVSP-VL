@@ -25,30 +25,33 @@ def stage(raw):
 
 
 def rewrite_reads(text,source,base,asset_root):
-    """Relocate file-profile arguments while retaining native script evaluation."""
+    """Relocate packaged reader arguments while retaining native script evaluation."""
     import os
     # Tokenize comments separately so examples and labels cannot become edits.
     tokens=[m for m in re.finditer(r'//[^\n]*|/\*.*?\*/|"(?:\\.|[^"\\])*"|[A-Za-z_]\w*|[^\s]',text,re.S) if not m[0].startswith(('//','/*'))]
     replacements=[];dynamic=False
     helper='StudioPackageProfile_'+hashlib.sha256((str(asset_root)+str(source.relative_to(base))).encode()).hexdigest()[:16]
+    readers={'ReadFileAirfoil':1,'ReadFileXSec':1,'ReadBORFileAirfoil':1,'ReadBORFileXSec':1,'ReadAuxiliaryGeomCCEFile':1,'ReadApplyDESFile':0,'ReadApplyXDDMFile':0}
     for i,token in enumerate(tokens):
-        if token[0] not in ('ReadFileAirfoil','ReadFileXSec','ReadBORFileAirfoil','ReadBORFileXSec','ReadAuxiliaryGeomCCEFile') or i+1>=len(tokens) or tokens[i+1][0]!='(':continue
-        depth=1;j=i+2
-        while j<len(tokens):
-            part=tokens[j][0]
-            if part=='(':depth+=1
-            elif part==')':depth-=1
-            elif part==',' and depth==1:break
-            if depth==0:break
-            j+=1
-        if j+2>=len(tokens) or tokens[j][0]!=',':continue
+        if token[0] not in readers or i+1>=len(tokens) or tokens[i+1][0]!='(':continue
+        j=i+1
+        if readers[token[0]]:
+            depth=1;j=i+2
+            while j<len(tokens):
+                part=tokens[j][0]
+                if part=='(':depth+=1
+                elif part==')':depth-=1
+                elif part==',' and depth==1:break
+                if depth==0:break
+                j+=1
+        if j+2>=len(tokens) or tokens[j][0]!=(',' if readers[token[0]] else '('):continue
         if not tokens[j+1][0].startswith('"') or tokens[j+2][0]!=')':
             end=j+1;depth=1
             while end<len(tokens):
                 if tokens[end][0]=='(':depth+=1
                 elif tokens[end][0]==')':depth-=1
                 if depth==0:break
-                if tokens[end][0]==',' and depth==1:raise ValueError('Use the two-argument native file-profile API.')
+                if tokens[end][0]==',' and depth==1:raise ValueError('Use the original native file-reader arguments.')
                 end+=1
             if end==len(tokens):raise ValueError('Unclosed native file-profile call.')
             start=tokens[j+1].start();stop=tokens[end].start()
