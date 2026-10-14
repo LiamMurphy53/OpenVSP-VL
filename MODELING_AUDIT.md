@@ -6,7 +6,7 @@ Forty-two test modules ran in separate processes. Thirty-nine modules passed, re
 
 | Module | Baseline result | Current follow-up |
 | --- | --- | --- |
-| Chevron patterns | Native segmentation fault | Full/partial check passed alone; a two-method sequence terminated with SIGTRAP; an instrumented repeat passed both methods. Intermittent failure remains unresolved. |
+| Chevron patterns | Native segmentation fault | Full/partial check passed alone; a two-method sequence terminated with SIGTRAP; an instrumented repeat passed both methods. A full traced run reproduced SIGSEGV while the test host was garbage-collecting during JSON decoding after a PROP W01_Start edit; the worker had returned a response. This narrows the failure to the long-lived SDK test host, but does not yet establish the cause. Intermittent failure remains unresolved. |
 | Import records | PLOT3D parent drawing visibility differed after reopening | Blank drawing policy now follows Studio selection rather than transient engine activity; all four blank/import regressions pass. |
 | Surface fitting | Built-in material parameter IDs differed in live variable choices | Built-in material choices now use stable owner/group/name references, resolved to current native IDs. All six fitting tests pass, including cold reload, read-only rejection, legacy selection removal and optimizer recovery. |
 
