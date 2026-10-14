@@ -45,3 +45,8 @@ Parent-owned custom controls retain original script TAB/SCROLL_TAB labels and de
 ### 2026-10-13 — custom BOR companion profiles
 
 Custom ZIP packages now relocate original ReadBORFileXSec and ReadBORFileAirfoil filenames, alongside the ordinary section readers. Literal and script-computed filenames use the same embedded-package restoration. Four BOR reader/filename cases compare all 101 profile samples against the original compiler/reader, remove original script/data and staging folders, and preserve complete saved/reopened native surfaces. All seven companion-file regressions pass (4.778s), including ordinary readers, helper-selected profiles, missing-file rejection and native-reader preconditions. Evidence: `.workspace/evidence/custom-bor-companion-regressions.log`. Other runtime data readers and full W05 closure remain open.
+
+
+### 2026-10-13 — custom clearance-envelope companions
+
+Custom packages relocate the original ReadAuxiliaryGeomCCEFile argument and restore its embedded envelope before cold native script execution. Literal and computed filename cases remove original script/envelope plus temporary staging, then compare all generated auxiliary surface samples and saved envelope-local coordinates against the original compiler/reader. All nine custom companion regressions pass (6.781s), retaining ordinary/BOR profiles and existing failure checks. Evidence: `.workspace/evidence/custom-clearance-companion-regressions.log`. This adds selected runtime data coverage within W05; arbitrary script file I/O and full modeling closure remain unproved.

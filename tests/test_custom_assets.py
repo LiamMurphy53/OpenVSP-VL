@@ -56,6 +56,41 @@ void UpdateSurf(){string parent=GetGeomParent(GetCurrCustomGeom());if(parent!="N
                 self.assertEqual(next(b for b in cold['tools']['bodiesOfRevolution'] if b['id']==parent)['profile'],expected)
                 self.assertEqual({c['id']:c['surfaces'] for c in cold['components']},{c['id']:c['surfaces'] for c in state['components']})
 
+    def test_clearance_companion_survives_relocation_with_native_geometry(self):
+        self.clearance_companion_case(False)
+
+    def test_computed_clearance_companion_survives_relocation_with_native_geometry(self):
+        self.clearance_companion_case(True)
+
+    def clearance_companion_case(self,computed):
+        from test_auxiliary_controls import NativeAuxiliaryControls
+        NativeAuxiliaryControls.fixture(self);v=self.v
+        v.SetParmValUpdate(self.aux,'AuxiliaryGeomType','Design',v.AUX_GEOM_THREE_PT_CCE)
+        NativeAuxiliaryControls.evaluate(self);v.WriteVSPFile(str(self.model),v.SET_ALL)
+        script="""void Init(){string s=AddXSecSurf();AppendCustomXSec(s,XS_POINT);AppendCustomXSec(s,XS_CIRCLE);AppendCustomXSec(s,XS_POINT);}
+void InitGui(){} void UpdateGui(){}
+void UpdateSurf(){string parent=GetGeomParent(GetCurrCustomGeom());if(parent!=\"NONE\" && parent!=\"\")ReadAuxiliaryGeomCCEFile(parent,\"envelope.cce\");string s=GetXSecSurf(GetCurrCustomGeom(),0);SetCustomXSecLoc(GetXSec(s,1),vec3d(1,0,0));SetCustomXSecLoc(GetXSec(s,2),vec3d(2,0,0));SkinXSecSurf();}"""
+        if computed:script=script.replace('void UpdateSurf(){','void UpdateSurf(){string filename=\"./envelope.cce\";').replace('parent,\"envelope.cce\"','parent,filename')
+        envelope='-3 0\n-2 1\n0 2\n2 1\n3 0\n'
+        source=self.path/'clearance-reader.vsppart';source.write_text(script);data=self.path/'envelope.cce';data.write_text(envelope)
+        import_script(v,source,'Original clearance reader',parent=self.aux);NativeAuxiliaryControls.evaluate(self)
+        expected=[]
+        for i in range(v.GetTotalNumSurfs(self.aux)):
+            u,w=v.GetUWTess01(self.aux,i%v.GetNumMainSurfs(self.aux))
+            points=[[p.x(),p.y(),p.z()] for p in v.CompVecPnt01(self.aux,i,[a for a in u for _ in w],[b for _ in u for b in w])]
+            expected.append(dict(index=i,rows=len(u),cols=len(w),points=points))
+        source.unlink();data.unlink()
+        raw=io.BytesIO()
+        with zipfile.ZipFile(raw,'w') as archive:
+            archive.writestr('part/Main.vsppart',script);archive.writestr('part/envelope.cce',envelope)
+        state,saved=self.worker(dict(action='mutate',operation='geometry-import',format='CUSTOM_PACKAGE',name='Clearance reader',parent=self.aux,content=base64.b64encode(raw.getvalue()).decode()))
+        self.assertEqual(next(c for c in state['components'] if c['id']==self.aux)['surfaces'],expected)
+        shutil.rmtree(saved.parent/'component-package');shutil.rmtree(saved.parent/'.studio-custom-assets')
+        cold,_=self.worker(dict(action='state'),saved)
+        self.assertEqual(next(c for c in cold['components'] if c['id']==self.aux)['surfaces'],expected)
+        actual=next(a for a in cold['tools']['auxiliary'] if a['id']==self.aux)
+        self.assertEqual(actual['controls']['clearanceCoordinates']['points'],[[0,-3,0],[0,-2,1],[0,0,2],[0,2,1],[0,3,0]])
+
     def test_profile_package_reopens_without_original_files(self):
         # Direct original compiler/reader reference with the file in native cwd.
         script=SCRIPT.replace('AppendCustomXSec(s,XS_FILE_FUSE);AppendCustomXSec(s,XS_FILE_FUSE);','AppendCustomXSec(s,XS_POINT);AppendCustomXSec(s,XS_FILE_FUSE);AppendCustomXSec(s,XS_FILE_FUSE);AppendCustomXSec(s,XS_POINT);').replace('ReadFileXSec(GetXSec(s,0)','ReadFileXSec(GetXSec(s,2)').replace('SetCustomXSecLoc(GetXSec(s,1),vec3d(8,0,0));','SetCustomXSecLoc(GetXSec(s,2),vec3d(8,0,0));SetCustomXSecLoc(GetXSec(s,3),vec3d(8,0,0));')
