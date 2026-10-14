@@ -1,6 +1,6 @@
 import {createSurfaceShader} from './surface-shader.js?v=20261014';
 import {customActionsMarkup,bindCustomActions} from './custom-controls.js?v=20261012';
-import {designAssistMarkup,bindDesignAssist,wingMountMarkup,bindWingMount} from './design-assist.js?v=20261012-1';
+import {designAssistMarkup,bindDesignAssist,wingMountMarkup,bindWingMount} from './design-assist.js?v=20261014-ar';
 import {propertiesMode,propertiesModeMarkup,bindPropertiesMode,applyPropertiesMode} from './properties-mode.js?v=20261012-1';
 import {familyWorkflowsMarkup,bindFamilyWorkflows,disposeFamilyWorkflows} from './family-workflows.js?v=20261010-123';
 import {crewToolsEnabled,humanPromotedIDs,humanControlsMarkup,bindHumanControls,disposeHumanInspection} from './human-controls.js?v=20261010-123';

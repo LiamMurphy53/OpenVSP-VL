@@ -53,7 +53,7 @@ def metadata(v,gid):
             sections,fractions,twists=stations
             difference=twists[0]-twists[-1]
             if all(math.isclose(t,twists[0]-difference*f,abs_tol=1e-9) for t,f in zip(twists,fractions)) and all(math.isclose(v.GetParmVal(v.GetXSecParm(x,'Twist_Location')),.25,abs_tol=1e-10) for x in sections):washout=difference
-        return dict(kind='wing',washoutAvailable=bool(stations),washout=washout,thicknessAvailable=thickness_available,camberAvailable=camber_available,sweep=uniform(angles['sweep']) if all(abs(r-.25)<1e-10 for r in references) else None,dihedral=uniform(angles['dihedral']) if not v.GetParmVal(v.FindParm(gid,'RelativeDihedralFlag','WingGeom')) else None,thicknessPercent=100*uniform(thickness) if uniform(thickness) is not None else None,camberPercent=100*uniform(camber) if uniform(camber) is not None else None)
+        return dict(kind='wing',aspectRatio=v.GetParmVal(gid,'TotalAR','WingGeom'),washoutAvailable=bool(stations),washout=washout,thicknessAvailable=thickness_available,camberAvailable=camber_available,sweep=uniform(angles['sweep']) if all(abs(r-.25)<1e-10 for r in references) else None,dihedral=uniform(angles['dihedral']) if not v.GetParmVal(v.FindParm(gid,'RelativeDihedralFlag','WingGeom')) else None,thicknessPercent=100*uniform(thickness) if uniform(thickness) is not None else None,camberPercent=100*uniform(camber) if uniform(camber) is not None else None)
     if kind in ('PROP','PROPELLER'):
         values=list(v.PCurveGetValVec(gid,v.PROP_THICK))
         thickness=values[0]*100 if values and all(abs(a-values[0])<1e-10 for a in values) else None
@@ -95,7 +95,21 @@ def apply(v,r):
         for name,val in [('Eta_Attach_Location',value/100),('M_Attach_Location',.5),('N_Attach_Location',.5)]:set_value(v.FindParm(gid,name,'Attach'),val)
         for axis in 'XYZ':set_value(v.FindParm(gid,axis+'_Rel_Location','XForm'),0)
         v.Update();return
-    if action=='wing-washout':
+    if action=='wing-aspect-ratio':
+        if kind!='WING':raise ValueError('Choose a wing.')
+        v.Update()
+        area=v.GetParmVal(gid,'TotalArea','WingGeom')
+        aspect=v.GetParmVal(gid,'TotalAR','WingGeom')
+        span=v.GetParmVal(gid,'TotalProjectedSpan','WingGeom')
+        if value<=0 or area<=0 or aspect<=0 or span<=0:raise ValueError('Aspect ratio, wing area and projected span must be positive.')
+        # Native projected-span editing keeps chords fixed, so AR changes linearly.
+        # Native area editing then scales span and chords together, retaining AR.
+        set_value(v.FindParm(gid,'TotalProjectedSpan','WingGeom'),span*value/aspect)
+        v.Update()
+        set_value(v.FindParm(gid,'TotalArea','WingGeom'),area)
+        v.Update()
+        if not math.isclose(v.GetParmVal(gid,'TotalArea','WingGeom'),area,rel_tol=1e-9,abs_tol=1e-10):raise ValueError('Native section limits prevent retaining wing area. The edit was not saved.')
+    elif action=='wing-washout':
         if kind!='WING':raise ValueError('Choose a wing.')
         stations=wing_twist_stations(v,gid)
         if not stations:raise ValueError('Every wing section needs positive span for distributed washout. Configure sections in Pro.')
@@ -186,7 +200,7 @@ def apply(v,r):
         x=v.GetXSec(v.GetXSecSurf(gid,si),index)
         if not math.isclose(v.GetXSecWidth(x),width,rel_tol=1e-9,abs_tol=1e-10) or not math.isclose(v.GetXSecHeight(x),height,rel_tol=1e-9,abs_tol=1e-10):
             raise ValueError('A native section limit prevents proportional resizing. The edit was not saved; adjust that section in Pro.')
-    field={'wing-washout':'washout','wing-sweep':'sweep','wing-dihedral':'dihedral','wing-thickness':'thicknessPercent','wing-camber':'camberPercent','prop-pitch':'pitch','prop-blades':'blades','prop-thickness':'thicknessPercent','body-width':'width','body-height':'height','body-nose':'noseLength','body-tail':'tailLength'}[action]
+    field={'wing-aspect-ratio':'aspectRatio','wing-washout':'washout','wing-sweep':'sweep','wing-dihedral':'dihedral','wing-thickness':'thicknessPercent','wing-camber':'camberPercent','prop-pitch':'pitch','prop-blades':'blades','prop-thickness':'thicknessPercent','body-width':'width','body-height':'height','body-nose':'noseLength','body-tail':'tailLength'}[action]
     actual=metadata(v,gid).get(field)
     if actual is None or not math.isclose(actual,value,rel_tol=1e-9,abs_tol=1e-10):
         raise ValueError('OpenVSP could not apply the requested value consistently under these native limits or constraints. The edit was not saved; configure the individual controls in Pro.')
