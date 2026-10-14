@@ -52,6 +52,8 @@ def import_script(v,path,name,parent="",package_root=None,asset_root=None):
     else:
         result=json.loads(f(engine,str(path).encode(),name.encode(),parent.encode()))
     if isinstance(result,dict):raise ValueError(result.get('error','Custom script import failed.'))
+    import native_custom_assets
+    native_custom_assets.require_reads(v)
     v.Update()
     if result not in v.FindGeoms():raise ValueError('The custom component was not created.')
     return result

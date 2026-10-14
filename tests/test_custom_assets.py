@@ -119,6 +119,31 @@ void UpdateSurf(){string s=GetXSecSurf(GetCurrCustomGeom(),0);SetCustomXSecLoc(G
                 self.assertEqual(next(c for c in cold['components'] if c['id']==parent)['surfaces'],expected)
                 self.assertEqual(next(p['value'] for p in next(c for c in cold['components'] if c['id']==parent)['params'] if p['id']==pid),18)
 
+    def test_missing_computed_design_file_rejects_before_saving(self):
+        for reader in ('ReadApplyDESFile','ReadApplyXDDMFile'):
+            with self.subTest(reader=reader):
+                script=SCRIPT.replace('void Init(){','void Init(){string filename=\"missing-data\";'+reader+'(filename);')
+                before=self.model.read_bytes();existing=set(self.path.glob('*/aircraft.vsp3'))
+                with self.assertRaisesRegex(ValueError,'Missing or ambiguous custom package file'):
+                    self.worker(dict(action='mutate',operation='geometry-import',format='CUSTOM_PACKAGE',name='Missing design reader',content=base64.b64encode(self.package(script)).decode()))
+                candidates=set(self.path.glob('*/aircraft.vsp3'))-existing
+                self.assertEqual(len(candidates),1);self.assertEqual(next(iter(candidates)).read_bytes(),before)
+                self.assertEqual(self.model.read_bytes(),before)
+
+    def test_missing_computed_design_file_during_edit_preserves_saved_model(self):
+        for reader in ('ReadApplyDESFile','ReadApplyXDDMFile'):
+            with self.subTest(reader=reader):
+                script=SCRIPT.replace('void Init(){','void Init(){string p=AddParm(PARM_BOOL_TYPE,\"MissingData\",\"Design\");SetParmVal(p,0);')
+                script=script.replace('void UpdateSurf(){','void UpdateSurf(){if(GetParmVal(GetCurrCustomGeom(),\"MissingData\",\"Design\")>0){string filename=\"missing-data\";'+reader+'(filename);}')
+                state,saved=self.worker(dict(action='mutate',operation='geometry-import',format='CUSTOM_PACKAGE',name='Deferred reader',content=base64.b64encode(self.package(script)).decode()))
+                c=next(c for c in state['components'] if c['name']=='Deferred reader');pid=next(p['id'] for p in c['params'] if p['name']=='MissingData')
+                before=saved.read_bytes();existing=set(self.path.glob('*/aircraft.vsp3'))
+                with self.assertRaisesRegex(ValueError,'Missing or ambiguous custom package file'):
+                    self.worker(dict(action='mutate',operation='parameter',id=pid,value=1),saved)
+                candidates=set(self.path.glob('*/aircraft.vsp3'))-existing
+                self.assertEqual(len(candidates),1);self.assertEqual(next(iter(candidates)).read_bytes(),before)
+                self.assertEqual(saved.read_bytes(),before)
+
     def test_profile_package_reopens_without_original_files(self):
         # Direct original compiler/reader reference with the file in native cwd.
         script=SCRIPT.replace('AppendCustomXSec(s,XS_FILE_FUSE);AppendCustomXSec(s,XS_FILE_FUSE);','AppendCustomXSec(s,XS_POINT);AppendCustomXSec(s,XS_FILE_FUSE);AppendCustomXSec(s,XS_FILE_FUSE);AppendCustomXSec(s,XS_POINT);').replace('ReadFileXSec(GetXSec(s,0)','ReadFileXSec(GetXSec(s,2)').replace('SetCustomXSecLoc(GetXSec(s,1),vec3d(8,0,0));','SetCustomXSecLoc(GetXSec(s,2),vec3d(8,0,0));SetCustomXSecLoc(GetXSec(s,3),vec3d(8,0,0));')

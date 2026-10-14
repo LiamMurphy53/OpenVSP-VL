@@ -9,6 +9,7 @@ import xml.etree.ElementTree as ET
 from native_section_file_validation import validate_profile_file
 
 ATTRIBUTE='Studio.CustomAssets'
+MISSING_ATTRIBUTE='Studio.MissingCustomAsset'
 
 
 def stage(raw):
@@ -29,7 +30,7 @@ def rewrite_reads(text,source,base,asset_root):
     import os
     # Tokenize comments separately so examples and labels cannot become edits.
     tokens=[m for m in re.finditer(r'//[^\n]*|/\*.*?\*/|"(?:\\.|[^"\\])*"|[A-Za-z_]\w*|[^\s]',text,re.S) if not m[0].startswith(('//','/*'))]
-    replacements=[];dynamic=False
+    replacements=[];dynamic=False;wrappers=set()
     helper='StudioPackageProfile_'+hashlib.sha256((str(asset_root)+str(source.relative_to(base))).encode()).hexdigest()[:16]
     readers={'ReadFileAirfoil':1,'ReadFileXSec':1,'ReadBORFileAirfoil':1,'ReadBORFileXSec':1,'ReadAuxiliaryGeomCCEFile':1,'ReadApplyDESFile':0,'ReadApplyXDDMFile':0}
     for i,token in enumerate(tokens):
@@ -55,7 +56,10 @@ def rewrite_reads(text,source,base,asset_root):
                 end+=1
             if end==len(tokens):raise ValueError('Unclosed native file-profile call.')
             start=tokens[j+1].start();stop=tokens[end].start()
-            replacements.append((start,stop,helper+'('+text[start:stop]+')'))
+            if readers[token[0]]==0:
+                wrappers.add(token[0])
+                replacements.append((token.start(),tokens[end].end(),helper+'_'+token[0]+'('+text[start:stop]+')'))
+            else:replacements.append((start,stop,helper+'('+text[start:stop]+')'))
             dynamic=True
             continue
         literal=tokens[j+1]
@@ -79,10 +83,24 @@ def rewrite_reads(text,source,base,asset_root):
         missing_path=asset_root/'.unavailable-profile'
         while (base/missing_path.relative_to(asset_root)).exists():missing_path=Path(str(missing_path)+'_')
         missing=missing_path.relative_to(Path.cwd()).as_posix()
-        # Unknown computed names go through the native reader's missing-file
-        # diagnostic rather than accessing an unrelated file in the job.
-        text+='\nstring '+helper+'(const string &in filename){\nstring normalized=filename;\nwhile(normalized.length()>=2 && normalized.substr(0,2)=="./")normalized=normalized.substr(2);\n'+cases+'return '+json.dumps(missing)+';\n}\n'
+        # Unknown computed names are recorded for rejection. Profile readers
+        # retain their native diagnostic; unsafe design readers are skipped.
+        text+='\nstring '+helper+'(const string &in filename){\nstring normalized=filename;\nwhile(normalized.length()>=2 && normalized.substr(0,2)=="./")normalized=normalized.substr(2);\n'+cases+'AddAttributeString(GetChildCollection(GetCurrCustomGeom()),'+json.dumps(MISSING_ATTRIBUTE)+',filename);\nreturn '+json.dumps(missing)+';\n}\n'
+        # These native void readers can crash on a missing file. Leave the
+        # original reader untouched for resolved data, and skip unresolved
+        # calls so the worker can reject the recorded failure before saving.
+        for reader in sorted(wrappers):
+            text+='\nvoid '+helper+'_'+reader+'(const string &in filename){string path='+helper+'(filename);if(path!='+json.dumps(missing)+')'+reader+'(path);}\n'
     return text
+
+
+def require_reads(v):
+    """Catch unresolved computed reads even when a native reader clears errors."""
+    for gid in v.FindGeoms():
+        for aid in v.FindAttributesInCollection(v.GetChildCollection(gid)):
+            if v.GetAttributeName(aid)==MISSING_ATTRIBUTE:
+                names=v.GetAttributeStringVal(aid)
+                raise ValueError('Missing or ambiguous custom package file: '+(names[0] if names else 'unknown filename'))
 
 
 def save(v,gid,raw):

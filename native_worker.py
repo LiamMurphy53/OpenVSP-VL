@@ -19,6 +19,8 @@ def errors(v):
         messages.append(manager.PopLastError().m_ErrorString)
     if messages:
         raise ValueError('; '.join(messages))
+    import native_custom_assets
+    native_custom_assets.require_reads(v)
 
 
 def parameter(v, pid):
@@ -710,6 +712,8 @@ def run(req, model):
         native_custom_library.validate_gui(v)
         native_custom_library.validate_surfaces(v)
         require_reference_survival(v,copy_refs)
+        import native_custom_assets
+        native_custom_assets.require_reads(v)
         v.WriteVSPFile(str(model),v.SET_ALL)
         errors(v)
         # Native file-curve limits are reconstructed differently by DecodeXml.
