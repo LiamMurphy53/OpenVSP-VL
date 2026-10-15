@@ -31,5 +31,11 @@ def copy(v,source):
 
 
 def paste(v,target,source):
-    one(target,[g for g in v.FindGeoms() if v.GetGeomTypeName(g).upper()=='BODYOFREVOLUTION']);copy(v,source);clipboard(v,target,1)
+    one(target,[g for g in v.FindGeoms() if v.GetGeomTypeName(g).upper()=='BODYOFREVOLUTION'])
+    from native_curve_copy_points import capture,restore
+    payload=capture(v,source)
+    copy(v,source);clipboard(v,target,1)
+    if payload is not None:
+        from native_bor_curves import container
+        restore(v,container(v,target),payload)
     return True,target
