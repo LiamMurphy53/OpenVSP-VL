@@ -62,9 +62,10 @@ def rewrite_reads(text,source,base,asset_root):
     tokens=[m for m in re.finditer(r'//[^\n]*|/\*.*?\*/|"(?:\\.|[^"\\])*"|[A-Za-z_]\w*|[^\s]',text,re.S) if not m[0].startswith(('//','/*'))]
     replacements=[];dynamic=False;wrappers=set()
     helper='StudioPackageProfile_'+hashlib.sha256((str(asset_root)+str(source.relative_to(base))).encode()).hexdigest()[:16]
-    readers={'ReadFileAirfoil':1,'ReadFileXSec':1,'ReadBORFileAirfoil':1,'ReadBORFileXSec':1,'ReadAuxiliaryGeomCCEFile':1,'ReadApplyDESFile':0,'ReadApplyXDDMFile':0}
+    readers={'ReadFileAirfoil':1,'ReadFileXSec':1,'ReadBORFileAirfoil':1,'ReadBORFileXSec':1,'ReadAuxiliaryGeomCCEFile':1,'ReadAdvLinkCodeFile':1,'ReadApplyDESFile':0,'ReadApplyXDDMFile':0}
     for i,token in enumerate(tokens):
         if token[0] not in readers or i+1>=len(tokens) or tokens[i+1][0]!='(':continue
+        kind='code' if token[0]=='ReadAdvLinkCodeFile' else 'profile'
         j=i+1
         if readers[token[0]]:
             depth=1;j=i+2
@@ -98,7 +99,7 @@ def rewrite_reads(text,source,base,asset_root):
         relative=Path(filename)
         candidates={(source.parent/relative).resolve(),(base/relative).resolve()}
         candidates=[p for p in candidates if p.is_relative_to(base) and p.is_file()]
-        if len(candidates)!=1:raise ValueError('Choose an unambiguous in-package profile file: '+filename)
+        if len(candidates)!=1:raise ValueError('Choose an unambiguous in-package '+kind+' file: '+filename)
         destination=asset_root/candidates[0].relative_to(base)
         if readers[token[0]]==0:
             design_record_ids(candidates[0],'DES' if token[0]=='ReadApplyDESFile' else 'XDDM')
