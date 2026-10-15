@@ -130,7 +130,12 @@ def import_geometry(v,r):
 def export(v,r):
     kind=r.get('kind')
     folder=Path.cwd()/'output';folder.mkdir(exist_ok=True)
-    if kind=='fit':
+    if kind=='advanced-link-code':
+        names=list(v.GetAdvLinkNames());index=r.get('index')
+        if type(index)!=int or not 0<=index<len(names):raise ValueError('Choose an existing expression.')
+        one(r.get('expectedName'),[names[index]],'This expression changed. Reload before exporting it.')
+        path=folder/'expression.as';v.WriteAdvLinkCodeFile(index,str(path))
+    elif kind=='fit':
         path=folder/'model.fit';v.SaveFitModelFile(str(path))
     elif kind=='design-variables':
         fmt=one(r['format'],['DES','XDDM']);path=folder/('design.'+('des' if fmt=='DES' else 'xddm'))
