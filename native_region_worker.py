@@ -12,8 +12,11 @@ from vsp_runtime import load
 
 def compute(model,region,target,curve):
     import native_custom_assets
-    native_custom_assets.restore(model)
-    v=load();v.ClearVSPModel();v.ReadVSPFile(str(model));v.Update()
+    v=load();v.ClearVSPModel();readable=native_custom_assets.prepare(v,model)
+    try:v.ReadVSPFile(str(readable))
+    finally:
+        if readable!=Path(model):readable.unlink(missing_ok=True)
+    v.SetVSP3FileName(str(model));v.Update()
     import native_gear_retraction
     native_gear_retraction.refresh(v)
     manager=v.ErrorMgrSingleton.getInstance()

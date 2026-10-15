@@ -1421,3 +1421,13 @@ extern "C" const char* studio_cutting_plane_drawings(const char* engine,const ch
     }catch(const std::exception& error){output="{\"error\":"+quote(error.what())+"}";}
     if(library)dlclose(library);return output.c_str();
 }
+
+extern "C" const char* studio_script_xml_text(const char* engine,const char* text,bool decode) {
+    static thread_local std::string output;void* library=nullptr;
+    try {
+        library=dlopen(engine,RTLD_NOW);if(!library)throw std::runtime_error(dlerror());
+        const char* name=decode?"_ZN7XmlUtil23ConvertFromXMLSafeCharsERKNSt3__112basic_stringIcNS0_11char_traitsIcEENS0_9allocatorIcEEEE":"_ZN7XmlUtil21ConvertToXMLSafeCharsERKNSt3__112basic_stringIcNS0_11char_traitsIcEENS0_9allocatorIcEEEE";
+        output=quote(symbol<std::string(*)(const std::string&)>(library,name)(std::string(text)));
+    }catch(const std::exception& error){output="{\"error\":"+quote(error.what())+"}";}
+    if(library)dlclose(library);return output.c_str();
+}

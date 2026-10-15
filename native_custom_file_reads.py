@@ -148,3 +148,8 @@ def replacements(text,tokens,helper):
         receiver=text[tokens[start].start():tokens[i-1].start()]
         result.append((tokens[start].start(),tokens[i+1].end(),helper+'_open(@('+receiver+'),'))
     return result
+
+
+def helper_code(helper,cases):
+    return ('\nstring '+helper+'_filePath(const string &in filename){string normalized=filename;while(normalized.length()>=2 && normalized.substr(0,2)=="./")normalized=normalized.substr(2);'+cases+'return filename;}\n'
+            '\nint '+helper+'_open(file@ target,const string &in filename,const string &in mode){int status=target.open(filename,mode);if(status!=0 && (mode=="r" || mode=="rb")){string path='+helper+'_filePath(filename);if(path!=filename)return target.open(path,mode);}return status;}\n')

@@ -612,8 +612,11 @@ def run(req, model):
     v.ClearVSPModel()
     if model.exists():
         import native_custom_assets
-        native_custom_assets.restore(model)
-        v.ReadVSPFile(str(model))
+        readable=native_custom_assets.prepare(v,model)
+        try:v.ReadVSPFile(str(readable))
+        finally:
+            if readable!=model:readable.unlink(missing_ok=True)
+        if readable!=model:v.SetVSP3FileName(str(model))
         errors(v)
         # Synchronize derived values and edit baselines before applying edits.
         # In particular, wing TotalSpan/TotalArea setters depend on the last

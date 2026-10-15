@@ -57,7 +57,6 @@ def stage(raw):
 
 def rewrite_reads(text,source,base,asset_root):
     """Relocate packaged reader arguments while retaining native script evaluation."""
-    import os
     # Tokenize comments separately so examples and labels cannot become edits.
     tokens=[m for m in re.finditer(r'//[^\n]*|/\*.*?\*/|"(?:\\.|[^"\\])*"|[A-Za-z_]\w*|[^\s]',text,re.S) if not m[0].startswith(('//','/*'))]
     replacements=[];dynamic=False;wrappers=set()
@@ -113,13 +112,7 @@ def rewrite_reads(text,source,base,asset_root):
         else:replacements.append((literal.start(),literal.end(),json.dumps(destination.relative_to(Path.cwd()).as_posix())))
     for start,end,replacement in sorted(replacements,reverse=True):text=text[:start]+replacement+text[end:]
     if dynamic:
-        choices={}
-        for file in base.rglob('*'):
-            if not file.is_file():continue
-            target=(asset_root/file.relative_to(base)).relative_to(Path.cwd()).as_posix()
-            for key in {file.relative_to(base).as_posix(),Path(os.path.relpath(file,source.parent)).as_posix()}:
-                choices.setdefault(key,set()).add(target)
-        cases=''.join('if(normalized=='+json.dumps(key)+')return '+json.dumps(next(iter(paths)))+';\n' for key,paths in sorted(choices.items()) if len(paths)==1)
+        cases=choice_cases(source,base,asset_root)
         missing_path=asset_root/'.unavailable-profile'
         while (base/missing_path.relative_to(asset_root)).exists():missing_path=Path(str(missing_path)+'_')
         missing=missing_path.relative_to(Path.cwd()).as_posix()
@@ -127,8 +120,8 @@ def rewrite_reads(text,source,base,asset_root):
             # Preserve native writes, optional reads and read-after-write behavior:
             # try the original filename first; only failed pure reads fall back
             # to an unambiguous embedded companion. Arguments evaluate once.
-            text+='\nstring '+helper+'_filePath(const string &in filename){string normalized=filename;while(normalized.length()>=2 && normalized.substr(0,2)=="./")normalized=normalized.substr(2);'+cases+'return filename;}\n'
-            text+='\nint '+helper+'_open(file@ target,const string &in filename,const string &in mode){int status=target.open(filename,mode);if(status!=0 && (mode=="r" || mode=="rb")){string path='+helper+'_filePath(filename);if(path!=filename)return target.open(path,mode);}return status;}\n'
+            from native_custom_file_reads import helper_code
+            text+=helper_code(helper,cases)
         # Unknown computed names are recorded for rejection. Profile readers
         # retain their native diagnostic; unsafe design readers are skipped.
         text+='\nstring '+helper+'(const string &in filename){\nstring normalized=filename;\nwhile(normalized.length()>=2 && normalized.substr(0,2)=="./")normalized=normalized.substr(2);\n'+cases+'AddAttributeString(GetChildCollection(GetCurrCustomGeom()),'+json.dumps(MISSING_ATTRIBUTE)+',filename);\nreturn '+json.dumps(missing)+';\n}\n'
@@ -167,12 +160,82 @@ def save(v,gid,raw):
 
 def restore(model):
     """Stage companions before native custom Init/Update runs during ReadVSPFile."""
-    if not Path(model).exists():return
-    for node in ET.parse(model).iter('Attribute'):
+    if Path(model).exists():_stage_tree(ET.parse(model))
+
+
+def _stage_tree(tree):
+    staged={}
+    for node in tree.iter('Attribute'):
         if node.get('Name')!=ATTRIBUTE:continue
         encoded=node.get('StrData','')
         if len(encoded)>67_000_000:raise ValueError('Saved custom package exceeds 50 MB.')
         try:raw=base64.b64decode(encoded,validate=True)
         except ValueError:raise ValueError('Saved custom package data is invalid.')
         if not raw or len(raw)>50_000_000:raise ValueError('Saved custom package exceeds 50 MB.')
-        stage(raw)
+        staged[node]=stage(raw)
+    return staged
+
+
+def choice_cases(source,base,asset_root):
+    import os
+    choices={}
+    for file in base.rglob('*'):
+        if not file.is_file():continue
+        target=(asset_root/file.relative_to(base)).relative_to(Path.cwd()).as_posix()
+        for key in {file.relative_to(base).as_posix(),Path(os.path.relpath(file,source.parent)).as_posix()}:
+            choices.setdefault(key,set()).add(target)
+    return ''.join('if(normalized=='+json.dumps(key)+')return '+json.dumps(next(iter(paths)))+';\n' for key,paths in sorted(choices.items()) if len(paths)==1)
+
+
+def prepare(v,model):
+    """Upgrade embedded file receivers in an isolated native-load copy only."""
+    import ctypes,native_preview
+    model=Path(model);tree=ET.parse(model);staged=_stage_tree(tree)
+    changed=False;candidates=[]
+    for geom in tree.iter('Geom'):
+        script=geom.find('CustomGeom/ScriptFileContents')
+        if script is None or not script.text:continue
+        assets=[a for a in geom.findall('ParmContainer/AttributeCollection/Attribute') if a.get('Name')==ATTRIBUTE]
+        if assets:candidates.append((script,assets))
+    if not candidates:return model
+    _,engine,bridge=native_preview.adapter(v);convert=bridge.studio_script_xml_text
+    convert.argtypes=[ctypes.c_char_p,ctypes.c_char_p,ctypes.c_bool];convert.restype=ctypes.c_char_p
+    def codec(text,decode):
+        result=json.loads(convert(engine,text.encode(),decode))
+        if isinstance(result,dict):raise ValueError(result.get('error','Native script XML conversion failed.'))
+        return result
+    from native_custom_file_reads import replacements as file_replacements,helper_code
+    for script,assets in candidates:
+        if len(assets)!=1:raise ValueError('Custom component has ambiguous embedded package records.')
+        folder,entry,_=staged[assets[0]]
+        text=codec(script.text,True)
+        tokens=[m for m in re.finditer(r'//[^\n]*|/\*.*?\*/|"(?:\\.|[^"\\])*"|[A-Za-z_]\w*|[^\s]',text,re.S) if not m[0].startswith(('//','/*'))]
+        # Includes can place generated helpers before later user callbacks.
+        # Exclude individual helper bodies, not the remainder of the script.
+        generated=[]
+        for i,token in enumerate(tokens[:-2]):
+            if token[0] not in ('string','void','int') or not re.fullmatch(r'StudioPackage(?:Profile|Upgrade)_[0-9a-f]{16}(?:_[A-Za-z0-9_]+)?',tokens[i+1][0]) or tokens[i+2][0]!='(':continue
+            j=i+2;depth=0
+            while j<len(tokens):
+                if tokens[j][0]=='(':depth+=1
+                elif tokens[j][0]==')':depth-=1
+                j+=1
+                if depth==0:break
+            if j>=len(tokens) or tokens[j][0]!='{':continue
+            depth=0;k=j
+            while k<len(tokens):
+                if tokens[k][0]=='{':depth+=1
+                elif tokens[k][0]=='}':depth-=1
+                k+=1
+                if depth==0:break
+            generated.append((token.start(),tokens[k-1].end()))
+        helper='StudioPackageUpgrade_'+hashlib.sha256(text.encode()).hexdigest()[:16]
+        edits=[edit for edit in file_replacements(text,tokens,helper) if not any(start<=edit[0]<end for start,end in generated)]
+        if not edits:continue
+        for start,end,replacement in sorted(edits,reverse=True):text=text[:start]+replacement+text[end:]
+        script.text=codec(text+helper_code(helper,choice_cases(entry,folder,folder)),False);changed=True
+    if not changed:return model
+    import os,tempfile
+    fd,filename=tempfile.mkstemp(prefix='.studio-custom-readable-',suffix='.vsp3',dir=Path.cwd()/'.studio-custom-assets')
+    with os.fdopen(fd,'wb') as output:tree.write(output,encoding='utf-8',xml_declaration=True)
+    return Path(filename)
