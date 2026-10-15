@@ -62,6 +62,9 @@ def enrich(v,gid,params):
         if definition['label'] and p['name'] not in LABELS:p['label']=definition['label'].rstrip(':')
         if kind==v.GDEV_INDEX_SELECTOR:p['customIndexSelector']=definition['index']
         if kind==v.GDEV_PARM_BUTTON:p['customParmButton']=True
+        if kind in (v.GDEV_SLIDER_INPUT,v.GDEV_SLIDER_ADJ_RANGE_INPUT):
+            p['customSlider']=dict(range=definition.get('range'),adjustable=kind==v.GDEV_SLIDER_ADJ_RANGE_INPUT,
+                                   key=f'{gid}:{definition["index"]}:{p["id"]}')
         if kind==v.GDEV_OUTPUT:p.update(displayReadOnly=True,readOnlyReason='Calculated output from the custom script.')
         if kind==v.GDEV_TRIGGER_BUTTON:
             p['trigger']=True

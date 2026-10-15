@@ -1249,7 +1249,7 @@ extern "C" const char* studio_custom_gui_definitions(const char* engine,const ch
         void* manager=symbol<void*>(library,"_ZZN22CustomGeomMgrSingleton11getInstanceEvE8instance");
         auto definitions=symbol<std::vector<GuiDef>(*)(void*,const std::string&)>(library,"_ZN22CustomGeomMgrSingleton12GetGuiDefVecERKNSt3__112basic_stringIcNS0_11char_traitsIcEENS0_9allocatorIcEEEE")(manager,std::string(geom));
         std::ostringstream json;json<<'[';bool first=true;
-        for(size_t i=0;i<definitions.size();++i){auto& d=definitions[i];if(!first)json<<',';first=false;json<<"{\"index\":"<<i<<",\"type\":"<<d.m_Type<<",\"label\":"<<quote(d.m_Label)<<",\"parameter\":"<<quote(d.m_ParmName)<<",\"group\":"<<quote(d.m_GroupName)<<'}';}
+        for(size_t i=0;i<definitions.size();++i){auto& d=definitions[i];if(!first)json<<',';first=false;json<<"{\"index\":"<<i<<",\"type\":"<<d.m_Type<<",\"label\":"<<quote(d.m_Label)<<",\"parameter\":"<<quote(d.m_ParmName)<<",\"group\":"<<quote(d.m_GroupName)<<",\"range\":";if(std::isfinite(d.m_Range))json<<std::setprecision(17)<<d.m_Range;else json<<"null";json<<'}';}
         json<<']';output=json.str();
     }catch(const std::exception& e){output="{\"error\":"+quote(e.what())+"}";}
     if(library)dlclose(library);return output.c_str();

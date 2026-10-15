@@ -71,3 +71,5 @@
 .viewport > .view-tools{top:18px;left:18px;max-width:calc(100% - 36px);flex-wrap:wrap}
 .view-tools .history{margin-left:6px;border-left:1px solid var(--border);padding-left:6px}
 .view-tools .history button{font-size:14px;padding:4px 8px}
+
+.custom-slider{margin-top:.5rem}.custom-slider input[type=range]{width:100%;min-height:1.5rem;padding:0;accent-color:var(--accent,#309b7b)}.custom-slider-range{display:flex;align-items:center;justify-content:space-between;gap:.5rem}.custom-slider-range>div{display:flex;gap:.35rem}.custom-slider-range button{padding:.15rem .6rem;min-height:1.8rem}

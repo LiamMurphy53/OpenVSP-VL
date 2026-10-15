@@ -146,3 +146,8 @@ Current combined modeling audit — October 15: 48 of 49 selected modules passed
 ### 2026-10-15 — surface-end cap diagnostics
 
 Properties now reports actual native cap results at both ends for each main surface. None, added, not added and unavailable are distinct; profile edge shaping stays separate. Native reader tests, six existing cap workflows, 30 independent original-getter comparisons and 25 default component-type probes pass. The browser confirms saved cap edits refresh the result. The adapter remains pinned to macOS arm64/OpenVSP 3.52.2 and verifies the engine binary checksum and native parameter addresses before reading the compiler-derived layout. W02 and broader modeling completion remain open; rounded-propeller chevron crashes remain unresolved.
+
+
+### 2026-10-15 — custom component sliders
+
+Properties now exposes script-defined sliders and adjustable ranges beside the numeric fields, with native ranges/limits, display units, stable windows during saved edits, own/external bindings and existing transaction validation. External Lock buttons correctly target the bound owner. Twenty selected native tests plus presentation checks pass; browser edits, Undo/Redo, reopening and a parent-bound locked edit have direct SDK geometry evidence. This advances W05; full modeling/custom-runtime closure and the known native chevron crash remain open.

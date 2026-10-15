@@ -45,13 +45,16 @@ def external_controls(v,component,parameters):
         pid=bindings.get(d['index'])
         if d['type'] not in control_types(v) or not pid or pid in own or not v.ValidParm(pid):continue
         item=copy.deepcopy(parameters.get(pid) or parameter(v,pid))
-        for key in ('customIndexSelector','customParmButton','trigger','triggerLabel'):item.pop(key,None)
+        for key in ('customIndexSelector','customParmButton','customSlider','trigger','triggerLabel'):item.pop(key,None)
         item['label']=d['label'].rstrip(':') or item.get('label') or item['name']
         item['active']=parameter_activity(v,[pid])[pid]
         if d['type']==v.GDEV_OUTPUT:item.update(displayReadOnly=True,readOnlyReason='Calculated output from the custom script.')
         if d['type']==v.GDEV_TRIGGER_BUTTON:item.update(trigger=True,triggerLabel=item['label'])
         if d['type']==v.GDEV_INDEX_SELECTOR:item['customIndexSelector']=d['index']
         if d['type']==v.GDEV_PARM_BUTTON:item['customParmButton']=True
+        if d['type'] in (v.GDEV_SLIDER_INPUT,v.GDEV_SLIDER_ADJ_RANGE_INPUT):
+            item['customSlider']=dict(range=d.get('range'),adjustable=d['type']==v.GDEV_SLIDER_ADJ_RANGE_INPUT,
+                                      key=f'{component["id"]}:{d["index"]}:{pid}')
         if d['type']==v.GDEV_CHOICE:item['choices']=[]
         row=dict(index=d['index'],parameter=item,owner=parameters.get(pid,{}).get('bindingOwner') or v.GetContainerName(v.GetParmContainer(pid)))
         if tab:row.update(tab=tab,tabIndex=tab_index)
