@@ -72,10 +72,55 @@ def resize(v,count,replacements=None):
         raise ValueError('A native dependency still refers to a removed set. Update that dependency first.')
 
 
+def reorder(v,order):
+    """Move user-set contents and references; native slot indices stay fixed."""
+    import copy,os
+    import native_references,native_property_locks
+    slots=list(range(v.SET_FIRST_USER,v.GetNumSets()))
+    if not isinstance(order,list) or any(type(i)!=int for i in order) or len(order)!=len(slots) or set(order)!=set(slots):raise ValueError('Provide each user-set index exactly once; built-in sets cannot move.')
+    if order==slots:return
+    mapping={old:new for new,old in zip(slots,order)}
+    original={i:dict(name=v.GetSetName(i),members=set(v.GetGeomSetAtIndex(i))) for i in slots}
+    refs=references(v);locks=native_property_locks.records(v)
+    path,tree=native_references.document(v)
+    try:attrs=copy.deepcopy(tree.find('.//SetAttrs'))
+    finally:path.unlink(missing_ok=True)
+    for destination,source in zip(slots,order):
+        v.SetSetName(destination,original[source]['name'])
+        for geom in v.FindGeoms():v.SetSetFlag(geom,destination,geom in original[source]['members'])
+    for ref in refs:
+        value=mapping.get(ref['value'],ref['value'])
+        if value==ref['value']:continue
+        if not ref['min']<=value<=ref['max']:raise ValueError('A saved set reference cannot follow the requested order: '+ref['label'])
+        if 'group' in ref:v.SetVarPresetParmVal(ref['group'],ref['setting'],ref['id'],value)
+        else:v.SetParmValUpdate(ref['id'],value)
+    v.Update()
+    expected={ref['key']:mapping.get(ref['value'],ref['value']) for ref in refs}
+    if any(expected.get(ref['key'])!=ref['value'] for ref in references(v)):raise ValueError('A native dependency prevents moving these set references. The edit was not saved.')
+    for destination,source in zip(slots,order):
+        if v.GetSetName(destination)!=original[source]['name'] or set(v.GetGeomSetAtIndex(destination))!=original[source]['members']:raise ValueError('OpenVSP could not retain the requested set contents.')
+    native_property_locks.require_unchanged(v,locks)
+    filename=v.GetVSPFileName();path,tree=native_references.document(v)
+    try:
+        existing=tree.find('.//SetAttrs')
+        if attrs is not None:
+            parent=next(node for node in tree.iter() if existing in list(node))
+            parent.remove(existing)
+            for node in attrs.findall('Set'):
+                old=int(node.get('SetIndex'))+v.SET_FIRST_USER
+                node.set('SetIndex',str(mapping[old]-v.SET_FIRST_USER))
+                node.set('SetName',original[old]['name'])
+            parent.append(attrs)
+        tree.write(path,encoding='utf-8',xml_declaration=True);os.replace(path,filename)
+    finally:path.unlink(missing_ok=True)
+    raise native_references.ReloadRequired(dict(action='state',validatePropertyLocks=True))
+
+
 def mutate(v,r):
     from native_tools import name,finite,one
     op=r['operation']
-    if op=='set-count':resize(v,r['count'],r.get('replacements'))
+    if op=='set-reorder':reorder(v,r['order'])
+    elif op=='set-count':resize(v,r['count'],r.get('replacements'))
     elif op=='set-create':
         label=name(r['name']);p=count_parameter(v);count=int(v.GetParmVal(p))
         if count>=v.GetParmUpperLimit(p):raise ValueError('The native geometry set limit has been reached.')

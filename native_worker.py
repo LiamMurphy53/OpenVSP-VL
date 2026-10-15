@@ -637,6 +637,9 @@ def run(req, model):
     native_wave_controls.refresh(v)
     import native_parasite_controls
     native_parasite_controls.refresh(v)
+    if req.get('validatePropertyLocks'):
+        import native_property_locks
+        native_property_locks.require_unchanged(v,native_property_locks.records(v))
     if action.startswith('study-'):
         import native_study_worker as study
         if action=='study-schema':data=study.schema(v,parameter)
