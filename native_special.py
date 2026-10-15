@@ -164,23 +164,23 @@ def mutate(v,r):
             source=r['source']
             if r.get('curveOnly',True):
                 target,ts,ti,_=section(v,r)
-                import native_bor_clipboard
-                native_bor_clipboard.copy(v,source)
-                from native_section_copy import curve_clipboard
-                curve_clipboard(v,ts,ti,1)
+                from native_curve_copy_points import copy_to_section
+                copy_to_section(v,source,ts,ti)
                 return True,target
             if source.get('kind')!='section':raise ValueError('Whole-section copies require an ordinary section source. Choose Profile only for this source.')
             r={**r,'sourceGeom':source['geom'],'sourceSurface':source.get('surface',0),'sourceIndex':source['index']}
         if r.get('sourceKind')=='bor':
             if not r.get('curveOnly',True):raise ValueError('Choose Profile only when copying from a body of revolution.')
-            target,_,ti,_=section(v,r)
+            target,ts,ti,_=section(v,r)
             if r.get('surface',0)!=0:raise ValueError('Native section clipboard uses section surface 0.')
-            import native_bor_clipboard
-            native_bor_clipboard.copy(v,dict(kind='bor',geom=r['sourceGeom']));v.PasteXSecCurve(target,ti)
+            from native_curve_copy_points import copy_to_section
+            copy_to_section(v,dict(kind='bor',geom=r['sourceGeom']),ts,ti)
             return True,target
         target,ts,ti,tx=section(v,r);source,ss,si,sx=section(v,dict(geom=r['sourceGeom'],surface=r['sourceSurface'],index=r['sourceIndex']))
         if r.get('surface',0)!=0 or r['sourceSurface']!=0:raise ValueError('Native section clipboard operations apply to surface 0.')
-        if r.get('curveOnly',True):v.CopyXSecCurve(source,si);v.PasteXSecCurve(target,ti)
+        if r.get('curveOnly',True):
+            from native_curve_copy_points import copy_to_section
+            copy_to_section(v,dict(kind='section',geom=source,surface=r['sourceSurface'],index=si),ts,ti)
         else:
             if v.GetGeomTypeName(source)!=v.GetGeomTypeName(target):raise ValueError('Whole sections need matching geometry types; copy the profile instead.')
             v.CopyXSec(source,si);v.PasteXSec(target,ti)

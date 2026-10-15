@@ -36,3 +36,13 @@ def restore(v,cid,payload):
     fields={v.GetParmName(p):p for p in v.FindContainerParmIDs(cid)}
     for name,value in payload['flags'].items():v.SetParmVal(fields[name],value)
     v.Update()
+
+
+def copy_to_section(v,source,surface,index):
+    import native_bor_clipboard
+    from native_section_copy import curve_clipboard
+    payload=capture(v,source)
+    native_bor_clipboard.copy(v,source);curve_clipboard(v,surface,index,1)
+    if payload is not None:
+        x=v.GetXSec(surface,index)
+        restore(v,v.GetParmContainer(v.GetXSecParm(x,'Theta')),payload)

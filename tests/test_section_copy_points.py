@@ -9,7 +9,7 @@ class SectionCopyPoints(unittest.TestCase):
     tearDown=test_native.NativeIntegration.tearDown
     worker=test_native.NativeIntegration.worker
 
-    def test_shorter_profile_replaces_points_on_all_section_families(self):
+    def check_copies(self,profile_only=False):
         v=self.v
         for kind in ('STACK','FUSELAGE','WING','PROP'):
             with self.subTest(kind=kind):
@@ -20,10 +20,14 @@ class SectionCopyPoints(unittest.TestCase):
                     v.SetParmValUpdate(v.GetXSecParm(x,'SymType'),v.SYM_NONE);v.EditXSecConvertTo(x,v.LINEAR)
                     v.SetEditXSecPnts(x,[r[0] for r in rows],[v.vec3d(*r[1:4]) for r in rows],[r[4] for r in rows])
                 v.Update();v.WriteVSPFile(str(self.model),v.SET_ALL)
-                v.CopyXSec(source,1);v.PasteXSec(target,1);v.Update()
+                if profile_only:v.CopyXSecCurve(source,1);v.PasteXSecCurve(target,1)
+                else:v.CopyXSec(source,1);v.PasteXSec(target,1)
+                v.Update()
                 reference=self.path/'direct.vsp3';v.WriteVSPFile(str(reference),v.SET_ALL)
                 expected,_=self.worker(dict(action='state'),reference)
-                state,path=self.worker(dict(action='mutate',operation='section-copy-from',geom=target,surface=0,index=1,sourceGeom=source,sourceSurface=0,sourceIndex=1))
+                request=dict(action='mutate',operation='section-copy-from',geom=target,surface=0,index=1,sourceGeom=source,sourceSurface=0,sourceIndex=1)
+                if profile_only:request['curveOnly']=True
+                state,path=self.worker(request)
                 c=next(c for c in state['components'] if c['id']==target);section=c['sections'][1]
                 self.assertEqual(section['controlPoints'],[r[1:4] for r in ROWS])
                 self.assertEqual(section['rounding'],[r[4] for r in ROWS])
@@ -34,5 +38,9 @@ class SectionCopyPoints(unittest.TestCase):
                 self.assertEqual(section['profile'],ref['sections'][1]['profile'])
                 cold,_=self.worker(dict(action='state'),path)
                 self.assertEqual(next(c['surfaces'] for c in cold['components'] if c['id']==target),c['surfaces'])
+
+    def test_shorter_profile_replaces_points_on_all_section_families(self):self.check_copies()
+
+    def test_legacy_profile_only_requests_match_native(self):self.check_copies(True)
 
 if __name__=='__main__':unittest.main()
