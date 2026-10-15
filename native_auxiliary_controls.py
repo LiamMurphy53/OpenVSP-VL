@@ -167,16 +167,20 @@ def mutate(v,r):
         from native_special import SHAPES
         shape=one(r['shape'],SHAPES,'Choose a native profile family.');protect(getattr(v,shape));curve(v,gid,1,getattr(v,shape))
     elif r['operation']=='auxiliary-profile-copy':
-        if isinstance(r.get('source'),dict):
-            import native_bor_clipboard
-            native_bor_clipboard.copy(v,r['source']);curve(v,gid,3);return
-        source=one(r['source'],v.FindGeoms(),'Choose an existing source component.')
-        if v.GetGeomTypeName(source).upper()=='AUXILIARY':curve(v,source,2)
-        else:
-            if not v.GetNumXSecSurfs(source):raise ValueError('Choose a source with ordinary sections or a Super cone profile.')
-            i=one(r.get('index',1),range(v.GetNumXSec(v.GetXSecSurf(source,0))),'Choose an existing source section.')
-            v.CopyXSecCurve(source,i)
-        curve(v,gid,3)
+        source=r['source']
+        if not isinstance(source,dict):
+            source=one(source,v.FindGeoms(),'Choose an existing source component.')
+            if v.GetGeomTypeName(source).upper()=='AUXILIARY':source=dict(kind='auxiliary',geom=source)
+            else:
+                if not v.GetNumXSecSurfs(source):raise ValueError('Choose a source with ordinary sections or a Super cone profile.')
+                i=one(r.get('index',1),range(v.GetNumXSec(v.GetXSecSurf(source,0))),'Choose an existing source section.')
+                source=dict(kind='section',geom=source,surface=0,index=i)
+        import native_bor_clipboard
+        from native_curve_copy_points import capture,restore
+        payload=capture(v,source)
+        native_bor_clipboard.copy(v,source);curve(v,gid,3)
+        if payload is not None:
+            restore(v,curve_container(v,gid),payload);edit(v,gid)
     elif r['operation']=='auxiliary-profile-import':
         from native_region_curves import import_profile
         fmt=one(r.get('format'),('airfoil','section'))

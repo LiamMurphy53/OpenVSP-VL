@@ -213,8 +213,13 @@ def mutate(v,r):
         source=r.get('source')
         if not isinstance(source,dict):raise ValueError('Choose a curve to copy.')
         import native_bor_clipboard
+        from native_curve_copy_points import capture,restore
+        payload=capture(v,source)
         native_bor_clipboard.copy(v,source)
         call(geom,index,region_index,3)
+        if payload is not None:
+            restore(v,native_references.references(v)[r['id']]['curveID'],payload)
+            edit(v,r)
     else:raise ValueError('Unknown section-curve operation.')
     v.Update()
     return True,geom

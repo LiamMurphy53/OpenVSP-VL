@@ -62,6 +62,72 @@ class SharedCurveCopyPoints(unittest.TestCase):
         self.assertEqual(self.model.read_bytes(),before)
         candidate=next(self.path.glob('*/aircraft.vsp3'));self.assertEqual(candidate.read_bytes(),before)
 
+    def check_other_destinations(self,cubic=False):
+        from test_shared_point_lists import SharedPointLists
+        v=self.v;cases=SharedPointLists.fixture(self)
+        source=v.AddGeom('STACK');surf=v.GetXSecSurf(source,0);v.ChangeXSecShape(surf,1,v.XS_EDIT_CURVE);x=v.GetXSec(surf,1)
+        v.SetParmValUpdate(v.GetXSecParm(x,'SymType'),v.SYM_NONE);v.EditXSecConvertTo(x,v.LINEAR)
+        v.SetEditXSecPnts(x,[r[0] for r in ROWS],[v.vec3d(*r[1:4]) for r in ROWS],[r[4] for r in ROWS]);v.SetXSecWidth(x,1)
+        if cubic:
+            v.EditXSecConvertTo(x,v.CEDIT);v.SetParmValUpdate(v.GetXSecParm(x,'G1_3'),1)
+            fixed=list(v.GetEditXSecFixedUVec(x));fixed[3]=True;v.SetEditXSecFixedUVec(x,fixed)
+        v.Update()
+        points=[[p.x(),p.y(),p.z()] for p in v.GetEditXSecCtrlVec(x,True)]
+        rounding=[v.GetParmVal(v.GetXSecParm(x,'R_'+str(i))) for i in range(len(points))]
+        flags={name:v.GetParmVal(v.GetXSecParm(x,name)) for i in range(len(points)) for name in ('G1_'+str(i),'FixedU_'+str(i))}
+        v.WriteVSPFile(str(self.model),v.SET_ALL)
+        source_cid=v.GetParmContainer(v.GetXSecParm(x,'Theta'))
+        for key,_,request,cid in cases[1:]:
+            with self.subTest(destination=key):
+                tree=ET.parse(self.model);profile=next(n for n in tree.iter('XSecCurve') if n.findtext('ParmContainer/ID')==source_cid)
+                target=next(n for n in tree.iter('XSecCurve') if n.findtext('ParmContainer/ID')==cid)
+                parent=next(n for n in tree.iter() if target in list(n));replacement=copy.deepcopy(profile);replacement.find('ParmContainer/ID').text=cid
+                parent.remove(target);parent.append(replacement)
+                source_geom=next(n for n in tree.iter('Geom') if n.findtext('ParmContainer/ID')==source)
+                next(n for n in tree.iter() if source_geom in list(n)).remove(source_geom)
+                reference=self.path/'shared-reference.vsp3';tree.write(reference,encoding='utf-8',xml_declaration=True)
+                expected,_=self.worker(dict(action='state'),reference)
+                operation='auxiliary-profile-copy' if key=='auxiliary' else 'region-curve-copy-from'
+                payload={k:v for k,v in request.items() if k!='operation'}
+                result,saved=self.worker(dict(action='mutate',operation=operation,source=dict(kind='section',geom=source,surface=0,index=1),**payload))
+                cold,_=self.worker(dict(action='state'),saved)
+                for state in (result,cold):
+                    editable=SharedPointLists.curve(self,state,key,request)
+                    self.assertEqual(editable['controlPoints'],points)
+                    self.assertEqual(editable['rounding'],rounding)
+                    fields=editable.get('params') or next(c['params'] for c in state['components'] if c['id']==request['geom'])
+                    self.assertEqual({p['name']:p['value'] for p in fields if p['name'] in flags},flags)
+                    geom=request.get('geom',self.gid)
+                    self.assertEqual(next(c['surfaces'] for c in state['components'] if c['id']==geom),next(c['surfaces'] for c in expected['components'] if c['id']==geom))
+                if key!='auxiliary':
+                    query=dict(action='query',operation='structural-preview',structure=request['structure']) if 'structure' in request else dict(action='query',operation='region-boundaries',geom=request['geom'])
+                    a,_=self.worker(query,saved);b,_=self.worker(query,reference)
+                    if 'structure' in request:self.assertEqual(a['regions'],b['regions'])
+                    else:
+                        boundaries=lambda data:[(r['id'],[(p['points'],p['u'],p['w']) for p in r['paths']]) for r in data['regions']]
+                        self.assertEqual(boundaries(a),boundaries(b))
+
+    def test_region_structural_and_auxiliary_linear(self):self.check_other_destinations()
+
+    def test_region_structural_and_auxiliary_cubic(self):self.check_other_destinations(True)
+
+    def test_shared_destinations_reject_referenced_points(self):
+        from test_shared_point_lists import SharedPointLists
+        v=self.v;cases=SharedPointLists.fixture(self)
+        source=v.AddGeom('STACK');surf=v.GetXSecSurf(source,0);v.ChangeXSecShape(surf,1,v.XS_EDIT_CURVE);x=v.GetXSec(surf,1)
+        v.SetParmValUpdate(v.GetXSecParm(x,'SymType'),v.SYM_NONE);v.EditXSecConvertTo(x,v.LINEAR)
+        v.SetEditXSecPnts(x,[r[0] for r in ROWS],[v.vec3d(*r[1:4]) for r in ROWS],[r[4] for r in ROWS])
+        for key,_,request,cid in cases[1:]:v.AddAttributeParm(v.GetChildCollection(v.GetVehicleID()),key+' point reference',v.FindParm(cid,'X_3','XSecCurve'))
+        v.Update();v.WriteVSPFile(str(self.model),v.SET_ALL);before=self.model.read_bytes()
+        for key,_,request,cid in cases[1:]:
+            with self.subTest(destination=key):
+                existing=set(self.path.glob('*/aircraft.vsp3'))
+                operation='auxiliary-profile-copy' if key=='auxiliary' else 'region-curve-copy-from'
+                payload={k:v for k,v in request.items() if k!='operation'}
+                with self.assertRaisesRegex(ValueError,'reference'):self.worker(dict(action='mutate',operation=operation,source=dict(kind='section',geom=source,surface=0,index=1),**payload))
+                candidate=next(iter(set(self.path.glob('*/aircraft.vsp3'))-existing))
+                self.assertEqual(candidate.read_bytes(),before)
+
     def test_short_linear_copy(self):self.check_copy()
 
     def test_short_cubic_copy_preserves_smooth_and_fixed_flags(self):self.check_copy(True)
