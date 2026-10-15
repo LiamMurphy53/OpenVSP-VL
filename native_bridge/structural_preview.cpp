@@ -1397,3 +1397,27 @@ extern "C" const char* studio_evaluate_wing_drivers(const char* engine,const cha
     }catch(const std::exception& error){output="{\"error\":"+quote(error.what())+"}";}
     if(library)dlclose(library);return output.c_str();
 }
+
+// CpSlice owns both plane and border DrawObjs. Geometry stays in its original
+// CreateSurf/LoadDrawObj routines; only finite native drawing records are copied.
+extern "C" const char* studio_cutting_plane_drawings(const char* engine,const char* id,int index) {
+    static thread_local std::string output;void* library=nullptr;
+    try {
+        library=dlopen(engine,RTLD_NOW);if(!library)throw std::runtime_error(dlerror());
+        void* manager=symbol<void*>(library,"_ZZN16ParmMgrSingleton11getInstanceEvE8instance");
+        void* plane=symbol<void*(*)(void*,const std::string&)>(library,"_ZN16ParmMgrSingleton17FindParmContainerERKNSt3__112basic_stringIcNS0_11char_traitsIcEENS0_9allocatorIcEEEE")(manager,std::string(id));
+        if(!plane)throw std::runtime_error("Native cutting plane unavailable.");
+        std::vector<DrawObj*> objects;
+        symbol<void(*)(void*,std::vector<DrawObj*>&,int,bool)>(library,"_ZN7CpSlice11LoadDrawObjERNSt3__16vectorIP7DrawObjNS0_9allocatorIS3_EEEEib")(plane,objects,index,false);
+        std::ostringstream s;s<<std::setprecision(17)<<'[';bool first=true;
+        for(const auto object:objects){
+            const bool face=object->m_Type==DrawObj::VSP_SHADED_QUADS,border=object->m_Type==DrawObj::VSP_LINE_LOOP;
+            if(!face&&!border)throw std::runtime_error("Unsupported native cutting-plane drawing type.");
+            if(object->m_PntVec.size()!=4)throw std::runtime_error("Unexpected native cutting-plane point count.");
+            if(!first)s<<',';first=false;
+            s<<"{\"nativeID\":"<<quote(object->m_GeomID)<<",\"nativeType\":"<<int(object->m_Type)<<",\"kind\":"<<quote(face?"quads":"loop")<<",\"visible\":"<<(object->m_Visible?"true":"false")<<",\"opacity\":"<<(face?object->m_MaterialInfo.Diffuse[3]:1)<<",\"points\":[";
+            for(size_t i=0;i<object->m_PntVec.size();++i){if(i)s<<',';const auto& p=object->m_PntVec[i];s<<'[';for(int k=0;k<3;++k){if(k)s<<',';if(!std::isfinite(p.v[k]))throw std::runtime_error("Native cutting plane contains undefined coordinates.");s<<p.v[k];}s<<']';}s<<"]}";
+        }s<<']';output=s.str();
+    }catch(const std::exception& error){output="{\"error\":"+quote(error.what())+"}";}
+    if(library)dlclose(library);return output.c_str();
+}

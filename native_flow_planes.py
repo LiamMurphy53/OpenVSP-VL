@@ -59,3 +59,16 @@ def mutate(v,r):
     else:raise ValueError('Unknown cutting-plane operation.')
     v.Update()
     return True,None
+
+
+def preview(v):
+    """Copy original CpSlice drawing objects; do not reproduce plane geometry."""
+    import ctypes,json,native_preview
+    _,engine,bridge=native_preview.adapter(v);fn=bridge.studio_cutting_plane_drawings
+    fn.argtypes=[ctypes.c_char_p,ctypes.c_char_p,ctypes.c_int];fn.restype=ctypes.c_char_p
+    parts=[]
+    for index,cid in enumerate(ids(v)):
+        objects=json.loads(fn(engine,cid.encode(),index))
+        if isinstance(objects,dict):raise ValueError(objects.get('error','Native cutting-plane drawing unavailable.'))
+        parts.append(dict(id=cid,index=index,name=v.GetContainerName(cid),objects=objects))
+    return dict(parts=parts,warnings=[],showContext=True,filename='Native cutting planes',displayNote='These are OpenVSP’s original cutting-plane and border points, bounded by its aircraft bounding box. Show native cutting plane controls which saved planes appear. This setup preview does not calculate pressure or airflow.')

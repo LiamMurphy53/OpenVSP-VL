@@ -654,7 +654,10 @@ def run(req, model):
         errors(v)
         v.WriteVSPFile(str(model),v.SET_ALL)
     if action=='query':
-        if req['operation']=='structural-preview':
+        if req['operation']=='flow-plane-preview':
+            import native_flow_planes
+            data=native_flow_planes.preview(v)
+        elif req['operation']=='structural-preview':
             import native_preview
             data=native_preview.structure(v,req)
         elif req['operation']=='assembly-preview':
