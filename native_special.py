@@ -177,13 +177,12 @@ def mutate(v,r):
             copy_to_section(v,dict(kind='bor',geom=r['sourceGeom']),ts,ti)
             return True,target
         target,ts,ti,tx=section(v,r);source,ss,si,sx=section(v,dict(geom=r['sourceGeom'],surface=r['sourceSurface'],index=r['sourceIndex']))
-        if r.get('surface',0)!=0 or r['sourceSurface']!=0:raise ValueError('Native section clipboard operations apply to surface 0.')
         if r.get('curveOnly',True):
             from native_curve_copy_points import copy_to_section
             copy_to_section(v,dict(kind='section',geom=source,surface=r['sourceSurface'],index=si),ts,ti)
         else:
-            if v.GetGeomTypeName(source)!=v.GetGeomTypeName(target):raise ValueError('Whole sections need matching geometry types; copy the profile instead.')
-            v.CopyXSec(source,si);v.PasteXSec(target,ti)
+            from native_section_copy import replace
+            replace(v,r)
     elif op=='body-skin-reset-all':
         one(g,[gid for gid in v.FindGeoms() if v.GetGeomTypeName(gid).upper() in ('FUSELAGE','STACK')],'Choose a fuselage or stack.')
         for surface in range(v.GetNumXSecSurfs(g)):

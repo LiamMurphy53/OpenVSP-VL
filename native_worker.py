@@ -470,7 +470,7 @@ def mutate(v, req):
                 if source['kind']=='section':source.update(surface=req.get('sourceSurface',0),index=req['sourceIndex'])
                 routed={**req,'source':source}
             native_special.mutate(v,routed)
-            native_section_copy.refresh_owner(v,gid)
+            if routed.get('curveOnly',True):native_section_copy.refresh_owner(v,gid)
         else:native_section_copy.replace(v,req)
     elif action in ('shape','insert-section','cut-section','split-section','drivers'):
         gid,surf,index,_=native_tools.section(v,req)
