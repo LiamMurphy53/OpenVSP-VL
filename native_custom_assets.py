@@ -62,6 +62,11 @@ def rewrite_reads(text,source,base,asset_root):
     tokens=[m for m in re.finditer(r'//[^\n]*|/\*.*?\*/|"(?:\\.|[^"\\])*"|[A-Za-z_]\w*|[^\s]',text,re.S) if not m[0].startswith(('//','/*'))]
     replacements=[];dynamic=False;wrappers=set()
     helper='StudioPackageProfile_'+hashlib.sha256((str(asset_root)+str(source.relative_to(base))).encode()).hexdigest()[:16]
+    from native_custom_file_reads import replacements as file_open_replacements
+    file_opens=file_open_replacements(text,tokens,helper)
+    for start,end,replacement in sorted(file_opens,reverse=True):text=text[:start]+replacement+text[end:]
+    if file_opens:tokens=[m for m in re.finditer(r'//[^\n]*|/\*.*?\*/|"(?:\\.|[^"\\])*"|[A-Za-z_]\w*|[^\s]',text,re.S) if not m[0].startswith(('//','/*'))]
+    dynamic=bool(file_opens)
     readers={'ReadFileAirfoil':1,'ReadFileXSec':1,'ReadBORFileAirfoil':1,'ReadBORFileXSec':1,'ReadAuxiliaryGeomCCEFile':1,'ReadAdvLinkCodeFile':1,'ReadApplyDESFile':0,'ReadApplyXDDMFile':0}
     for i,token in enumerate(tokens):
         if token[0] not in readers or i+1>=len(tokens) or tokens[i+1][0]!='(':continue
@@ -106,7 +111,7 @@ def rewrite_reads(text,source,base,asset_root):
             wrappers.add(token[0]);dynamic=True
             replacements.append((token.start(),tokens[j+2].end(),helper+'_'+token[0]+'('+json.dumps(filename)+')'))
         else:replacements.append((literal.start(),literal.end(),json.dumps(destination.relative_to(Path.cwd()).as_posix())))
-    for start,end,replacement in reversed(replacements):text=text[:start]+replacement+text[end:]
+    for start,end,replacement in sorted(replacements,reverse=True):text=text[:start]+replacement+text[end:]
     if dynamic:
         choices={}
         for file in base.rglob('*'):
@@ -118,6 +123,12 @@ def rewrite_reads(text,source,base,asset_root):
         missing_path=asset_root/'.unavailable-profile'
         while (base/missing_path.relative_to(asset_root)).exists():missing_path=Path(str(missing_path)+'_')
         missing=missing_path.relative_to(Path.cwd()).as_posix()
+        if file_opens:
+            # Preserve native writes, optional reads and read-after-write behavior:
+            # try the original filename first; only failed pure reads fall back
+            # to an unambiguous embedded companion. Arguments evaluate once.
+            text+='\nstring '+helper+'_filePath(const string &in filename){string normalized=filename;while(normalized.length()>=2 && normalized.substr(0,2)=="./")normalized=normalized.substr(2);'+cases+'return filename;}\n'
+            text+='\nint '+helper+'_open(file@ target,const string &in filename,const string &in mode){int status=target.open(filename,mode);if(status!=0 && (mode=="r" || mode=="rb")){string path='+helper+'_filePath(filename);if(path!=filename)return target.open(path,mode);}return status;}\n'
         # Unknown computed names are recorded for rejection. Profile readers
         # retain their native diagnostic; unsafe design readers are skipped.
         text+='\nstring '+helper+'(const string &in filename){\nstring normalized=filename;\nwhile(normalized.length()>=2 && normalized.substr(0,2)=="./")normalized=normalized.substr(2);\n'+cases+'AddAttributeString(GetChildCollection(GetCurrCustomGeom()),'+json.dumps(MISSING_ATTRIBUTE)+',filename);\nreturn '+json.dumps(missing)+';\n}\n'
