@@ -8,6 +8,7 @@
 #include "XSecCurveDriverGroup.h"
 #include "Matrix4d.h"
 #include "APIDefines.h"
+#include "GeomCapLayout.h"
 #include <dlfcn.h>
 #include <fstream>
 #include <mach-o/dyld.h>
@@ -40,6 +41,40 @@ template<class T> static T symbol(void* library, const char* name) {
     void* value=dlsym(library,name);
     if (!value) throw std::runtime_error(std::string("Native preview symbol unavailable: ")+name);
     return reinterpret_cast<T>(value);
+}
+
+// Offsets are compiler-generated from the complete pinned Geom declaration.
+// Check native Parm addresses before accessing either private result vector.
+extern "C" const char* studio_cap_results(const char* engine,const char* geom,const char* const* guards,int count) {
+    static thread_local std::string output;void* library=nullptr;
+    try {
+        if(count<0)throw std::runtime_error("Invalid native surface count.");
+        library=dlopen(engine,RTLD_NOW);if(!library)throw std::runtime_error(dlerror());
+        auto find=symbol<void*(*)(const std::string&,const std::string&)>(library,"_ZN3vsp13FindGeomForOpERKNSt3__112basic_stringIcNS0_11char_traitsIcEENS0_9allocatorIcEEEES8_");
+        auto component=static_cast<const char*>(find(std::string(geom),"Studio end-cap results"));
+        if(!component)throw std::runtime_error("Native component unavailable.");
+        void* manager=symbol<void*>(library,"_ZZN16ParmMgrSingleton11getInstanceEvE8instance");
+        auto parm=symbol<Parm*(*)(void*,const std::string&)>(library,"_ZN16ParmMgrSingleton8FindParmERKNSt3__112basic_stringIcNS0_11char_traitsIcEENS0_9allocatorIcEEEE");
+        using namespace studio_cap_layout;
+        const std::size_t offsets[]={m_CapUMinOption,m_CapUMaxOption,m_CapUMinTess,m_TessU,m_TessW};
+        for(int i=0;i<5;++i) {
+            if(!guards[i] || !*guards[i] || reinterpret_cast<const char*>(parm(manager,std::string(guards[i])))!=component+offsets[i])
+                throw std::runtime_error("Native end-cap layout does not match the pinned engine.");
+        }
+        std::ostringstream s;s<<'[';
+        for(int end=0;end<2;++end){
+            if(end)s<<',';
+            const auto& flags=*reinterpret_cast<const std::vector<bool>*>(component+(end?m_CapUMaxSuccess:m_CapUMinSuccess));
+            if(flags.empty()){s<<"null";continue;}
+            if(flags.size()!=static_cast<std::size_t>(count))throw std::runtime_error("Native end-cap results do not match the surface count.");
+            s<<'[';
+            for(int i=0;i<count;++i){if(i)s<<',';s<<(flags[i]?"true":"false");}
+            s<<']';
+        }
+        s<<']';output=s.str();
+    }catch(const std::exception& error){output="{\"error\":"+quote(error.what())+"}";}
+    if(library)dlclose(library);
+    return output.c_str();
 }
 
 // The inline source getter has no emitted symbol. Read the reference through

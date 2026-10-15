@@ -114,6 +114,10 @@ def enrich(v, gid, params, sections):
                 section.setdefault('edgeCapControls', []).append(cap)
     ends = [c for c in caps if not c['profile']]
     if not ends or not v.GetNumMainSurfs(gid): return None
+    results = native_preview.cap_results(v, gid)
+    for cap, flags in zip(ends, results):
+        cap['results'] = flags
+        cap['requested'] = v.GetParmVal(cap['fields']['mode']) != v.NO_END_CAP
     hints = []
     if v.GetGeomTypeName(gid).upper() in ('FUSELAGE', 'STACK'):
         for si in range(v.GetNumXSecSurfs(gid)):

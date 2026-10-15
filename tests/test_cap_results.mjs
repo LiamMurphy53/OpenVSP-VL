@@ -1,0 +1,11 @@
+import assert from 'node:assert/strict';
+import {endCapControlsMarkup} from '../web/end-cap-controls.js';
+const cap={label:'Root',profile:false,fields:{mode:'shape'},requested:true,results:[true,false]};
+const component={params:[{id:'shape',value:1}],sections:[],endCaps:{ends:[cap],hints:[],profile:[]}};
+const render=()=>endCapControlsMarkup(component,0,{esc:String,parameterField:()=>'<select></select>'});
+assert.match(render(),/Surface 0: cap added · Surface 1: no cap added/);
+assert.match(render(),/may already be closed or unsuitable/);
+cap.results=null;assert.match(render(),/Native cap result unavailable/);
+cap.requested=false;assert.match(render(),/No cap requested/);assert.doesNotMatch(render(),/unavailable/);
+cap.profile=true;assert.doesNotMatch(render(),/No cap requested|data-cap-results/);
+console.log('Per-surface, unavailable, no-cap and profile-edge result displays passed.');

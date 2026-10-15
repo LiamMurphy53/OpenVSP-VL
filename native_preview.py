@@ -7,6 +7,7 @@ from pathlib import Path
 import platform
 import subprocess
 import tempfile
+from functools import lru_cache
 from vsp_runtime import ROOT,distribution
 
 
@@ -83,6 +84,30 @@ def parameter_activity(v,ids):
     if isinstance(result,dict):raise ValueError(result.get('error','Native parameter activity unavailable.'))
     if len(result)!=len(ids):raise ValueError('Native parameter activity is incomplete.')
     return dict(zip(ids,result))
+
+
+@lru_cache(maxsize=4)
+def _cap_engine_layout(path, size, modified):
+    # A version string alone cannot establish the private-result-vector ABI.
+    if hashlib.sha256(Path(path).read_bytes()).hexdigest() != 'b18ffe72b538ea33d14f482d19f274800ccff8442ce4270f9e4e6443d9955bd6':
+        raise ValueError('Native end-cap results require the verified OpenVSP 3.52.2 engine build.')
+
+
+def cap_results(v,gid):
+    """Copy actual per-main-surface Geom cap-success flags, without geometry inference."""
+    if gid not in v.FindGeoms():raise ValueError('Choose an existing component.')
+    guards=[v.FindParm(gid,name,group) for name,group in
+            [('CapUMinOption','EndCap'),('CapUMaxOption','EndCap'),
+             ('CapUMinTess','EndCap'),('Tess_U','Shape'),('Tess_W','Shape')]]
+    if not all(v.ValidParm(p) for p in guards):raise ValueError('Native end-cap parameters unavailable.')
+    engine_path=distribution()/'python/openvsp/openvsp/_vsp.so';stat=engine_path.stat()
+    _cap_engine_layout(str(engine_path),stat.st_size,stat.st_mtime_ns)
+    _,engine,bridge=adapter(v);function=bridge.studio_cap_results
+    function.argtypes=[ctypes.c_char_p,ctypes.c_char_p,ctypes.POINTER(ctypes.c_char_p),ctypes.c_int]
+    function.restype=ctypes.c_char_p
+    result=json.loads(function(engine,gid.encode(),(ctypes.c_char_p*5)(*(p.encode() for p in guards)),v.GetNumMainSurfs(gid)))
+    if isinstance(result,dict):raise ValueError(result.get('error','Native end-cap results unavailable.'))
+    return result
 
 
 def prop_driver_combinations(v):
