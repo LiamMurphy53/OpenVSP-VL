@@ -87,10 +87,10 @@ def parameter_activity(v,ids):
 
 
 @lru_cache(maxsize=4)
-def _cap_engine_layout(path, size, modified):
+def _verified_private_layout(path, size, modified):
     # A version string alone cannot establish the private-result-vector ABI.
     if hashlib.sha256(Path(path).read_bytes()).hexdigest() != 'b18ffe72b538ea33d14f482d19f274800ccff8442ce4270f9e4e6443d9955bd6':
-        raise ValueError('Native end-cap results require the verified OpenVSP 3.52.2 engine build.')
+        raise ValueError('Native result inspection requires the verified OpenVSP 3.52.2 engine build.')
 
 
 def cap_results(v,gid):
@@ -101,7 +101,7 @@ def cap_results(v,gid):
              ('CapUMinTess','EndCap'),('Tess_U','Shape'),('Tess_W','Shape')]]
     if not all(v.ValidParm(p) for p in guards):raise ValueError('Native end-cap parameters unavailable.')
     engine_path=distribution()/'python/openvsp/openvsp/_vsp.so';stat=engine_path.stat()
-    _cap_engine_layout(str(engine_path),stat.st_size,stat.st_mtime_ns)
+    _verified_private_layout(str(engine_path),stat.st_size,stat.st_mtime_ns)
     _,engine,bridge=adapter(v);function=bridge.studio_cap_results
     function.argtypes=[ctypes.c_char_p,ctypes.c_char_p,ctypes.POINTER(ctypes.c_char_p),ctypes.c_int]
     function.restype=ctypes.c_char_p

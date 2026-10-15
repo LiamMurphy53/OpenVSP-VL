@@ -9,6 +9,7 @@
 #include "Matrix4d.h"
 #include "APIDefines.h"
 #include "GeomCapLayout.h"
+#include "WaveDragMgr.h"
 #include <dlfcn.h>
 #include <fstream>
 #include <mach-o/dyld.h>
@@ -1141,6 +1142,36 @@ extern "C" const char* studio_wave_reference_curves(const char* engine,double vo
         std::ostringstream s;s<<std::setprecision(17)<<"{\"xNormalized\":";
         auto values=[&](const std::vector<double>& a){s<<'[';for(size_t i=0;i<a.size();++i){if(i)s<<',';if(std::isfinite(a[i]))s<<a[i];else s<<"null";}s<<']';};
         values(x);s<<",\"searsHaack\":";values(sh);s<<",\"vonKarman\":";values(vk);s<<",\"lighthill\":";values(lh);s<<'}';output=s.str();
+    }catch(const std::exception& error){output="{\"error\":"+quote(error.what())+"}";}
+    if(library)dlclose(library);return output.c_str();
+}
+
+extern "C" const char* studio_wave_plot_data(const char* engine,const char* machParm,const char* slicesParm) {
+    static thread_local std::string output;void* library=nullptr;
+    try {
+        library=dlopen(engine,RTLD_NOW);if(!library)throw std::runtime_error(dlerror());
+        auto manager=symbol<WaveDragSingleton*>(library,"_ZZN17WaveDragSingleton11getInstanceEvE8instance");
+        void* parms=symbol<void*>(library,"_ZZN16ParmMgrSingleton11getInstanceEvE8instance");
+        auto find=symbol<Parm*(*)(void*,const std::string&)>(library,"_ZN16ParmMgrSingleton8FindParmERKNSt3__112basic_stringIcNS0_11char_traitsIcEENS0_9allocatorIcEEEE");
+        if(find(parms,std::string(machParm))!=&manager->m_MachNumber || find(parms,std::string(slicesParm))!=&manager->m_NumSlices)
+            throw std::runtime_error("Native wave manager does not match the pinned declarations.");
+        std::ostringstream s;s<<std::setprecision(17);
+        auto scalar=[&](double value){if(std::isfinite(value))s<<value;else s<<"null";};
+        auto vector=[&](const std::vector<double>& values){s<<'[';for(size_t i=0;i<values.size();++i){if(i)s<<',';scalar(values[i]);}s<<']';};
+        auto matrix=[&](const std::vector<std::vector<double>>& values){s<<'[';for(size_t i=0;i<values.size();++i){if(i)s<<',';vector(values[i]);}s<<']';};
+        s<<"{\"xNormalized\":";vector(manager->m_XNorm);s<<",\"xFitNormalized\":";vector(manager->m_XNormFit);
+        s<<",\"componentIds\":[";for(size_t i=0;i<manager->m_CompIDVec.size();++i){if(i)s<<',';s<<quote(manager->m_CompIDVec[i]);}
+        s<<"],\"inletArea\":";scalar(manager->m_InletArea);s<<",\"exitArea\":";scalar(manager->m_ExitArea);
+        s<<",\"selectedCone\":"<<static_cast<const Parm&>(manager->m_ThetaIndex).Get()<<",\"selectedIdealBody\":"<<static_cast<const Parm&>(manager->m_IdealBodyType).Get()<<",\"selectedAreaMode\":"<<static_cast<const Parm&>(manager->m_AreaPlotType).Get()<<",\"showPoints\":"<<(manager->m_PointFlag()?"true":"false")<<",\"cones\":[";
+        if(manager->m_NTheta<0 || manager->m_NTheta>10000)throw std::runtime_error("Invalid native wave cone count.");
+        for(int i=0;i<manager->m_NTheta;++i){
+            if(i)s<<',';s<<"{\"coneIndex\":"<<i+1;
+            s<<",\"flowSlices\":";vector(manager->m_SliceAreaDistFlow.at(i));s<<",\"totalSlices\":";vector(manager->m_SliceAreaDist.at(i));
+            s<<",\"flowFit\":";vector(manager->m_FitAreaDistFlow.at(i));s<<",\"totalFit\":";vector(manager->m_FitAreaDist.at(i));
+            s<<",\"componentSlices\":";matrix(manager->m_CompSliceAreaDist.at(i));s<<",\"componentFit\":";matrix(manager->m_CompFitAreaDist.at(i));
+            s<<",\"buildupSlices\":";matrix(manager->m_BuildupAreaDist.at(i));s<<",\"buildupFit\":";matrix(manager->m_BuildupFitAreaDist.at(i));s<<'}';
+        }
+        s<<"]}";output=s.str();
     }catch(const std::exception& error){output="{\"error\":"+quote(error.what())+"}";}
     if(library)dlclose(library);return output.c_str();
 }

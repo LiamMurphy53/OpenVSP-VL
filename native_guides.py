@@ -333,6 +333,8 @@ def save_preview(v,data,name):
     if name=='WaveDrag':
         c=v.FindContainer('WaveDragSettings',0)
         data['guideSettings']={n:v.GetParmVal(v.FindParm(c,n,'WaveDrag')) for n in ('Sref','RefFlag')}
+        import native_wave_references
+        native_wave_references.save(v,data)
         import native_wave_drawings
         native_wave_drawings.save(v,data)
     geometry=preview(data['results'],name)

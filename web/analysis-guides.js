@@ -1,3 +1,4 @@
+import {waveAreaResults,bindWaveAreaResults} from './wave-area-results.js?v=20261015';
 import {parasiteFlightResults} from './parasite-flight-results.js?v=20261012-1';
 import {pressureSliceResults} from './saved-solutions.js?v=20261010-123';
 import {referenceResults} from './reference-results.js?v=20261011-references';
@@ -93,7 +94,7 @@ export function guidedResults(results,esc,plotSVG,settings,inputs=[],analysisDat
  }
  if(r.name==='Projection')html=metrics([['Area','Combined projected area'],['Direction','Native direction']])+table('Native component projection',[['Comp_Names','Component'],['Comp_Areas','Projected area']],values('Comp_Names').length)+'<p class="native-tip">Component projections can overlap. The combined area above is OpenVSP’s union or clipped result. The outline viewer shows its native boundary paths.</p>';
  if(r.name==='WaveDrag'){
-  html=metrics([['CDWave','Wave drag coefficient'],['Mach','Mach'],['Num_Cone_Sections','Cone sections'],['Num_Slices','Axial slices'],['Inlet_Area','Inlet area'],['Exit_Area','Exit area']])+(settings?`<p class="native-tip">Native reference area used for this run: <strong>${esc(display(settings.Sref))}</strong>.</p>`:'')+table('Native cone-section results',[['Theta','Cone angle'],['Start_X','Start X'],['End_X','End X'],['Length','Length'],['MaxArea','Maximum area'],['Volume','Volume']],values('Theta').length);
+  html=waveAreaResults(analysisData.waveReferenceCurves,esc)+metrics([['CDWave','Wave drag coefficient'],['Mach','Mach'],['Num_Cone_Sections','Cone sections'],['Num_Slices','Axial slices'],['Inlet_Area','Inlet area'],['Exit_Area','Exit area']])+(settings?`<p class="native-tip">Native reference area used for this run: <strong>${esc(display(settings.Sref))}</strong>.</p>`:'')+table('Native cone-section results',[['Theta','Cone angle'],['Start_X','Start X'],['End_X','End X'],['Length','Length'],['MaxArea','Maximum area'],['Volume','Volume']],values('Theta').length);
   const slices=r.entries.filter(e=>e.name==='Slice_Area'),x=values('X_Norm');
   html+=`<details class="guide-wave-sections" open><summary>Native area distributions (${slices.length} sections)</summary>${slices.map(e=>`<section><h4>Section ${e.index} · native angle ${esc(display(values('Theta')[e.index]))}</h4>${x.length===e.values.length?plotSVG(x,e.values,'Native normalized X','Section area'): '<p>Native coordinate and area arrays have different lengths; inspect the exact arrays below.</p>'}</section>`).join('')}</details>`;
  }
@@ -102,6 +103,7 @@ export function guidedResults(results,esc,plotSVG,settings,inputs=[],analysisDat
  return `<section class="guided-result" data-guided-result="${esc(r.name)}"><h3>${esc({Comp_Geom:'Component areas and volumes',Mass_Properties:'Mass properties',Slice:'Cross-sectional areas',Projection:'Projected area',WaveDrag:'Wave drag',Parasite_Drag:'Parasite drag buildup'}[r.name])}</h3>${html}${diagnostic}<p class="native-tip">${r.name==='Parasite_Drag'?'Buildup summaries are rounded for reading; the flight-condition table retains saved precision.':'Displayed values are rounded for reading.'} Full-precision native arrays remain in the result tables, JSON and CSV.</p></section>`;
 }
 
-export function bindGuidedResults(){
- document.querySelectorAll('.guided-result svg').forEach((svg,i)=>{const button=document.createElement('button');button.textContent='Download this native plot';button.className='guide-plot-export';svg.after(button);button.onclick=()=>{const copy=svg.cloneNode(true);copy.setAttribute('xmlns','http://www.w3.org/2000/svg');copy.setAttribute('style','font:12px sans-serif;background:white');const url=URL.createObjectURL(new Blob([copy.outerHTML],{type:'image/svg+xml'})),a=document.createElement('a');a.href=url;a.download=`native-analysis-plot-${i+1}.svg`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);};});
+export function bindGuidedResults(data={}){
+ bindWaveAreaResults(data.waveReferenceCurves,x=>String(x).replace(/[&<>"\']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])));
+ document.querySelectorAll('.guided-result svg:not([data-wave-reference-chart])').forEach((svg,i)=>{const button=document.createElement('button');button.textContent='Download this native plot';button.className='guide-plot-export';svg.after(button);button.onclick=()=>{const copy=svg.cloneNode(true);copy.setAttribute('xmlns','http://www.w3.org/2000/svg');copy.setAttribute('style','font:12px sans-serif;background:white');const url=URL.createObjectURL(new Blob([copy.outerHTML],{type:'image/svg+xml'})),a=document.createElement('a');a.href=url;a.download=`native-analysis-plot-${i+1}.svg`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);};});
 }

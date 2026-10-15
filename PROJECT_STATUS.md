@@ -7,7 +7,7 @@ This is a status view of the existing capability plan, not a new scope or a repl
 | Existing category | Implementation remaining | Verification remaining |
 | --- | --- | --- |
 | Modeling | Complete remaining specialized/custom workflows, including other custom device types and remaining runtime companion data; confirm complete section workflows on genuine secondary cross-section surfaces. Compound Streamlined workflows remain partial. | Wider geometry/profile/attachment/symmetry combinations; native save/reopen and browser recovery for the complete scope. Rounded-propeller chevron inconsistency/crash remains unresolved. |
-| Engineering | Finish queued guided calculation, result and study workflows; the staged wave ideal-body display is not connected. Inventory gaps against every installed capability rather than relying on registered analysis names. | Full native result/provenance comparisons across CFD, aerodynamic, structural, rotor, utility and study combinations. Native CFD propeller crash, structural variation and prior solver discrepancies remain open. |
+| Engineering | Finish queued guided calculation, result and study workflows. Inventory gaps against every installed capability rather than relying on registered analysis names. | Full native result/provenance comparisons across CFD, aerodynamic, structural, rotor, utility and study combinations. Native CFD propeller crash, structural variation and prior solver discrepancies remain open. |
 | Reliability/delivery | Complete standalone workflow delivery, remaining portability/recovery work and documentation. | Full cold-start UI, relocation, responsive layout, cancellation/recovery and portable end-to-end checks. Current package checks cover selected workflows only, including 18 recent geometry regressions through the bundled worker and engine. |
 | Completion audit | Reconcile every explicit plan requirement and installed capability to authoritative evidence. | No broad row is closed by a narrow passing case. Close only after every requirement is proved and known failures are resolved. |
 
@@ -151,3 +151,9 @@ Properties now reports actual native cap results at both ends for each main surf
 ### 2026-10-15 — custom component sliders
 
 Properties now exposes script-defined sliders and adjustable ranges beside the numeric fields, with native ranges/limits, display units, stable windows during saved edits, own/external bindings and existing transaction validation. External Lock buttons correctly target the bound owner. Twenty selected native tests plus presentation checks pass; browser edits, Undo/Redo, reopening and a parent-bound locked edit have direct SDK geometry evidence. This advances W05; full modeling/custom-runtime closure and the known native chevron crash remain open.
+
+### 2026-10-15 — wave equivalent-body display connected
+
+The previously staged ideal-body support is now saved with native WaveDrag runs and connected to the modern results view. Cone selection, flow-corrected total/component/buildup curves, three native ideal references, slice samples and current-plot CSV/SVG downloads are usable. Two complete native-capture regressions match independent SDK runs, including a nonzero propulsive inlet; the prior reference-area workflow still passes. Browser downloads preserve all 400 fitted/reference rows and 45 slice rows for the selected comparison. Broader wave combinations, engineering completion and the known native failures remain open.
+
+The wave plot follow-up also passes all three selected cases through the packaged worker (2.526 s); standalone preflight loads OpenVSP 3.52.2 and all 339 packaged source hashes match. This remains selected delivery evidence.

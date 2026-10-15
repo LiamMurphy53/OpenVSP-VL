@@ -73,3 +73,5 @@
 .view-tools .history button{font-size:14px;padding:4px 8px}
 
 .custom-slider{margin-top:.5rem}.custom-slider input[type=range]{width:100%;min-height:1.5rem;padding:0;accent-color:var(--accent,#309b7b)}.custom-slider-range{display:flex;align-items:center;justify-content:space-between;gap:.5rem}.custom-slider-range>div{display:flex;gap:.35rem}.custom-slider-range button{padding:.15rem .6rem;min-height:1.8rem}
+
+.wave-area-results svg{width:100%;height:auto}.wave-area-legend{display:flex;flex-wrap:wrap;gap:.5rem 1rem;list-style:none;padding:0}.wave-area-results label{display:block}.wave-area-results input[type=checkbox]{width:auto}

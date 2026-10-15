@@ -55,6 +55,12 @@
         "DXSecCurveDriverGroup"
       ],
       "sha256": "6b7cf8caa2575a2e3569623ce8976c9a4fa1cda6c6d17d4d511a59ff0ad4f69b"
+    },
+    "WaveDragMgr.h": {
+      "source": "src/geom_core/WaveDragMgr.h",
+      "sourceSHA256": "54b5be19b342b42f2c541fef768fb61a7eaaf5169bd071304a870fe59de49c76",
+      "sha256": "8ae50c6f02b418770b592de78e47f3060f31b7f3f861d9244b08387646745400",
+      "change": "Replace unused Vehicle/Geom includes with complete existing ParmContainer, DrawObj and ResultsMgr declarations; entire class unchanged."
     }
   },
   "generated": {

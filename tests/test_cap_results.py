@@ -57,4 +57,4 @@ class CapResults(unittest.TestCase):
         with tempfile.NamedTemporaryFile() as file:
             file.write(b'Unverified engine build');file.flush()
             with self.assertRaisesRegex(ValueError,'verified OpenVSP'):
-                native_preview._cap_engine_layout(file.name,23,0)
+                native_preview._verified_private_layout(file.name,23,0)
