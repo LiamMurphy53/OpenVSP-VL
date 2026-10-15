@@ -397,6 +397,8 @@ def validate(v,req,parameter,analysis_schema,set_inputs):
 
 
 def prepare(v,req,model,errors):
+    import native_property_locks
+    locked=native_property_locks.records(v)
     import native_wave_controls
     native_wave_controls.refresh(v)
     import native_parasite_controls
@@ -520,5 +522,6 @@ def prepare(v,req,model,errors):
     for item in records:
         require_case_parameter(item)
         item['effective']=v.GetParmVal(item['id'])
+    native_property_locks.require_unchanged(v,locked)
     v.WriteVSPFile(str(model),v.SET_ALL);errors(v)
     return dict(version=v.GetVSPVersion(),parameters=records,warnings=[f'{x["id"]}: requested {x["requested"]}, native value {x["effective"]} after dependencies.' for x in records if not math.isclose(x['requested'],x['effective'],rel_tol=1e-10,abs_tol=1e-12)])

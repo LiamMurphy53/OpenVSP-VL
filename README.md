@@ -264,3 +264,9 @@ Build a new bundle with `python3 package_studio.py --output /path/to/OpenVSP\ St
 The bundle passed basic engine/adapter loading and native geometry/measurement-drawing checks after relocation to a temporary path outside the project. Full packaged browser/solver/export/recovery checks and other-platform delivery remain unfinished. The app retains the current implementation and known verification limits.
 
 Desktop/automatic launches first reuse a verified saved workspace endpoint. Otherwise they try the default local address and select a free local port if it is occupied. The chosen address is recorded in the workspace. An explicit `--port` or `PORT` remains an exact choice and reports conflicts. A saved endpoint that remains occupied but fails its Studio health check is left unchanged, with startup guidance.
+
+### Property locks
+
+Use **Lock** beside a geometry property to hold its current native value. Locks are saved in the aircraft file. Aspect ratio also has a lock in Streamlined wing design; Pro exposes locks on the native geometry fields, including calculated dimensions. **Unlock** releases the constraint.
+
+Studio checks the final native result before saving: direct edits, related dimensions, parameter links, fitting and prepared study cases cannot change a locked value or remove its parameter. A warning identifies the conflicting property and the edit is discarded. Locks constrain Studio transactions; the original OpenVSP application does not enforce Studio attributes.
