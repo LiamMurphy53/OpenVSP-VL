@@ -1,0 +1,16 @@
+import assert from 'node:assert/strict';
+import {visibleRenderer} from '../web/visible-renderer.js';
+let model=0,dom=null,calls=[];
+const view=visibleRenderer(()=>{calls.push(model);dom={model,draft:'',camera:1};});
+view.request();model=1;view.request();model=2;view.request();
+assert.deepEqual(calls,[],'Hidden model changes must not mount editors or start previews');
+view.setVisible(true);assert.deepEqual(calls,[2],'Opening renders only the latest model');
+dom.draft='unsaved expression';dom.camera=3;const retained=dom;
+view.setVisible(false);view.setVisible(true);
+assert.equal(dom,retained,'Unchanged navigation retains form drafts and viewer state');
+assert.equal(dom.draft,'unsaved expression');assert.equal(dom.camera,3);
+view.setVisible(false);model=3;view.request();model=4;view.request();
+assert.deepEqual(calls,[2]);view.setVisible(true);assert.deepEqual(calls,[2,4]);
+model=5;view.request();assert.deepEqual(calls,[2,4,5],'Visible edits refresh immediately');
+view.setVisible(true);assert.deepEqual(calls,[2,4,5],'Selecting the visible page does not destroy drafts');
+console.log('Hidden refresh coalescing, latest-state rendering, retained drafts/views and visible edits pass.');
