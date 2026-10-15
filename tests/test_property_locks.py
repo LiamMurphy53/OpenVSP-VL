@@ -71,6 +71,32 @@ class PropertyLocks(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,'locked'):self.worker(dict(action='mutate',operation='fit-optimize'),path)
         self.assertEqual(path.read_bytes(),before)
 
+    def test_reloaded_reference_edit_enforces_lock_and_preserves_transaction(self):
+        import uuid
+        import native_service as service
+        from native_property_locks import set_locked
+        v=self.v;pid=v.FindParm(self.gid,'TotalSpan','WingGeom')
+        prop=v.AddFeaProperty(v.FEA_SHELL);material=v.AddFeaMaterial()
+        set_locked(v,[pid],True)
+        # Simulate a native-app change while the saved Studio constraint remains.
+        v.SetParmValUpdate(pid,24);v.Update();v.WriteVSPFile(str(self.model),v.SET_ALL)
+        old=service.WORK,service.MODEL,service.HISTORY,service.FUTURE,service.REVISION,service.SESSION_WARNING
+        try:
+            service.WORK=self.path;service.MODEL=self.model;service.HISTORY=[];service.FUTURE=[];service.REVISION=uuid.uuid4().hex;service.SESSION_WARNING=None
+            before=self.model.read_bytes();revision=service.REVISION
+            with self.assertRaisesRegex(ValueError,'locked'):
+                service.mutation(dict(operation='property-material',id=prop,material=material,revision=revision))
+            self.assertEqual(self.model.read_bytes(),before)
+            self.assertEqual(service.REVISION,revision);self.assertEqual(service.HISTORY,[])
+            service.mutation(dict(operation='property-lock',parameters=[pid],locked=False,revision=revision))
+            state=service.mutation(dict(operation='property-material',id=prop,material=material,revision=service.REVISION))
+            self.assertEqual(state['tools']['propertyLocks'],[])
+            v.ClearVSPModel();v.ReadVSPFile(str(self.model));v.Update()
+            from native_references import references
+            self.assertEqual(references(v)[prop]['FeaMaterialID'],material)
+            self.assertEqual(v.GetParmVal(pid),24)
+        finally:service.WORK,service.MODEL,service.HISTORY,service.FUTURE,service.REVISION,service.SESSION_WARNING=old
+
     def test_study_constraints_checked_before_writing(self):
         v=self.v;g=self.gid;pid=v.FindParm(g,'TotalSpan','WingGeom')
         from native_property_locks import set_locked

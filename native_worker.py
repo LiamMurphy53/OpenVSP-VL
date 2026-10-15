@@ -637,7 +637,7 @@ def run(req, model):
     native_wave_controls.refresh(v)
     import native_parasite_controls
     native_parasite_controls.refresh(v)
-    if req.get('validatePropertyLocks'):
+    if req.get('validatePropertyLocks') and action!='mutate':
         import native_property_locks
         native_property_locks.require_unchanged(v,native_property_locks.records(v))
     if action.startswith('study-'):
@@ -766,7 +766,10 @@ if __name__=='__main__':
     except ReloadRequired as exc:
         import os
         reload_request=request.with_name('reload-request.json')
-        reload_request.write_text(json.dumps(exc.request or {'action':'state'}))
+        # File-based native edits must satisfy the same saved geometry locks
+        # after DecodeXml and dependency updates as ordinary mutations.
+        next_request={**(exc.request or {'action':'state'}),'validatePropertyLocks':True}
+        reload_request.write_text(json.dumps(next_request))
         for fd in map(int,sys.argv[4:]):os.set_inheritable(fd,True)
         os.execv(sys.executable,[sys.executable,str(Path(__file__).resolve()),str(reload_request),str(model),str(response),*sys.argv[4:]])
     except Exception as exc:
