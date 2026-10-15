@@ -168,7 +168,7 @@ def read_flow_plane(path):
         raise ValueError('Flow plane exceeds the 150 MB preview limit.')
     rows = iter(path.read_text().splitlines())
     try:
-        direction, location, reference, clip = map(float, next(rows).split())
+        direction, location, reference, velocity_scale = map(float, next(rows).split())
         count, cells = map(int, next(rows).split())
         if not 0 < count <= LIMIT or not 0 < cells <= LIMIT:
             raise ValueError('Invalid native flow plane counts.')
@@ -189,7 +189,7 @@ def read_flow_plane(path):
             elements.append(dict(id=row[0],type=3,kind='face',group=0,nodes=[lookup[n] for n in row[1:]],order=1))
     except (StopIteration, OverflowError) as exc:
         raise ValueError('Truncated native flow plane.') from exc
-    if not all(math.isfinite(x) for x in (direction,location,reference,clip)):
+    if not all(math.isfinite(x) for x in (direction,location,reference,velocity_scale)):
         raise ValueError('Invalid native flow plane header.')
     # Average only for flat cell colouring. All original nodal samples remain available.
     fields=[]
@@ -198,5 +198,5 @@ def read_flow_plane(path):
         fields.append(dict(name=label,label=label,values=[sum(samples[n] for n in e['nodes'])/4 for e in elements],nodeValues=samples))
     return dict(filename=path.name,nodes=nodes,nodeIDs=ids,elements=elements,totalElements=cells,
                 groups=[dict(id=0,name='Native flow plane',count=cells)],higherOrder=False,unsupportedElements=0,
-                fields=fields,velocities=velocities,direction=direction,location=location,referenceSpeed=reference,
+                fields=fields,velocities=velocities,direction=direction,location=location,referenceSpeed=reference,solverVelocityScale=velocity_scale,
                 displayNote='Colours show cell averages of native nodal samples. Click a cell to inspect its original node values.')

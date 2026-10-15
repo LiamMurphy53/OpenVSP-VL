@@ -55,6 +55,7 @@ class AeroFiles(unittest.TestCase):
         path=self.folder/'wing.case.1.quad.1.dat'
         path.write_text('2 0 100 200\n4 1\n10 0 0 0 100 2 3 -.1\n20 1 0 0 90 3 4 -.2\n30 1 0 1 80 4 5 -.3\n40 0 0 1 70 5 6 -.4\n7 10 20 30 40\n')
         mesh=read_flow_plane(path)
+        self.assertEqual(mesh['referenceSpeed'],100);self.assertEqual(mesh['solverVelocityScale'],200)
         self.assertEqual(mesh['nodeIDs'],[10,20,30,40]);self.assertEqual(mesh['elements'][0]['id'],7)
         self.assertEqual(mesh['fields'][0]['nodeValues'],[-.1,-.2,-.3,-.4])
         self.assertAlmostEqual(mesh['fields'][0]['values'][0],-.25)
