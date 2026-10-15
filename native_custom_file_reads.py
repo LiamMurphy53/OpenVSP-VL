@@ -4,8 +4,7 @@ import re
 
 def replacements(text,tokens,helper):
     words=[t[0] for t in tokens];count=len(words)
-    classes={words[i+1] for i,w in enumerate(words[:-1]) if w in ('class','interface','enum')}
-    types={'file','int','uint','double','float','bool','string','auto','array'}|classes
+    primitives={'file','int','uint','double','float','bool','string','auto','array'}
     pairs={}
     # Balance call, index and block scopes independently of comparison operators.
     for opening,closing in [('(',')'),('[',']'),('{','}')]:
@@ -13,9 +12,43 @@ def replacements(text,tokens,helper):
         for i,w in enumerate(words):
             if w==opening:pending.append(i)
             elif w==closing and pending:j=pending.pop();pairs[i]=j;pairs[j]=i
+    namespace_blocks={};namespace_at=[];namespace='';blocks=[]
+    for i,word in enumerate(words):
+        namespace_at.append(namespace)
+        if word=='namespace':
+            j=i+1;parts=[]
+            while j<count and words[j] not in ('{',';'):
+                if words[j]!=':':parts.append(words[j])
+                j+=1
+            if j<count and words[j]=='{':namespace_blocks[j]='::'.join(filter(None,[namespace,*parts]))
+        if word=='{':
+            blocks.append(namespace)
+            namespace=namespace_blocks.get(i,namespace)
+        elif word=='}' and blocks:namespace=blocks.pop()
+    def qualified(i,end):
+        if i>=end:return None
+        absolute=words[i:i+2]==[':',':']
+        j=i+2 if absolute else i
+        if j>=end or not re.fullmatch(r'[A-Za-z_]\w*',words[j]):return None
+        parts=[words[j]];j+=1
+        while j+2<end and words[j:j+2]==[':',':'] and re.fullmatch(r'[A-Za-z_]\w*',words[j+2]):
+            parts.append(words[j+2]);j+=3
+        return ('::' if absolute else '')+'::'.join(parts),j
+    def names(name,index):
+        if name.startswith('::'):return [name[2:]]
+        namespace=namespace_at[index];result=[]
+        while namespace:
+            result.append(namespace+'::'+name);namespace=namespace.rpartition('::')[0]
+        return result+[name]
+    classes={('::'.join(filter(None,[namespace_at[i],words[i+1]]))) for i,w in enumerate(words[:-1]) if w in ('class','interface','enum')}
     def type_at(i,end):
-        if i>=end or words[i] not in types:return None
-        kind=words[i];j=i+1
+        name=qualified(i,end)
+        if not name:return None
+        raw,j=name
+        kind=next((name for name in names(raw,i) if name in classes),None)
+        if kind is None:
+            if raw.lstrip(':') not in primitives:return None
+            kind=raw.lstrip(':')
         if kind=='array':
             if j>=end or words[j]!='<':return None
             inner=type_at(j+1,end)
@@ -36,9 +69,13 @@ def replacements(text,tokens,helper):
             j=i+2
             while j<count and words[j] not in ('{',';'):j+=1
             if j<count and words[j]=='{':
-                owner=words[i+1];class_blocks[j]=owner
-                bases[owner]=[w for w in words[i+2:j] if w in classes] if ':' in words[i+2:j] else []
-    global_fields={};scopes=[(None,global_fields)];parens=[];fields={};functions={};methods={};calls=[]
+                owner='::'.join(filter(None,[namespace_at[i],words[i+1]]));class_blocks[j]=owner
+                bases[owner]=[];k=i+3
+                while k<j:
+                    base=type_at(k,j)
+                    if base:bases[owner].append(base[0]);k=base[1]
+                    else:k+=1
+    global_fields={};namespace_fields={'':global_fields};scopes=[(None,global_fields)];parens=[];fields={};functions={};methods={};calls=[]
     keywords={'if','for','while','switch','catch','return'}
     for i,word in enumerate(words):
         if word=='(':
@@ -47,29 +84,30 @@ def replacements(text,tokens,helper):
             if parens:parens.pop()
             continue
         if word=='{':
-            owner=class_blocks.get(i);bindings={}
+            owner=class_blocks.get(i);bindings=namespace_fields.setdefault(namespace_blocks[i],{}) if i in namespace_blocks else {}
             if i and words[i-1]==')':
                 j=pairs.get(i-1,-1)
                 if j>0 and words[j-1] not in keywords:
                     for k in range(j+1,i-1):
-                        decl=declaration(k,i-1)
+                        decl=declaration(k,i-1) if not (k and words[k-1]==':') else None
                         if decl:bindings[decl[0]]=decl[1]
             scopes.append((owner,bindings));continue
         if word=='}':
             if len(scopes)>1:scopes.pop()
             continue
         if not parens:
-            decl=declaration(i,count)
+            decl=declaration(i,count) if not (i and words[i-1]==':') else None
             if decl:
                 name,kind,j=decl;owner,bindings=scopes[-1]
+                at_namespace=any(bindings is values for values in namespace_fields.values())
                 call_style=j+1<count and words[j+1]=='('
                 closing=pairs.get(j+1,-1) if call_style else -1
                 first=j+2
                 while first<count and words[first]=='const':first+=1
                 parameter_type=type_at(first,closing) if closing>=0 else None
-                function=call_style and (closing+1<count and words[closing+1]=='{' or (len(scopes)==1 or owner) and (first==closing or parameter_type is not None))
+                function=call_style and (closing+1<count and words[closing+1]=='{' or (at_namespace or owner) and (first==closing or parameter_type is not None))
                 if function:
-                    if len(scopes)==1:functions[name]=kind
+                    if at_namespace:functions['::'.join(filter(None,[namespace_at[i],name]))]=kind
                     elif owner:methods.setdefault(owner,{})[name]=kind
                 else:
                     if kind=='auto' and j+2<count and words[j+1]=='=':
@@ -109,6 +147,9 @@ def replacements(text,tokens,helper):
             return start
         if not re.fullmatch(r'[A-Za-z_]\w*',words[end]):return None
         if end>=2 and words[end-1]=='.':return bounds(end-2)
+        if end>=2 and words[end-2:end]==[':',':']:
+            before=bounds(end-3)
+            return before if before is not None else end-2
         return end
     def member(table,owner,name,visited=()):
         if owner in visited:return None
@@ -132,18 +173,28 @@ def replacements(text,tokens,helper):
             function=words[opening-1]
             constructor=type_at(start,opening)
             if constructor and constructor[1]==opening:return constructor[0]
-            if opening-1==start:
+            qualified_function=qualified(start,opening)
+            if qualified_function and qualified_function[1]==opening:
                 owner=next((c for c,_ in reversed(context) if c),None)
-                kind=member(methods,owner,function)
-                return kind if kind is not None else functions.get(function)
+                kind=member(methods,owner,function) if opening-1==start else None
+                return kind if kind is not None else next((functions[n] for n in names(qualified_function[0],start) if n in functions),None)
             if opening>=2 and words[opening-2]=='.':
                 owner=resolve(start,opening-3,context,depth+1)
                 return member(methods,owner,function)
             return None
+        explicit=qualified(start,end+1)
+        if explicit and explicit[1]==end+1 and start!=end:
+            for name in names(explicit[0],start):
+                namespace,_,field=name.rpartition('::')
+                if field in namespace_fields.get(namespace,{}):return inferred(namespace_fields[namespace][field])
+            return None
         name=words[end]
         if start==end:
             if name=='this':return next((c for c,_ in reversed(context) if c),None)
-            kind=global_fields.get(name)
+            kind=None
+            for candidate in names(name,start):
+                namespace,_,field=candidate.rpartition('::')
+                if field in namespace_fields.get(namespace,{}):kind=namespace_fields[namespace][field];break
             for owner,bindings in reversed(context[1:]):
                 if name in bindings:kind=bindings[name];break
                 inherited=member(fields,owner,name) if owner else None

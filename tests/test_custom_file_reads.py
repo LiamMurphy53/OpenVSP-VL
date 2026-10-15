@@ -106,3 +106,27 @@ class CustomFileReads(unittest.TestCase):
     def test_inherited_receivers_inside_methods_and_local_shadows(self):
         extra='\nclass Other{int open(const string &in filename,const string &in mode){return 99;}}\nclass ReaderBase{file@ reader=file();file@ getReader(){return reader;}}\nclass ReaderLeaf:ReaderBase{double value(){double result=5;if(this.reader.open("length.txt","r")==0){result=parseFloat(reader.readLine());reader.close();}Other reader;if(reader.open("length.txt","r")!=99)return 2;return result;}double fromGetter(){if(getReader().open("length.txt","r")!=0)return 5;double result=parseFloat(getReader().readLine());getReader().close();return result;}}\n'
         self.check(self.script('ReaderLeaf holder;SetParmVal(GetParm(GetCurrCustomGeom(),"Length","Design"),(holder.value()+holder.fromGetter())/2);',extra),12)
+
+    def test_namespaced_native_file_members_and_factories(self):
+        extra='\nnamespace Data{file@ shared=file();file@ MakeReader(){return shared;}class Holder{file@ reader=file();file@ getReader(){return reader;}}}\n'
+        for prefix,expression in [('Data::Holder holder;','holder.reader'),('auto holder=Data::Holder();','holder.getReader()'),('','Data::MakeReader()')]:
+            with self.subTest(expression=expression):
+                value='Data::shared' if expression=='Data::MakeReader()' else expression
+                self.check(self.script(prefix+'double length=5;if('+expression+'.open("length.txt","r")==0){length=parseFloat('+value+'.readLine());'+value+'.close();}SetParmVal(GetParm(GetCurrCustomGeom(),"Length","Design"),length);',extra),12)
+
+    def test_namespace_type_and_function_names_do_not_collide(self):
+        extra='\nnamespace Data{class Holder{file@ reader=file();file@ getReader(){return reader;}}file@ MakeReader(){return file();}}\nnamespace Other{class Value{int open(const string &in filename,const string &in mode){return 99;}}class Holder{Value reader;Value@ getReader(){return reader;}}Value@ MakeReader(){return Value();}}\n'
+        prefix='auto holder=Data::Holder();Other::Holder other;double length=5;if(holder.getReader().open("length.txt","r")==0){length=parseFloat(holder.reader.readLine());holder.reader.close();}if(other.reader.open("length.txt","r")!=99 || other.getReader().open("length.txt","r")!=99 || Other::MakeReader().open("length.txt","r")!=99)length=2;SetParmVal(GetParm(GetCurrCustomGeom(),"Length","Design"),length);'
+        self.check(self.script(prefix,extra),12)
+
+    def test_nested_namespace_readers_and_qualified_inheritance(self):
+        extra='\nnamespace Data{class Base{file@ reader=file();file@ getReader(){return reader;}}namespace Nested{class Holder:Data::Base{}file@ shared=file();file@ MakeReader(){return shared;}double Read(){Holder holder;double length=5;if(holder.reader.open("length.txt","r")==0){length=parseFloat(holder.reader.readLine());holder.reader.close();}if(MakeReader().open("other.txt","r")==0){length+=parseFloat(shared.readLine());shared.close();}return length;}}}\n'
+        self.check(self.script('SetParmVal(GetParm(GetCurrCustomGeom(),"Length","Design"),Data::Nested::Read());',extra),29)
+
+    def test_namespace_forward_globals_and_absolute_lookup(self):
+        extra='\nfile@ shared=file();namespace Data{double Read(){double length=5;if(shared.open("length.txt","r")==0){length=parseFloat(shared.readLine());shared.close();}if(::shared.open("other.txt","r")==0){length+=parseFloat(::shared.readLine());::shared.close();}return length;}file@ shared=file();}\n'
+        self.check(self.script('SetParmVal(GetParm(GetCurrCustomGeom(),"Length","Design"),Data::Read());',extra),29)
+
+    def test_qualified_parameter_types_keep_their_namespace_identity(self):
+        extra='\nnamespace Data{class Holder{file@ reader=file();}}namespace Other{class Value{int open(const string &in filename,const string &in mode){return 99;}}class Holder{Value reader;}}namespace Data{int Probe(Other::Holder@ holder){return holder.reader.open("length.txt","r");}double Read(Data::Holder@ holder){double length=5;if(holder.reader.open("length.txt","r")==0){length=parseFloat(holder.reader.readLine());holder.reader.close();}return length;}}\n'
+        self.check(self.script('Data::Holder holder;Other::Holder other;double length=Data::Read(@holder);if(Data::Probe(@other)!=99)length=2;SetParmVal(GetParm(GetCurrCustomGeom(),"Length","Design"),length);',extra),12)
