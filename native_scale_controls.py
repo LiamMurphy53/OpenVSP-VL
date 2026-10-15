@@ -13,6 +13,9 @@ def reason(v,pid):
 
 
 def annotate(v,field):
+    if field['rawGroup']=='XForm' and field['name']=='Scale':
+        owner=v.GetParmContainer(field['id'])
+        if owner in v.FindGeoms():field['scaleActions']=dict(geom=owner)
     message=reason(v,field['id'])
     if message:field.update(displayReadOnly=True,editable=False,readOnlyReason=message,description=message)
 
@@ -20,3 +23,15 @@ def annotate(v,field):
 def validate_parameter(v,pid):
     message=reason(v,pid)
     if message:raise ValueError(message)
+
+
+def mutate(v,request):
+    from native_preview import parameter_activity
+    gid=request.get('geom')
+    if gid not in v.FindGeoms():raise ValueError('Choose an existing component to scale.')
+    pid=v.FindParm(gid,'Scale','XForm')
+    if not v.ValidParm(pid) or not parameter_activity(v,[pid])[pid]:raise ValueError('Scale is locked by OpenVSP for this component.')
+    operation=request.get('operation')
+    if operation=='scale-accept':v.AcceptGeomScale(gid)
+    elif operation=='scale-reset':v.ResetGeomScale(gid)
+    else:raise ValueError('Choose Accept scale or Reset scale.')
