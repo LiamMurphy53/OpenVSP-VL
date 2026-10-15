@@ -15,10 +15,49 @@ class Chevrons(unittest.TestCase):
     setUp=profile_tests.ProfileControls.setUp
     tearDown=profile_tests.ProfileControls.tearDown
     worker=profile_tests.ProfileControls.worker
-    apply=profile_tests.ProfileControls.apply
     fixture=profile_tests.ProfileControls.fixture
     parm=profile_tests.ProfileControls.parm
     reopened=profile_tests.ProfileControls.reopened
+
+    def apply(self,path,pid,value):
+        if self.kind=='BODYOFREVOLUTION':
+            expected=self.fresh_bor(path,pid,value)
+            state,saved=self.worker(dict(action='mutate',operation='parameter',id=pid,value=value),path)
+            self.compare_bor(state,expected)
+        else:
+            from native_profile_reference import reference
+            expected=reference(path,self.gid,pid,value)
+            state,saved=self.worker(dict(action='mutate',operation='parameter',id=pid,value=value),path)
+            self.compare_reference(state,expected)
+        return state,saved
+
+    def compare_reference(self,state,expected):
+        c=state['components'][0]
+        self.assertEqual({p['id']:p['value'] for p in c['params']},expected['params'])
+        actual=c['surfaces']
+        profiles=[dict(surface=s['surface'],index=s['index'],profile=s['profile']) for s in c['sections']]
+        if self.kind!='PROP':
+            self.assertEqual(actual,expected['surfaces'])
+            self.assertEqual(profiles,expected['sections'])
+            return
+        # Original propeller evaluations vary only at floating-point scale.
+        for aa,bb in ((actual,expected['surfaces']),(profiles,expected['sections'])):
+            self.assertEqual(len(aa),len(bb))
+            for a,b in zip(aa,bb):
+                coordinates='points' if 'points' in a else 'profile'
+                self.assertEqual({k:x for k,x in a.items() if k!=coordinates},{k:x for k,x in b.items() if k!=coordinates})
+                self.assertEqual(len(a[coordinates]),len(b[coordinates]))
+                for ap,bp in zip(a[coordinates],b[coordinates]):
+                    self.assertEqual(len(ap),len(bp))
+                    for x,y in zip(ap,bp):self.assertLessEqual(abs(x-y),1e-14)
+
+    def reopened(self,path):
+        state,_=self.worker(dict(action='state'),path)
+        if self.kind=='BODYOFREVOLUTION':self.compare_bor(state,self.fresh_bor(path))
+        else:
+            from native_profile_reference import reference
+            self.compare_reference(state,reference(path,self.gid))
+        return state
 
     def step(self,path,name,value):
         try:return self.apply(path,self.parm(name,'Chevron'),value)
