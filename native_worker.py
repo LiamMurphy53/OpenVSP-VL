@@ -731,10 +731,12 @@ def run(req, model):
         native_property_locks.require_unchanged(v,locked)
         v.WriteVSPFile(str(model),v.SET_ALL)
         errors(v)
-        # Native file-curve limits are reconstructed differently by DecodeXml.
-        # Return the saved model's authoritative state through a fresh engine,
-        # retaining native IDs and limits instead of rewriting their metadata.
-        if req.get('operation') in ('region-curve-import','auxiliary-profile-import'):
+        # DecodeXml reconstructs file-curve limits and wing chord values at
+        # native precision. Return authoritative saved geometry/metadata
+        # through a fresh engine instead of altering native stored values.
+        if req.get('operation') in ('region-curve-import','auxiliary-profile-import') or (
+            req.get('operation')=='design-assist' and req.get('control')=='wing-taper'
+        ):
             raise ReloadRequired()
     data=snapshot(v)
     data['changed']=changed

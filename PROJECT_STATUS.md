@@ -157,3 +157,9 @@ Properties now exposes script-defined sliders and adjustable ranges beside the n
 The previously staged ideal-body support is now saved with native WaveDrag runs and connected to the modern results view. Cone selection, flow-corrected total/component/buildup curves, three native ideal references, slice samples and current-plot CSV/SVG downloads are usable. Two complete native-capture regressions match independent SDK runs, including a nonzero propulsive inlet; the prior reference-area workflow still passes. Browser downloads preserve all 400 fitted/reference rows and 45 slice rows for the selected comparison. Broader wave combinations, engineering completion and the known native failures remain open.
 
 The wave plot follow-up also passes all three selected cases through the packaged worker (2.526 s); standalone preflight loads OpenVSP 3.52.2 and all 339 packaged source hashes match. This remains selected delivery evidence.
+
+### 2026-10-15 — compound wing taper
+
+Streamlined Wing design now has an overall tip/root taper control that coordinates all sections while retaining native wing area and section spans. It supports pointed/reverse taper, retains existing planform features through progressive chord scaling, and changes section sizing drivers to span/root/tip chords. Native parameter limits and saved locks remain enforced. Five new worker tests and four existing AR/washout methods pass. Browser edit/Undo/Redo and full two-component SDK recipe comparisons pass. Broader compound modeling and the known native failures remain open.
+
+Packaged taper validation: all five new cases pass through the bundled worker (5.312 s), with successful engine startup preflight and 339 matching packaged source checksums.

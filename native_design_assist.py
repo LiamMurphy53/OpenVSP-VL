@@ -28,6 +28,18 @@ def wing_twist_stations(v,gid):
     return sections,[p/positions[-1] for p in positions],twists
 
 
+def wing_planform(v,gid):
+    """Native station chords and section spans for a whole-wing taper recipe."""
+    if v.GetGeomTypeName(gid).upper()!='WING':return None
+    surf=v.GetXSecSurf(gid,0)
+    sections=[v.GetXSec(surf,i) for i in range(1,v.GetNumXSec(surf))]
+    if not sections:return None
+    spans=[v.GetParmVal(v.GetXSecParm(x,'Span')) for x in sections]
+    chords=[v.GetParmVal(v.GetXSecParm(sections[0],'Root_Chord'))]+[v.GetParmVal(v.GetXSecParm(x,'Tip_Chord')) for x in sections]
+    if any(not math.isfinite(x) or x<=0 for x in spans) or chords[0]<=0 or any(not math.isfinite(x) or x<0 for x in chords):return None
+    return sections,spans,chords
+
+
 def metadata(v,gid):
     kind=v.GetGeomTypeName(gid).upper()
     if kind=='WING':
@@ -53,7 +65,8 @@ def metadata(v,gid):
             sections,fractions,twists=stations
             difference=twists[0]-twists[-1]
             if all(math.isclose(t,twists[0]-difference*f,abs_tol=1e-9) for t,f in zip(twists,fractions)) and all(math.isclose(v.GetParmVal(v.GetXSecParm(x,'Twist_Location')),.25,abs_tol=1e-10) for x in sections):washout=difference
-        return dict(kind='wing',aspectRatio=v.GetParmVal(gid,'TotalAR','WingGeom'),washoutAvailable=bool(stations),washout=washout,thicknessAvailable=thickness_available,camberAvailable=camber_available,sweep=uniform(angles['sweep']) if all(abs(r-.25)<1e-10 for r in references) else None,dihedral=uniform(angles['dihedral']) if not v.GetParmVal(v.FindParm(gid,'RelativeDihedralFlag','WingGeom')) else None,thicknessPercent=100*uniform(thickness) if uniform(thickness) is not None else None,camberPercent=100*uniform(camber) if uniform(camber) is not None else None)
+        planform=wing_planform(v,gid)
+        return dict(kind='wing',taperAvailable=bool(planform),taper=planform[2][-1]/planform[2][0] if planform else None,aspectRatio=v.GetParmVal(gid,'TotalAR','WingGeom'),washoutAvailable=bool(stations),washout=washout,thicknessAvailable=thickness_available,camberAvailable=camber_available,sweep=uniform(angles['sweep']) if all(abs(r-.25)<1e-10 for r in references) else None,dihedral=uniform(angles['dihedral']) if not v.GetParmVal(v.FindParm(gid,'RelativeDihedralFlag','WingGeom')) else None,thicknessPercent=100*uniform(thickness) if uniform(thickness) is not None else None,camberPercent=100*uniform(camber) if uniform(camber) is not None else None)
     if kind in ('PROP','PROPELLER'):
         values=list(v.PCurveGetValVec(gid,v.PROP_THICK))
         thickness=values[0]*100 if values and all(abs(a-values[0])<1e-10 for a in values) else None
@@ -109,6 +122,35 @@ def apply(v,r):
         set_value(v.FindParm(gid,'TotalArea','WingGeom'),area)
         v.Update()
         if not math.isclose(v.GetParmVal(gid,'TotalArea','WingGeom'),area,rel_tol=1e-9,abs_tol=1e-10):raise ValueError('Native section limits prevent retaining wing area. The edit was not saved.')
+    elif action=='wing-taper':
+        if kind!='WING':raise ValueError('Choose a wing.')
+        planform=wing_planform(v,gid)
+        if not planform or value<0:raise ValueError('Overall taper must be nonnegative; section spans and root chord must be positive. Configure degenerate sections in Pro.')
+        sections,spans,chords=planform
+        area=v.GetParmVal(gid,'TotalArea','WingGeom')
+        projected=v.GetParmVal(gid,'TotalProjectedSpan','WingGeom')
+        if area<=0:raise ValueError('Wing area must be positive.')
+        # Progressively scale existing station chords, retaining planform
+        # features instead of replacing every section with a straight taper.
+        factor=value/(chords[-1]/chords[0]) if chords[-1]>0 else None;position=0;targets=[chords[0]];total_span=sum(spans)
+        for span,chord in zip(spans,chords[1:]):
+            position+=span
+            targets.append(chord*(1+(factor-1)*position/total_span) if factor is not None else chord+chords[0]*value*position/total_span)
+        targets[-1]=chords[0]*value  # Avoid cancellation at very small taper.
+        for i in range(1,len(sections)+1):v.SetDriverGroup(gid,i,v.SPAN_WSECT_DRIVER,v.ROOTC_WSECT_DRIVER,v.TIPC_WSECT_DRIVER)
+        for x,span,root,tip in zip(sections,spans,targets,targets[1:]):
+            for name,target in [('Span',span),('Root_Chord',root),('Tip_Chord',tip)]:set_value(v.GetXSecParm(x,name),target)
+        v.Update()
+        current_area=v.GetParmVal(gid,'TotalArea','WingGeom')
+        chord=v.GetParmVal(gid,'TotalChord','WingGeom')
+        if current_area<=0 or chord<=0:raise ValueError('Native chord limits prevent this taper. The edit was not saved.')
+        # Original UpdateTotalChord scales chords only. Read native area back
+        # to normalize the result; no wing area equation is reproduced.
+        set_value(v.FindParm(gid,'TotalChord','WingGeom'),chord*area/current_area)
+        v.Update()
+        actual=wing_planform(v,gid)
+        if not actual or any(not math.isclose(a,b,rel_tol=1e-9,abs_tol=1e-10) for a,b in zip(spans,actual[1])) or not math.isclose(v.GetParmVal(gid,'TotalArea','WingGeom'),area,rel_tol=1e-9,abs_tol=1e-10) or not math.isclose(v.GetParmVal(gid,'TotalProjectedSpan','WingGeom'),projected,rel_tol=1e-9,abs_tol=1e-10):
+            raise ValueError('Native section limits prevent retaining wing area and spans. The edit was not saved.')
     elif action=='wing-washout':
         if kind!='WING':raise ValueError('Choose a wing.')
         stations=wing_twist_stations(v,gid)
@@ -200,7 +242,7 @@ def apply(v,r):
         x=v.GetXSec(v.GetXSecSurf(gid,si),index)
         if not math.isclose(v.GetXSecWidth(x),width,rel_tol=1e-9,abs_tol=1e-10) or not math.isclose(v.GetXSecHeight(x),height,rel_tol=1e-9,abs_tol=1e-10):
             raise ValueError('A native section limit prevents proportional resizing. The edit was not saved; adjust that section in Pro.')
-    field={'wing-aspect-ratio':'aspectRatio','wing-washout':'washout','wing-sweep':'sweep','wing-dihedral':'dihedral','wing-thickness':'thicknessPercent','wing-camber':'camberPercent','prop-pitch':'pitch','prop-blades':'blades','prop-thickness':'thicknessPercent','body-width':'width','body-height':'height','body-nose':'noseLength','body-tail':'tailLength'}[action]
+    field={'wing-taper':'taper','wing-aspect-ratio':'aspectRatio','wing-washout':'washout','wing-sweep':'sweep','wing-dihedral':'dihedral','wing-thickness':'thicknessPercent','wing-camber':'camberPercent','prop-pitch':'pitch','prop-blades':'blades','prop-thickness':'thicknessPercent','body-width':'width','body-height':'height','body-nose':'noseLength','body-tail':'tailLength'}[action]
     actual=metadata(v,gid).get(field)
-    if actual is None or not math.isclose(actual,value,rel_tol=1e-9,abs_tol=1e-10):
+    if actual is None or not math.isclose(actual,value,rel_tol=1e-9,abs_tol=0 if action=='wing-taper' else 1e-10):
         raise ValueError('OpenVSP could not apply the requested value consistently under these native limits or constraints. The edit was not saved; configure the individual controls in Pro.')
