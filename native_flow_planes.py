@@ -47,9 +47,15 @@ def mutate(v,r):
         cid=v.AddCpSlice(axis,position)
         if not cid:raise ValueError('OpenVSP did not create the cutting plane.')
         v.SetContainerName(cid,label)
-    elif op=='flow-plane-delete':
-        current=ids(v);cid=one(r.get('id'),current)
-        v.DelCpSlice(current.index(cid))
+    elif op=='flow-plane-rename':
+        cid=one(r.get('id'),ids(v));v.SetContainerName(cid,name(r.get('name')))
+    elif op in ('flow-plane-delete','flow-plane-delete-many'):
+        current=ids(v);selected=[r.get('id')] if op=='flow-plane-delete' else r.get('ids')
+        if not isinstance(selected,list) or not selected or any(not isinstance(cid,str) for cid in selected) or len(selected)!=len(set(selected)):raise ValueError('Choose one or more distinct cutting planes.')
+        for cid in selected:one(cid,current)
+        from native_editable_curves import guard_parameter_replacement
+        guard_parameter_replacement(v,{p for cid in selected for p in v.FindContainerParmIDs(cid)},'cutting-plane parameter IDs',action='Removing these planes')
+        for index in sorted((current.index(cid) for cid in selected),reverse=True):v.DelCpSlice(index)
     else:raise ValueError('Unknown cutting-plane operation.')
     v.Update()
     return True,None

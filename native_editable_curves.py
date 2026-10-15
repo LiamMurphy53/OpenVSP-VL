@@ -42,7 +42,7 @@ def guard_rebuild(v,parameters,indices=None):
     guard_parameter_replacement(v,ids)
 
 
-def guard_parameter_replacement(v,ids,label='native point IDs'):
+def guard_parameter_replacement(v,ids,label='native point IDs',action='This curve edit'):
     users=[]
     for i in range(v.GetNumParmLinks()):
         link=v.GetParmLinkID(i)
@@ -54,7 +54,7 @@ def guard_parameter_replacement(v,ids,label='native point IDs'):
     if ids & {v.GetDesignVar(i) for i in range(v.GetNumDesignVars())}:users.append('design variable')
     for attr in v.FindAllAttributes():
         if v.GetAttributeType(attr)==v.PARM_REFERENCE_DATA and ids & set(v.GetAttributeParmID(attr)):users.append('parameter reference '+v.GetAttributeName(attr))
-    if users:raise ValueError('This curve edit deletes or recreates '+label+' used by '+', '.join(sorted(set(users)))+'. Reassign or remove those references before editing. The edit was not saved.')
+    if users:raise ValueError(action+' deletes or recreates '+label+' used by '+', '.join(sorted(set(users)))+'. Reassign or remove those references before editing. The edit was not saved.')
 
 
 def guard_shape_replacement(v,xid,target):
