@@ -17,6 +17,8 @@ def compute(model,region,target,curve):
     finally:
         if readable!=Path(model):readable.unlink(missing_ok=True)
     v.SetVSP3FileName(str(model));v.Update()
+    import native_cloud
+    native_cloud.refresh(v)
     import native_gear_retraction
     native_gear_retraction.refresh(v)
     manager=v.ErrorMgrSingleton.getInstance()

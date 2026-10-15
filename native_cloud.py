@@ -1,46 +1,34 @@
-"""Native point-cloud transforms and safe directional projection.
-
-The release exposes local points but no cloud transform matrix. Temporary
-Blank children let OpenVSP evaluate the parent's origin and three axes,
-including hierarchy and attachment. Matrix operations and ray/surface math
-remain native. No temporary geometry is saved in the user's aircraft.
-"""
+"""Original point-cloud transforms and safe native directional projection."""
 import math
 import os
 import xml.etree.ElementTree as ET
 from native_references import document,ReloadRequired
 
 
-def transform(v,g):
-    probes=[];axes=[]
-    try:
-        for point in [(0,0,0),(1,0,0),(0,1,0),(0,0,1)]:
-            child=v.AddGeom('BLANK',g);probes.append(child)
-            parms={v.GetParmName(p):p for p in v.GetGeomParmIDs(child)}
-            for name,value in [('Trans_Attach_Flag',v.ATTACH_TRANS_COMP),('Rots_Attach_Flag',v.ATTACH_ROT_COMP),('X_Rel_Location',point[0]),('Y_Rel_Location',point[1]),('Z_Rel_Location',point[2])]:v.SetParmValUpdate(parms[name],value)
-            axes.append(v.vec3d(*[v.GetParmVal(parms[n]) for n in ['X_Location','Y_Location','Z_Location']]))
-        matrix=v.Matrix4d();matrix.loadIdentity();matrix.translatev(axes[0]);matrix.setBasis(*[p-axes[0] for p in axes[1:]])
-        # Match PtCloudGeom::GetTotalTransMat's native multiplication order.
-        scaled=v.Matrix4d();scaled.loadIdentity();scaled.scale(v.GetParmVal(g,'Scale_From_Original','XForm'));scaled.postMult(matrix)
-        return scaled
-    finally:
-        for child in reversed(probes):v.DeleteGeom(child)
-        v.Update()
+def transform_points(v,g,points,inverse=False):
+    import ctypes,json,native_preview
+    if g not in v.FindGeoms() or v.GetGeomTypeName(g).upper() not in ('PTCLOUD','POINTCLOUD','POINT_CLOUD'):raise ValueError('Choose an existing native point cloud.')
+    _,engine,bridge=native_preview.adapter(v);fn=bridge.studio_cloud_transform
+    fn.argtypes=[ctypes.c_char_p,ctypes.c_char_p,ctypes.POINTER(ctypes.c_double),ctypes.c_int,ctypes.c_bool];fn.restype=ctypes.c_char_p
+    coordinates=(ctypes.c_double*(3*len(points)))(*(x for p in points for x in (p.x(),p.y(),p.z())))
+    result=json.loads(fn(engine,g.encode(),coordinates,len(points),inverse))
+    if isinstance(result,dict):raise ValueError(result.get('error','Native point-cloud transform unavailable.'))
+    return [v.vec3d(*p) for p in result]
 
 
 def world_points(v,g):
-    matrix=transform(v,g)
-    return [matrix.xform(p) for p in v.GetPtCloudPnts(g)]
+    return transform_points(v,g,list(v.GetPtCloudPnts(g)))
 
 
 def project(v,g,target,surface,direction):
-    matrix=transform(v,g);inverse=v.Matrix4d();inverse.initMat(matrix);inverse.affineInverse();points=[]
-    for local in v.GetPtCloudPnts(g):
-        distance,u,w=v.AxisProjPnt01(target,surface,direction,matrix.xform(local))
+    points=list(v.GetPtCloudPnts(g));world=transform_points(v,g,points);hits=[];positions=[]
+    for i,point in enumerate(world):
+        distance,u,w=v.AxisProjPnt01(target,surface,direction,point)
         # The release's ProjectPtCloudPts dereferences invalid UV on a ray miss.
         # Use the native ray query and keep misses untouched, as its API documents.
-        if distance>=0 and all(math.isfinite(x) and 0<=x<=1 for x in [u,w]):points.append(inverse.xform(v.CompPnt01(target,surface,u,w)))
-        else:points.append(local)
+        if distance>=0 and all(math.isfinite(x) and 0<=x<=1 for x in [u,w]):
+            hits.append(v.CompPnt01(target,surface,u,w));positions.append(i)
+    for i,point in zip(positions,transform_points(v,g,hits,inverse=True)):points[i]=point
     filename=v.GetVSPFileName();path,tree=document(v)
     try:
         matches=[node for node in tree.findall('.//Vehicle/Geom') if node.findtext('ParmContainer/ID')==g]
@@ -53,3 +41,15 @@ def project(v,g,target,surface,direction):
         tree.write(path,encoding='utf-8',xml_declaration=True);os.replace(path,filename)
     finally:path.unlink(missing_ok=True)
     raise ReloadRequired()
+
+
+def refresh(v):
+    """Rebuild the native scale matrix omitted by PtCloudGeom::DecodeXml."""
+    import ctypes,json,native_preview
+    clouds=[g for g in v.FindGeoms() if v.GetGeomTypeName(g).upper() in ('PTCLOUD','POINTCLOUD','POINT_CLOUD')]
+    if not clouds:return
+    _,engine,bridge=native_preview.adapter(v);fn=bridge.studio_cloud_refresh
+    fn.argtypes=[ctypes.c_char_p,ctypes.c_char_p];fn.restype=ctypes.c_char_p
+    for g in clouds:
+        result=json.loads(fn(engine,g.encode()))
+        if result.get('error'):raise ValueError(result['error'])

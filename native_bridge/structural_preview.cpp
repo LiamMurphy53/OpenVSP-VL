@@ -1431,3 +1431,43 @@ extern "C" const char* studio_script_xml_text(const char* engine,const char* tex
     }catch(const std::exception& error){output="{\"error\":"+quote(error.what())+"}";}
     if(library)dlclose(library);return output.c_str();
 }
+
+extern "C" const char* studio_cloud_transform(const char* engine,const char* geom,const double* coordinates,int count,bool inverse) {
+    static thread_local std::string output;void* library=nullptr;
+    try {
+        if(count<0 || count>10000000 || (count && !coordinates))throw std::runtime_error("Invalid native point list.");
+        library=dlopen(engine,RTLD_NOW);if(!library)throw std::runtime_error(dlerror());
+        auto find=symbol<void*(*)(const std::string&,const std::string&)>(library,"_ZN3vsp13FindGeomForOpERKNSt3__112basic_stringIcNS0_11char_traitsIcEENS0_9allocatorIcEEEES8_");
+        void* component=find(std::string(geom),"Studio point-cloud transform");
+        if(!component)throw std::runtime_error("Native point cloud unavailable.");
+        Matrix4d matrix=symbol<Matrix4d(*)(const void*)>(library,"_ZNK11PtCloudGeom16GetTotalTransMatEv")(component);
+        if(inverse)symbol<void(*)(Matrix4d*)>(library,"_ZN8Matrix4d13affineInverseEv")(&matrix);
+        auto transform=symbol<vec3d(*)(const Matrix4d*,const vec3d&)>(library,"_ZNK8Matrix4d5xformERK5vec3d");
+        auto construct=symbol<void(*)(void*,double,double,double)>(library,"_ZN5vec3dC1Eddd");
+        std::ostringstream s;s << std::setprecision(17) << '[';
+        for(int i=0;i<count;++i){
+            for(int k=0;k<3;++k)if(!std::isfinite(coordinates[3*i+k]))throw std::runtime_error("Point coordinates must be finite.");
+            alignas(vec3d) unsigned char storage[sizeof(vec3d)];construct(storage,coordinates[3*i],coordinates[3*i+1],coordinates[3*i+2]);
+            vec3d point=transform(&matrix,*reinterpret_cast<vec3d*>(storage));
+            for(double x:point.v)if(!std::isfinite(x))throw std::runtime_error("Native cloud transform produced undefined coordinates.");
+            if(i)s << ',';s << '[' << point.v[0] << ',' << point.v[1] << ',' << point.v[2] << ']';
+        }
+        s << ']';output=s.str();
+    }catch(const std::exception& error){output="{\"error\":"+quote(error.what())+"}";}
+    if(library)dlclose(library);return output.c_str();
+}
+
+extern "C" const char* studio_cloud_refresh(const char* engine,const char* geom) {
+    static thread_local std::string output;void* library=nullptr;
+    try {
+        library=dlopen(engine,RTLD_NOW);if(!library)throw std::runtime_error(dlerror());
+        auto find=symbol<void*(*)(const std::string&,const std::string&)>(library,"_ZN3vsp13FindGeomForOpERKNSt3__112basic_stringIcNS0_11char_traitsIcEENS0_9allocatorIcEEEES8_");
+        void* component=find(std::string(geom),"Studio point-cloud scale refresh");
+        if(!component)throw std::runtime_error("Native point cloud unavailable.");
+        symbol<void(*)(void*,double)>(library,"_ZN11PtCloudGeom10ApplyScaleEd")(component,1.0);
+        symbol<void(*)(void*)>(library,"_ZN11PtCloudGeom10UpdateBBoxEv")(component);
+        symbol<void(*)(void*)>(library,"_ZN11PtCloudGeom13UpdateDrawObjEv")(component);
+        output="{}";
+    }catch(const std::exception& error){output="{\"error\":"+quote(error.what())+"}";}
+    if(library)dlclose(library);return output.c_str();
+}

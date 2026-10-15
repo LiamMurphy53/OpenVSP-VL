@@ -622,6 +622,8 @@ def run(req, model):
         # In particular, wing TotalSpan/TotalArea setters depend on the last
         # evaluated value, which is not serialized in the native document.
         v.Update()
+        import native_cloud
+        native_cloud.refresh(v)
         import native_profile_controls
         native_profile_controls.refresh(v)
         native_files.restore_design(v)
