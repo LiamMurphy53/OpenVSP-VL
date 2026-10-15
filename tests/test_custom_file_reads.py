@@ -90,3 +90,19 @@ class CustomFileReads(unittest.TestCase):
         for prefix,reader in [('file first,second;','second'),('array<file@> readers(2);@readers[1]=file();','readers[1]')]:
             with self.subTest(prefix=prefix):
                 self.check(self.script(prefix+'if('+reader+'.open("length.txt","r")==0){double length=parseFloat('+reader+'.readLine());'+reader+'.close();SetParmVal(GetParm(GetCurrCustomGeom(),"Length","Design"),length);}'),12)
+
+    def test_inherited_file_members_and_methods_keep_native_data(self):
+        extra='\nclass ReaderBase{file@ reader=file();file@ getReader(){return reader;}}\nclass ReaderMiddle:ReaderBase{}\nclass ReaderLeaf:ReaderMiddle{}\n'
+        for expression in ['holder.reader','holder.getReader()']:
+            with self.subTest(expression=expression):
+                prefix='ReaderLeaf holder;double length=5;if('+expression+'.open("length.txt","r")==0){length=parseFloat('+expression+'.readLine());'+expression+'.close();}SetParmVal(GetParm(GetCurrCustomGeom(),"Length","Design"),length);'
+                self.check(self.script(prefix,extra),12)
+
+    def test_inherited_nonfile_member_and_method_are_not_relocated(self):
+        extra='\nclass Other{int open(const string &in filename,const string &in mode){return filename=="length.txt"?99:0;}}\nclass OtherBase{Other reader;Other@ getReader(){return reader;}}\nclass OtherLeaf:OtherBase{}\n'
+        prefix='OtherLeaf holder;file reader;double length=5;if(reader.open("length.txt","r")==0){length=parseFloat(reader.readLine());reader.close();}if(holder.reader.open("length.txt","r")!=99 || holder.getReader().open("length.txt","r")!=99)length=2;SetParmVal(GetParm(GetCurrCustomGeom(),"Length","Design"),length);'
+        self.check(self.script(prefix,extra),12)
+
+    def test_inherited_receivers_inside_methods_and_local_shadows(self):
+        extra='\nclass Other{int open(const string &in filename,const string &in mode){return 99;}}\nclass ReaderBase{file@ reader=file();file@ getReader(){return reader;}}\nclass ReaderLeaf:ReaderBase{double value(){double result=5;if(this.reader.open("length.txt","r")==0){result=parseFloat(reader.readLine());reader.close();}Other reader;if(reader.open("length.txt","r")!=99)return 2;return result;}double fromGetter(){if(getReader().open("length.txt","r")!=0)return 5;double result=parseFloat(getReader().readLine());getReader().close();return result;}}\n'
+        self.check(self.script('ReaderLeaf holder;SetParmVal(GetParm(GetCurrCustomGeom(),"Length","Design"),(holder.value()+holder.fromGetter())/2);',extra),12)

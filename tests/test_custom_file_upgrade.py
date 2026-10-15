@@ -14,8 +14,9 @@ class CustomFileUpgrade(unittest.TestCase):
     script=test_custom_file_reads.CustomFileReads.script
     package=test_custom_file_reads.CustomFileReads.package
     length=test_custom_file_reads.CustomFileReads.length
-    def legacy(self,compound=False,generated=False,check_filename=False):
+    def legacy(self,compound=False,generated=False,check_filename=False,inherited=False):
         script=self.script(('auto reader=file();' if compound else 'file reader;')+'double length=5;if(reader.open("length.txt","r")==0){length=parseFloat(reader.readLine());reader.close();}SetParmVal(GetParm(GetCurrCustomGeom(),"Length","Design"),length);')
+        if inherited:script=script.replace('file reader;','ReaderLeaf holder;').replace('reader.open(', 'holder.reader.open(').replace('reader.readLine()', 'holder.reader.readLine()').replace('reader.close()', 'holder.reader.close()')+'\nclass ReaderBase{file@ reader=file();}\nclass ReaderLeaf:ReaderBase{}\n'
         if check_filename:script=script.replace('SetParmVal(GetParm(GetCurrCustomGeom(),"Length","Design"),length);','if(GetVSPFileName().findFirst("studio-custom-readable")>=0)length=2;SetParmVal(GetParm(GetCurrCustomGeom(),"Length","Design"),length);')
         if generated:script='int StudioPackageProfile_0123456789abcdef_open(file@ target,const string &in name,const string &in mode){return target.open(name,mode); }\n'+script
         original=self.path/'original';original.mkdir();(original/'Main.vsppart').write_text(script);(original/'length.txt').write_text('12\n');old=os.getcwd();os.chdir(original)
@@ -66,3 +67,9 @@ class CustomFileUpgrade(unittest.TestCase):
         gid,expected=self.legacy(check_filename=True)
         state,_=self.worker(dict(action='state'));c=next(c for c in state['components'] if c['id']==gid)
         self.assertEqual(self.length(c),12);self.assertEqual([s['points'] for s in c['surfaces']],expected)
+
+    def test_legacy_inherited_reader_uses_embedded_native_data(self):
+        gid,expected=self.legacy(inherited=True);before=self.model.read_bytes()
+        state,path=self.worker(dict(action='state'));c=next(c for c in state['components'] if c['id']==gid)
+        self.assertEqual(self.length(c),12);self.assertEqual([s['points'] for s in c['surfaces']],expected)
+        self.assertEqual(self.model.read_bytes(),before);self.assertEqual(path.read_bytes(),before)
