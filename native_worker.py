@@ -772,18 +772,39 @@ if __name__=='__main__':
     def reply(data):
         temp=response.with_name(response.name+'.tmp')
         temp.write_text(json.dumps(sanitize(data),allow_nan=False));os.replace(temp,response)
+    # Keep the incoming candidate recoverable across fresh-process decoding.
+    # Only our internally generated reload request can carry this local name.
+    import re,uuid
+    rollback=None;original=None
+    def restore_candidate():
+        if original is not None:
+            temp=model.with_name('.native-restore-'+uuid.uuid4().hex+'.vsp3');temp.write_bytes(original);os.replace(temp,model)
+    def clear_rollback():
+        if rollback is not None:rollback.unlink(missing_ok=True)
     try:
-        data=run(json.loads(request.read_text()),model)
+        req=json.loads(request.read_text())
+        rollback_name=req.pop('_nativeRollbackFile',None)
+        if request.name=='reload-request.json' and isinstance(rollback_name,str) and re.fullmatch(r'\.native-rollback-[0-9a-f]{32}\.vsp3',rollback_name):
+            rollback=model.parent/rollback_name
+        original=rollback.read_bytes() if rollback is not None else model.read_bytes() if req.get('action')=='mutate' and model.exists() else None
+        data=run(req,model)
         reply(data)
+        clear_rollback()
     except ReloadRequired as exc:
         import os
         reload_request=request.with_name('reload-request.json')
         # File-based native edits must satisfy the same saved geometry locks
         # after DecodeXml and dependency updates as ordinary mutations.
         next_request={**(exc.request or {'action':'state'}),'validatePropertyLocks':True}
+        if original is not None:
+            if rollback is None:
+                rollback=model.parent/('.native-rollback-'+uuid.uuid4().hex+'.vsp3');rollback.write_bytes(original)
+            next_request['_nativeRollbackFile']=rollback.name
         reload_request.write_text(json.dumps(next_request))
         for fd in map(int,sys.argv[4:]):os.set_inheritable(fd,True)
         os.execv(sys.executable,[sys.executable,str(Path(__file__).resolve()),str(reload_request),str(model),str(response),*sys.argv[4:]])
     except Exception as exc:
+        restore_candidate()
+        clear_rollback()
         reply({'error':str(exc)})
         raise

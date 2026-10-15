@@ -29,6 +29,10 @@ def project(v,g,target,surface,direction):
         if distance>=0 and all(math.isfinite(x) and 0<=x<=1 for x in [u,w]):
             hits.append(v.CompPnt01(target,surface,u,w));positions.append(i)
     for i,point in zip(positions,transform_points(v,g,hits,inverse=True)):points[i]=point
+    replace_points(v,g,points)
+
+
+def replace_points(v,g,points):
     filename=v.GetVSPFileName();path,tree=document(v)
     try:
         matches=[node for node in tree.findall('.//Vehicle/Geom') if node.findtext('ParmContainer/ID')==g]
@@ -53,3 +57,47 @@ def refresh(v):
     for g in clouds:
         result=json.loads(fn(engine,g.encode()))
         if result.get('error'):raise ValueError(result['error'])
+
+
+FILTERS={'KeepPtsInBBox','RemovePtsInBBox','KeepPtsInRange','RemovePtsInRange','KeepPtsAbove','KeepPtsBelow','KeepPtsNearPt','RemovePtsNearPt','KeepPtsNearGeom','RemovePtsNearGeom'}
+
+
+def filter_points(v,g,request):
+    from native_tools import one,finite
+    from native_fit import vector
+    method=one(request.get('method'),FILTERS,'Choose a point filter.')
+    def index(value,choices):
+        if type(value)!=int:raise ValueError('Choose a whole-number axis or surface index.')
+        return one(value,choices)
+    points=list(v.GetPtCloudPnts(g));world=transform_points(v,g,points)
+    if method.endswith('BBox'):
+        minimum=vector(v,request.get('minimum'));maximum=vector(v,request.get('maximum'))
+        if any(a>b for a,b in zip((minimum.x(),minimum.y(),minimum.z()),(maximum.x(),maximum.y(),maximum.z()))):raise ValueError('Box minimum coordinates must not exceed the maximum coordinates.')
+        args=[minimum,maximum]
+    elif method.endswith('Range'):
+        axis=index(request.get('axis'),[v.X_DIR,v.Y_DIR,v.Z_DIR]);low=finite(request.get('low'));high=finite(request.get('high'))
+        if low>high:raise ValueError('Range minimum must not exceed its maximum.')
+        args=[axis,low,high]
+    elif method in ('KeepPtsAbove','KeepPtsBelow'):
+        args=[index(request.get('axis'),[v.X_DIR,v.Y_DIR,v.Z_DIR]),finite(request.get('value'))]
+    elif method.endswith('NearPt'):
+        radius=finite(request.get('radius'))
+        if radius<0:raise ValueError('Radius must be zero or greater.')
+        args=[vector(v,request.get('center')),radius]
+    else:
+        target=one(request.get('target'),v.FindGeoms());surface=index(request.get('surface'),range(v.GetTotalNumSurfs(target)));tolerance=finite(request.get('tolerance'))
+        if tolerance<0:raise ValueError('Surface distance must be zero or greater.')
+        args=[target,surface,tolerance]
+    filtered=getattr(v,method)(world,*args)
+    # These native filters return unchanged input points in native order.
+    # Associate each returned coordinate with its original local point, avoiding
+    # inverse-transform roundoff and preserving repeated input coordinates.
+    from collections import defaultdict,deque
+    original=defaultdict(deque)
+    for point,local in zip(world,points):original[(point.x(),point.y(),point.z())].append(local)
+    kept=[]
+    for point in filtered:
+        matches=original[(point.x(),point.y(),point.z())]
+        if not matches:raise ValueError('The native filter returned a point outside the original cloud.')
+        kept.append(matches.popleft())
+    replace_points(v,g,kept)

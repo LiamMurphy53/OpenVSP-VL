@@ -219,6 +219,10 @@ def mutate(v,r):
         if g not in v.FindGeoms():raise ValueError('A three-dimensional hull needs noncoplanar native points.')
         v.SetGeomParent(g,source);parms={v.GetParmName(p):p for p in v.GetGeomParmIDs(g)}
         for key,value in [('Trans_Attach_Flag',v.ATTACH_TRANS_COMP),('Rots_Attach_Flag',v.ATTACH_ROT_COMP),('Scale',v.GetParmVal(source,'Scale_From_Original','XForm'))]:v.SetParmValUpdate(parms[key],value)
+    elif op=='point-cloud-filter':
+        one(g,[g for g in v.FindGeoms() if v.GetGeomTypeName(g).upper() in ('PTCLOUD','POINTCLOUD','POINT_CLOUD')])
+        import native_cloud
+        native_cloud.filter_points(v,g,r)
     elif op=='point-cloud-project':
         one(g,[g for g in v.FindGeoms() if v.GetGeomTypeName(g).upper() in ('PTCLOUD','POINTCLOUD','POINT_CLOUD')]);target=one(r['target'],v.FindGeoms());surf=one(r['surface'],range(v.GetTotalNumSurfs(target)));direction=one(r['direction'],[v.X_DIR,v.Y_DIR,v.Z_DIR])
         import native_cloud
