@@ -448,6 +448,8 @@ def prepare(v,req,model,errors):
             raise ValueError('A swept parameter became unavailable after native geometry changes in this case. Propeller representation changes can regenerate rotor groups. Split representation and rotor-speed sweeps into separate studies using their own saved aircraft.')
     for item in ordered:
         require_case_parameter(item)
+        import native_scale_controls
+        native_scale_controls.validate_parameter(v,item['id'])
         import native_connection_controls
         if v.GetParmGroupName(item['id'])=='Connection':v.Update()
         native_connection_controls.validate_parameter(v,item['id'],item['requested'])

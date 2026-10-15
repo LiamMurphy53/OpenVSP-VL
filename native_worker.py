@@ -70,6 +70,8 @@ def parameter(v, pid):
     native_fea_sizing.annotate(v,field)
     import native_cfd_density
     native_cfd_density.annotate(v,field)
+    import native_scale_controls
+    native_scale_controls.annotate(v,field)
     import native_property_locks
     native_property_locks.annotate(v,field)
     return field
@@ -172,11 +174,6 @@ def snapshot(v):
             drawing=wire_geometry(v,gid);surfaces=drawing['surfaces'];paths=drawing['paths'];isolated_points=drawing['points']
             activity=parameter_activity(v,[p['id'] for p in params])
             for p in params:p['active']=activity[p['id']]
-            for p in params:
-                if p['name']=='Scale_From_Original':
-                    p['displayReadOnly']=True;p['description']='Accumulated native scale; use Scale to resize this geometry.'
-                elif p['name']=='Last_Scale':
-                    p['displayReadOnly']=True;p['description']='Native scale bookkeeping; use Scale to resize this geometry.'
             wire_settings=native_wire.settings(v,gid,params)
         if not surfaces and not mesh and not paths and kind.upper() not in ('BLANK','HINGE','PTCLOUD','POINTCLOUD','POINT_CLOUD','ROUTING','AUXILIARY'):
             warnings.append(f'{v.GetGeomName(gid)}: no wire drawing points remain; reduce trimming or import a populated wire file.' if wire_settings else f'{v.GetGeomName(gid)}: this geometry has no API surface preview; inspect it in native OpenVSP.')
@@ -355,6 +352,8 @@ def mutate(v, req):
         native_custom_library.validate(v,pid)
         import native_prop_drivers
         native_prop_drivers.validate_parameter(v,pid)
+        import native_scale_controls
+        native_scale_controls.validate_parameter(v,pid)
         import native_human_controls
         native_human_controls.validate_parameter(v,pid)
         import native_prop_controls
