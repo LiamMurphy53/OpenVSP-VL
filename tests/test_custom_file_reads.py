@@ -36,7 +36,8 @@ class CustomFileReads(unittest.TestCase):
     def length(self,c):return next(p['value'] for p in c['params'] if p['name']=='Length' and p['rawGroup']=='Design')
 
     def check(self,script,expected):
-        original,surfaces=self.original(script);self.assertEqual(original,expected)
+        original,surfaces=self.original(script)
+        if expected is not None:self.assertEqual(original,expected)
         _,path,c=self.imported(script);self.assertEqual(self.length(c),original);self.assertEqual([s['points'] for s in c['surfaces']],surfaces)
         shutil.rmtree(path.parent/'.studio-custom-assets',ignore_errors=True)
         state,_=self.worker(dict(action='state'),path);cold=next(x for x in state['components'] if x['id']==c['id']);self.assertEqual(self.length(cold),original);self.assertEqual(cold['surfaces'],c['surfaces'])
@@ -61,3 +62,31 @@ class CustomFileReads(unittest.TestCase):
 
     def test_binary_reads_use_original_native_file_decoder(self):
         self.check(self.script('file reader;if(reader.open("binary.bin","r")==0){double length=reader.readDouble();reader.close();SetParmVal(GetParm(GetCurrCustomGeom(),"Length","Design"),length);}'),12.25)
+
+    def test_auto_file_handle_reads_original_data(self):
+        self.check(self.script('auto reader=file();if(reader.open("length.txt","r")==0){double length=parseFloat(reader.readLine());reader.close();SetParmVal(GetParm(GetCurrCustomGeom(),"Length","Design"),length);}'),12)
+
+    def test_member_and_indexed_file_handles_read_original_data(self):
+        for expression,prefix,extra in [
+            ('holder.reader','Holder holder;','\nclass Holder{file@ reader=file();}\n'),
+            ('readers[1]','array<file@> readers={file(),file()};',''),
+            ('holder.reader','auto holder=Holder();','\nclass Holder{file@ reader=file();}\n'),
+            ('holder.getReader()','Holder holder;','\nclass Holder{file@ reader=file();file@ getReader(){return reader;}}\n')
+        ]:
+            with self.subTest(expression=expression):
+                self.check(self.script(prefix+'if('+expression+'.open("length.txt","r")==0){double length=parseFloat('+expression+'.readLine());'+expression+'.close();SetParmVal(GetParm(GetCurrCustomGeom(),"Length","Design"),length);}',extra),12)
+
+    def test_factory_receiver_and_mode_evaluate_once_in_original_order(self):
+        extra='\nint calls=0;file@ shared=file();file@ MakeReader(){calls=calls*10+1;return shared;}string ReadMode(){calls=calls*10+2;return "r";}\n'
+        script=self.script('calls=0;if(MakeReader().open("length.txt",ReadMode())==0){double length=parseFloat(shared.readLine())+calls/100.0;shared.close();SetParmVal(GetParm(GetCurrCustomGeom(),"Length","Design"),length);}',extra)
+        _,component=self.check(script,None);self.assertIn(self.length(component),(12.12,12.21))
+
+    def test_nonfile_members_and_factories_remain_original_calls(self):
+        extra='\nclass Other{int open(const string &in filename,const string &in mode){return filename=="length.txt"?99:0;}}\nclass Holder{Other reader;Other@ getReader(){return reader;}}\nOther@ NotAFile(){Other value;return value;}\n'
+        prefix='auto holder=Holder();auto nonfile=NotAFile();file reader;double length=1;if(reader.open("length.txt","r")==0){length=parseFloat(reader.readLine());reader.close();}if(holder.reader.open("length.txt","r")!=99 || holder.getReader().open("length.txt","r")!=99 || nonfile.open("length.txt","r")!=99)length=2;SetParmVal(GetParm(GetCurrCustomGeom(),"Length","Design"),length);'
+        self.check(self.script(prefix,extra),12)
+
+    def test_multiple_handle_declarations_and_array_constructor(self):
+        for prefix,reader in [('file first,second;','second'),('array<file@> readers(2);@readers[1]=file();','readers[1]')]:
+            with self.subTest(prefix=prefix):
+                self.check(self.script(prefix+'if('+reader+'.open("length.txt","r")==0){double length=parseFloat('+reader+'.readLine());'+reader+'.close();SetParmVal(GetParm(GetCurrCustomGeom(),"Length","Design"),length);}'),12)
