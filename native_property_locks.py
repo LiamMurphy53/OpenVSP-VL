@@ -21,8 +21,8 @@ def records(v):
 def set_locked(v,ids,locked):
     if type(locked)!=bool or not isinstance(ids,list) or not ids or any(not isinstance(p,str) for p in ids) or len(ids)!=len(set(ids)):raise ValueError('Choose properties to lock or unlock.')
     allowed={p for g in v.FindGeoms() for p in v.GetGeomParmIDs(g)}
-    if any(p not in allowed for p in ids):raise ValueError('Choose an existing geometry property.')
     existing={item['id']:item for item in records(v)}
+    if any(p not in allowed and (locked or p not in existing) for p in ids):raise ValueError('Choose an existing geometry property or saved lock.')
     for pid in ids:
         if locked and pid not in existing:
             owner=v.GetParmContainer(pid)
@@ -45,3 +45,13 @@ def require_unchanged(v,locked):
 
 def annotate(v,field):
     field['userLocked']=any(item['id']==field['id'] for item in records(v))
+
+
+def snapshot(v):
+    result=[]
+    for item in records(v):
+        available=v.ValidParm(item['id'])
+        actual=v.GetParmVal(item['id']) if available else None
+        conflict=not available or not math.isfinite(actual) or not math.isclose(actual,item['value'],rel_tol=1e-10,abs_tol=1e-12)
+        result.append(dict(item,available=available,current=actual,conflict=conflict))
+    return result

@@ -218,6 +218,9 @@ def snapshot(v):
     binding_parameters={p['id']:{**p,'bindingOwner':c['name']} for c in components for p in c['params']}
     for c in components:c['customExternalControls']=native_custom_bindings.external_controls(v,c,binding_parameters)
     tools=native_tools.snapshot(v,parameter)
+    import native_property_locks
+    tools['propertyLocks']=native_property_locks.snapshot(v)
+    warnings.extend('Saved lock needs attention: '+item.get('label',item['id'])+'. Unlock it in Properties before editing.' for item in tools['propertyLocks'] if item['conflict'])
     for c in components:
         cloud=next((p for p in tools['pointClouds'] if p['id']==c['id']),None)
         if cloud:c['points']=cloud['worldPoints']

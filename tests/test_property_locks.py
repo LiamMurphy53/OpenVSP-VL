@@ -47,6 +47,30 @@ class PropertyLocks(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,'locked'):self.worker(dict(action='mutate',operation='parameter',id=source,value=30),path)
         self.assertEqual(path.read_bytes(),before)
 
+    def test_external_deletion_can_release_stale_lock(self):
+        v=self.v;g=self.gid;pid=v.FindParm(g,'TotalSpan','WingGeom')
+        from native_property_locks import set_locked
+        set_locked(v,[pid],True)
+        v.DeleteGeom(g);v.Update();v.WriteVSPFile(str(self.model),v.SET_ALL)
+        state,path=self.worker(dict(action='state'))
+        lock=state['tools']['propertyLocks'][0]
+        self.assertFalse(lock['available']);self.assertTrue(lock['conflict'])
+        self.assertTrue(state['warnings'])
+        state,path=self.worker(dict(action='mutate',operation='property-lock',parameters=[pid],locked=False),path)
+        self.assertEqual(state['tools']['propertyLocks'],[])
+
+    def test_fit_optimizer_cannot_change_locked_variable(self):
+        v=self.v;v.ClearVSPModel();g=v.AddGeom('POD');pid=v.FindParm(g,'Length','Design')
+        v.SetParmValUpdate(pid,12);p=v.CompPnt01(g,0,.7,.25)
+        point=[p.x(),p.y(),p.z()]
+        v.SetParmValUpdate(pid,8);v.WriteVSPFile(str(self.model),v.SET_ALL)
+        state,path=self.worker(dict(action='mutate',operation='fit-targets-add',geom=g,surface=0,points=[point],fixedU=True,fixedW=True,u=.7,w=.25))
+        state,path=self.worker(dict(action='mutate',operation='fit-variables',parameters=[pid]),path)
+        state,path=self.worker(dict(action='mutate',operation='property-lock',parameters=[pid],locked=True),path)
+        before=path.read_bytes()
+        with self.assertRaisesRegex(ValueError,'locked'):self.worker(dict(action='mutate',operation='fit-optimize'),path)
+        self.assertEqual(path.read_bytes(),before)
+
     def test_study_constraints_checked_before_writing(self):
         v=self.v;g=self.gid;pid=v.FindParm(g,'TotalSpan','WingGeom')
         from native_property_locks import set_locked

@@ -270,3 +270,5 @@ Desktop/automatic launches first reuse a verified saved workspace endpoint. Othe
 Use **Lock** beside a geometry property to hold its current native value. Locks are saved in the aircraft file. Aspect ratio also has a lock in Streamlined wing design; Pro exposes locks on the native geometry fields, including calculated dimensions. **Unlock** releases the constraint.
 
 Studio checks the final native result before saving: direct edits, related dimensions, parameter links, fitting and prepared study cases cannot change a locked value or remove its parameter. A warning identifies the conflicting property and the edit is discarded. Locks constrain Studio transactions; the original OpenVSP application does not enforce Studio attributes.
+
+The **Aircraft property locks** list in Properties shows all saved constraints and lets you release them. Missing properties or values changed outside Studio are flagged, including when the aircraft has no remaining components.
