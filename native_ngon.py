@@ -78,6 +78,31 @@ def mesh_metadata(v,gid):
     return result
 
 
+def capture_mesh(v,gid):
+    """Archive tag context immediately after the original meshing operation."""
+    data=mesh_metadata(v,gid)
+    if not any(m['triangles'] for m in data['meshes']):return False
+    validate_mesh_metadata(data)
+    if not hasattr(v,'_studio_mesh_tag_data'):v._studio_mesh_tag_data={}
+    v._studio_mesh_tag_data[gid]=dict(source=_mesh_tag_signature(data),data=copy.deepcopy(data['tagData']))
+    return True
+
+
+def mesh_project_data(v,gid):
+    """Original native flattened geometry/XML plus its preserved metadata."""
+    raw=mesh_metadata(v,gid)
+    if gid not in getattr(v,'_studio_mesh_tag_data',{}):raise ValueError('The triangle source changed without an archived native tag context. Rebuild the source mesh before saving its metadata.')
+    path=distribution()/'python/openvsp/openvsp/_vsp.so';stat=path.stat();_verified_private_layout(str(path),stat.st_size,stat.st_mtime_ns)
+    _,engine,bridge=adapter(v);function=bridge.studio_mesh_project_data
+    function.argtypes=[ctypes.c_char_p]*3;function.restype=ctypes.c_char_p
+    result=json.loads(function(engine,gid.encode(),v.FindParm(gid,'Scale_From_Original','XForm').encode()))
+    if 'error' in result:raise ValueError(result['error'])
+    result['metadata']['tagData']=copy.deepcopy(raw['tagData']);validate_mesh_metadata(result['metadata'])
+    kept=sum(sum(not child['ignore'] for child in t['split']) if t['split'] else not t['ignore'] for m in raw['meshes'] for t in m['triangles'])
+    if sum(len(m['triangles']) for m in result['metadata']['meshes'])!=kept:raise ValueError('OpenVSP canonical mesh encoding dropped source triangles. The project was not replaced.')
+    return result
+
+
 def _mesh_tag_signature(data):
     # Native conversion renumbers scratch node/triangle IDs; uniform model
     # scaling changes only the separate scale matrix, not the tag definitions.
@@ -333,7 +358,8 @@ def write(v,path):
     """Keep native VSP3 parameters and Studio's full polygon graph in one file."""
     path=Path(path)
     graphs={g:snapshot(v,g) for g in v.FindGeoms() if v.GetGeomTypeName(g).upper() in ('NGONMESH','NGON_MESH')}
-    if not graphs:
+    triangles={g:mesh_project_data(v,g) for g in v.FindGeoms() if v.GetGeomTypeName(g).upper()=='MESH' and g in getattr(v,'_studio_mesh_tag_data',{})}
+    if not graphs and not triangles:
         v.WriteVSPFile(str(path),v.SET_ALL)
         return
     for data in graphs.values():validate(data)
@@ -345,13 +371,23 @@ def write(v,path):
         tree=ET.parse(temporary);found=set()
         for geom in tree.findall('./Vehicle/Geom'):
             gid=geom.findtext('./ParmContainer/ID')
-            if gid not in graphs:continue
-            if geom.find('NGonMeshGeom') is None or gid in found:raise ValueError('Native polygon file identity is inconsistent.')
+            if gid not in graphs and gid not in triangles:continue
+            if gid in found:raise ValueError('Native mesh file identity is inconsistent.')
             found.add(gid)
-            text=json.dumps(graphs[gid],allow_nan=False,ensure_ascii=True,separators=(',',':'))
+            if gid in graphs:
+                if geom.find('NGonMeshGeom') is None:raise ValueError('Native polygon file identity is inconsistent.')
+                data=graphs[gid];tag='StudioPolygonSnapshot';version='1'
+            else:
+                previous=geom.find('MeshGeom')
+                if previous is None:raise ValueError('Native triangle file identity is inconsistent.')
+                canonical=ET.fromstring(triangles[gid]['xml'])
+                if canonical.tag!='MeshGeom':raise ValueError('OpenVSP did not encode the native triangle mesh.')
+                index=list(geom).index(previous);geom.remove(previous);geom.insert(index,canonical)
+                data=triangles[gid]['metadata'];tag='StudioTriangleMetadata';version='2'
+            text=json.dumps(data,allow_nan=False,ensure_ascii=True,separators=(',',':'))
             if len(text)>128*1024*1024:raise ValueError('Polygon snapshot exceeds the project limit.')
-            ET.SubElement(geom,'StudioPolygonSnapshot',format='1',sha256=hashlib.sha256(text.encode()).hexdigest()).text=text
-        if found!=set(graphs):raise ValueError('OpenVSP did not save every polygon component.')
+            ET.SubElement(geom,tag,format=version,sha256=hashlib.sha256(text.encode()).hexdigest()).text=text
+        if found!=(set(graphs)|set(triangles)):raise ValueError('OpenVSP did not save every mesh component.')
         tree.write(temporary,encoding='utf-8',xml_declaration=True)
         os.replace(temporary,path);v.SetVSP3FileName(str(path))
     except BaseException:
@@ -363,8 +399,8 @@ def write(v,path):
 def restore_file(v,path):
     """Restore Studio extension data after an ordinary original-engine VSP3 read."""
     raw=Path(path).read_bytes()
-    if b'<StudioPolygonSnapshot' not in raw:return []
-    tree=ET.ElementTree(ET.fromstring(raw));pending={}
+    if b'<StudioPolygonSnapshot' not in raw and b'<StudioTriangleMetadata' not in raw:return []
+    tree=ET.ElementTree(ET.fromstring(raw));pending={};triangle_pending={}
     def pairs(items):
         result={}
         for key,value in items:
@@ -372,6 +408,14 @@ def restore_file(v,path):
             result[key]=value
         return result
     for geom in tree.findall('./Vehicle/Geom'):
+        triangle_entries=geom.findall('StudioTriangleMetadata')
+        if triangle_entries:
+            gid=geom.findtext('./ParmContainer/ID');entry=triangle_entries[0];text=entry.text or ''
+            if len(triangle_entries)!=1 or not gid or gid in triangle_pending or geom.find('MeshGeom') is None or geom.find('NGonMeshGeom') is not None:raise ValueError('Invalid saved triangle component identity.')
+            if entry.get('format')!='2' or len(text)>128*1024*1024 or hashlib.sha256(text.encode()).hexdigest()!=entry.get('sha256'):raise ValueError('Saved triangle metadata is corrupt or unsupported.')
+            data=json.loads(text,object_pairs_hook=pairs);validate_mesh_metadata(data)
+            if gid not in v.FindGeoms() or v.GetGeomTypeName(gid).upper()!='MESH':raise ValueError('Saved triangle metadata has no native mesh owner.')
+            triangle_pending[gid]=data
         entries=geom.findall('StudioPolygonSnapshot')
         if not entries:continue
         gid=geom.findtext('./ParmContainer/ID');entry=entries[0];text=entry.text or ''
@@ -382,5 +426,6 @@ def restore_file(v,path):
     # Validate every component before changing any native graph. Worker-level
     # rollback still protects the project if a later native restoration fails.
     for gid,data in pending.items():restore(v,gid,data)
-    if pending:v.Update()
-    return list(pending)
+    for gid,data in triangle_pending.items():restore_mesh_metadata(v,gid,data)
+    if pending or triangle_pending:v.Update()
+    return list(pending)+list(triangle_pending)

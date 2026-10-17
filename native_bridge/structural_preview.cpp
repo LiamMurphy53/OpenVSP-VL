@@ -279,7 +279,7 @@ static void restoreTagTables(void* library,xmlNodePtr root){
 struct TriangleStages {
     void(*destroy)(TMesh*);void(*construct)(TMesh*);void(*copy)(TMesh*,TMesh*);std::vector<TMesh*> values;
     TriangleStages(void* library,size_t count):destroy(symbol<void(*)(TMesh*)>(library,"_ZN5TMeshD1Ev")),construct(symbol<void(*)(TMesh*)>(library,"_ZN5TMeshC1Ev")),copy(symbol<void(*)(TMesh*,TMesh*)>(library,"_ZN5TMesh4copyEPS_")){values.reserve(count);}
-    TMesh* add(TMesh* source){auto p=static_cast<TMesh*>(::operator new(sizeof(TMesh)));try{construct(p);}catch(...){::operator delete(p);throw;}values.push_back(p);copy(p,source);return p;}
+    TMesh* add(TMesh* source,void(*operation)(TMesh*,TMesh*)=nullptr){auto p=static_cast<TMesh*>(::operator new(sizeof(TMesh)));try{construct(p);}catch(...){::operator delete(p);throw;}values.push_back(p);(operation?operation:copy)(p,source);return p;}
     ~TriangleStages(){for(auto p:values){destroy(p);::operator delete(p);}}
 };
 static bool sameDouble(double a,double b){return a==b && (a!=0 || std::signbit(a)==std::signbit(b));}
@@ -334,6 +334,21 @@ extern "C" const char* studio_mesh_restore_metadata(const char* engine,const cha
         if(!scaleGuard || !*scaleGuard || reinterpret_cast<char*>(parm(manager,std::string(scaleGuard)))!=component+studio_mesh_layout::m_ScaleFromOrig)throw std::runtime_error("Native triangle mesh layout does not match the pinned engine.");studio_ngon::restoreMeshMetadata(library,component,root);output="{\"restored\":true}";
     }catch(const std::exception& e){output="{\"error\":"+quote(e.what())+"}";}
     if(doc)xmlFreeDoc(doc);if(library)dlclose(library);return output.c_str();
+}
+
+extern "C" const char* studio_mesh_project_data(const char* engine,const char* geom,const char* scaleGuard){
+    static thread_local std::string output;void* library=nullptr;xmlNodePtr root=nullptr;xmlBufferPtr buffer=nullptr;void(*freeNode)(xmlNodePtr)=nullptr;void(*freeBuffer)(xmlBufferPtr)=nullptr;
+    try{
+        library=dlopen(engine,RTLD_NOW);if(!library)throw std::runtime_error(dlerror());auto find=symbol<void*(*)(const std::string&,const std::string&)>(library,"_ZN3vsp13FindGeomForOpERKNSt3__112basic_stringIcNS0_11char_traitsIcEENS0_9allocatorIcEEEES8_");auto component=static_cast<const char*>(find(geom,"Studio canonical triangle project"));if(!component)throw std::runtime_error("Native triangle mesh unavailable.");auto manager=symbol<void*>(library,"_ZZN16ParmMgrSingleton11getInstanceEvE8instance");auto parm=symbol<Parm*(*)(void*,const std::string&)>(library,"_ZN16ParmMgrSingleton8FindParmERKNSt3__112basic_stringIcNS0_11char_traitsIcEENS0_9allocatorIcEEEE");
+        if(!scaleGuard || !*scaleGuard || reinterpret_cast<const char*>(parm(manager,std::string(scaleGuard)))!=component+studio_mesh_layout::m_ScaleFromOrig)throw std::runtime_error("Native triangle mesh layout does not match the pinned engine.");
+        const auto& meshes=*reinterpret_cast<const std::vector<TMesh*>*>(component+studio_mesh_layout::m_TMeshVec);studio_ngon::TriangleStages stages(library,meshes.size());auto flatten=symbol<void(*)(TMesh*,TMesh*)>(library,"_ZN5TMesh11CopyFlattenEPS_");for(auto m:meshes){if(!m)throw std::runtime_error("Missing native triangle mesh.");stages.add(m,flatten);}
+        // Use the installed engine's own XML implementation and allocator as
+        // well as its TMesh encoder; no triangle serialization is reimplemented.
+        auto create=symbol<xmlNodePtr(*)(xmlNsPtr,const xmlChar*)>(library,"xmlNewNode");auto child=symbol<xmlNodePtr(*)(xmlNodePtr,xmlNsPtr,const xmlChar*,const xmlChar*)>(library,"xmlNewTextChild");freeNode=symbol<void(*)(xmlNodePtr)>(library,"xmlFreeNode");freeBuffer=symbol<void(*)(xmlBufferPtr)>(library,"xmlBufferFree");auto makeBuffer=symbol<xmlBufferPtr(*)()>(library,"xmlBufferCreate");auto dump=symbol<int(*)(xmlBufferPtr,xmlDocPtr,xmlNodePtr,int,int)>(library,"xmlNodeDump");auto content=symbol<const xmlChar*(*)(const xmlBuffer*)>(library,"xmlBufferContent");auto length=symbol<int(*)(const xmlBuffer*)>(library,"xmlBufferLength");auto encode=symbol<xmlNodePtr(*)(TMesh*,xmlNodePtr&)>(library,"_ZN5TMesh9EncodeXmlERP8_xmlNode");
+        root=create(nullptr,BAD_CAST "MeshGeom");if(!root)throw std::runtime_error("Could not allocate native mesh XML.");auto count=std::to_string(stages.values.size());if(!child(root,nullptr,BAD_CAST "Num_Meshes",BAD_CAST count.c_str()))throw std::runtime_error("Could not encode native mesh count.");for(auto m:stages.values)encode(m,root);buffer=makeBuffer();if(!buffer || dump(buffer,nullptr,root,0,1)<0)throw std::runtime_error("Could not encode native triangle project data.");std::string xml(reinterpret_cast<const char*>(content(buffer)),length(buffer));
+        auto metadata=studio_ngon::meshMetadata(stages.values);double matrix[16];symbol<void(*)(const void*,double*)>(library,"_ZNK8Matrix4d6getMatEPd")(component+studio_mesh_layout::m_ScaleMatrix,matrix);std::ostringstream extra;extra<<std::setprecision(17)<<",\"scaleMatrix\":";studio_ngon::array(extra,matrix);extra<<'}';metadata.pop_back();metadata+=extra.str();output="{\"metadata\":"+metadata+",\"xml\":"+quote(xml)+"}";
+    }catch(const std::exception& e){output="{\"error\":"+quote(e.what())+"}";}
+    if(buffer && freeBuffer)freeBuffer(buffer);if(root && freeNode)freeNode(root);if(library)dlclose(library);return output.c_str();
 }
 
 // Offsets are compiler-generated from the complete pinned Geom declaration.

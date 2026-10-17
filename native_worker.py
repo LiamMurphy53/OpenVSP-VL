@@ -577,8 +577,14 @@ def execute_analysis(v,req):
         details['cuttingPlanes']=native_flow_planes.snapshot(v,parameter)
     if name=='CfdMeshAnalysis':details['nativeSettingOverrides']=cfd_settings
     save(v,name,effective_inputs,**details)
+    before_analysis_geoms=set(v.FindGeoms()) if name in ('CompGeom','DegenGeomMesh') else set()
     result=v.ExecAnalysis(name)
     errors(v)
+    if name in ('CompGeom','DegenGeomMesh'):
+        mesh_candidates=set(v.FindGeoms())-before_analysis_geoms
+        if result:mesh_candidates.update(v.GetStringResults(result,'Mesh_GeomID'))
+        for gid in mesh_candidates:
+            if gid in v.FindGeoms() and v.GetGeomTypeName(gid).upper()=='MESH':native_ngon.capture_mesh(v,gid)
     if name=='CfdMeshAnalysis':
         mesh=native_mesh.read_gmsh(Path.cwd()/'surface.msh')
         import native_cfd_results

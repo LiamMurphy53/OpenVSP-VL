@@ -318,6 +318,9 @@ def save_preview(v,data,name):
             data['meshFile']=filename;data['meshSummary']=native_mesh.summary(mesh)
         finally:
             for g,flag in members.items():v.SetSetFlag(g,slot,flag)
+        import native_ngon
+        model_file='component-mesh.vsp3';native_ngon.write(v,Path.cwd()/model_file)
+        data['componentMeshModel']=dict(file=model_file,geometryIDs=ids,triangleMetadata=all(g in getattr(v,'_studio_mesh_tag_data',{}) for g in ids))
     if name=='ParasiteDrag':
         requested=Path(next(e['values'][0] for e in data['inputs'] if e['name']=='FileName'))
         # ComputeBuildUp refreshes native default filenames while rebuilding
