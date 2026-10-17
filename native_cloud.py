@@ -116,4 +116,4 @@ def fit_plane(v,request):
     spread='coincident' if axis is None else 'noncollinear' if any(v.cross(axis,p-points[0]).mag()>0 for p in points[1:]) else 'collinear'
     offsets=[v.dot(p-center,normal) for p in points]
     if not all(math.isfinite(x) for x in offsets):raise ValueError('OpenVSP returned an undefined point-to-plane offset.')
-    return dict(nativeOperation='FitPlane',geom=g,name=v.GetGeomName(g),coordinateFrame='Model coordinates',pointCount=len(points),center=xyz(center),normal=xyz(normal),pointSpread=spread,points=[xyz(p) for p in points],signedOffsets=offsets)
+    return dict(nativeOperation='FitPlane',engineVersion=v.GetVSPVersion(),geom=g,name=v.GetGeomName(g),coordinateFrame='Model coordinates',pointCount=len(points),center=xyz(center),normal=xyz(normal),pointSpread=spread,points=[xyz(p) for p in points],signedOffsets=offsets)

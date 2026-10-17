@@ -437,4 +437,22 @@ def export_geometry(req):
 def query(req):
     with LOCK:
         check_revision(req.get('revision'))
-        return invoke(dict(req,action='query'),MODEL,WORK/'queries'/uuid.uuid4().hex)
+        identifier=uuid.uuid4().hex;folder=WORK/'queries'/identifier
+        data=invoke(dict(req,action='query'),MODEL,folder)
+        if req.get('operation')=='cloud-fit-plane':
+            record=dict(operation=req['operation'],revision=REVISION,engineVersion=data['engineVersion'],request=req,data=data)
+            (folder/'plane.json').write_text(json.dumps(record,indent=2,allow_nan=False)+'\n')
+            output=io.StringIO(newline='');writer=csv.writer(output)
+            writer.writerow(['Point','X','Y','Z','SignedOffset'])
+            writer.writerows([i+1,*point,data['signedOffsets'][i]] for i,point in enumerate(data['points']))
+            (folder/'plane.csv').write_bytes(output.getvalue().encode())
+            data['exports']={fmt:'/api/query-export?id='+identifier+'&format='+fmt for fmt in ('json','csv')}
+        return data
+
+
+def query_export(identifier,format):
+    if not isinstance(identifier,str) or not re.fullmatch(r'[0-9a-f]{32}',identifier):raise ValueError('Invalid saved query.')
+    if format not in ('json','csv'):raise ValueError('Choose JSON or CSV.')
+    folder=WORK/'queries'/identifier;path=folder/('plane.'+format)
+    if folder.is_symlink() or path.is_symlink() or not path.is_file() or folder.resolve().parent!=(WORK/'queries').resolve():raise ValueError('Saved query export not found.')
+    return path.read_bytes(),('application/json' if format=='json' else 'text/csv'),'native-cloud-plane.'+format

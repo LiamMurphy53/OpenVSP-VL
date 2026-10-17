@@ -18,7 +18,7 @@ class Handler(SimpleHTTPRequestHandler):
         super().end_headers()
 
     def reply(self,status,body,content_type='application/json',filename=None):
-        data=json.dumps(body,allow_nan=False).encode() if content_type=='application/json' else body
+        data=json.dumps(body,allow_nan=False).encode() if content_type=='application/json' and not isinstance(body,bytes) else body
         self.send_response(status)
         self.send_header('Content-Type',content_type)
         self.send_header('Content-Length',str(len(data)))
@@ -60,6 +60,8 @@ class Handler(SimpleHTTPRequestHandler):
                 if url.path=='/api/aero':return self.reply(200,service.aero_preview(jid,q['file'][0],int(q.get('case',['1'])[0])))
                 if url.path=='/api/results.csv':return self.reply(200,service.result_csv(jid),'text/csv','results.csv')
                 path=service.artifact_file(jid,q['file'][0]);return self.reply(200,path.read_bytes(),'application/octet-stream',path.name)
+            if url.path=='/api/query-export':
+                q=parse_qs(url.query);body,kind,filename=service.query_export(q.get('id',[''])[0],q.get('format',[''])[0]);return self.reply(200,body,kind,filename)
             if url.path=='/api/job': return self.reply(200,service.job_state(parse_qs(url.query)['id'][0]))
             if url.path=='/api/export':
                 with service.LOCK: return self.reply(200,service.MODEL.read_bytes(),'application/x-openvsp')
