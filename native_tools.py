@@ -340,6 +340,21 @@ def mutate(v,r):
     elif op=='preset-apply':
         group=one(r['group'],v.GetVarPresetGroups());setting=one(r['setting'],v.GetVarPresetSettings(group));v.ApplyVarPresetSetting(group,setting)
     elif op=='preset-delete': v.DeleteVarPresetGroup(one(r['id'],v.GetVarPresetGroups()))
+    elif op=='mesh-to-polygon':
+        if gid not in v.FindGeoms() or v.GetGeomTypeName(gid).upper()!='MESH':raise ValueError('Choose a native triangle mesh to create a polygon mesh.')
+        from native_references import document
+        path,tree=document(v)
+        try:
+            record=next(g for g in tree.findall('./Vehicle/Geom') if g.findtext('ParmContainer/ID')==gid)
+            if not record.findall('MeshGeom/TMesh/Tri_List/Tri'):raise ValueError('Choose a triangle mesh with geometry.')
+        finally:path.unlink(missing_ok=True)
+        import native_ngon
+        native_ngon.prepare_mesh(v,gid)
+        created=v.CreateNGonMeshGeom(gid)
+        if created not in v.FindGeoms():raise ValueError('OpenVSP did not create a polygon mesh.')
+        graph=native_ngon.snapshot(v,created)
+        if not graph['points'] or not graph['faces']:raise ValueError('OpenVSP produced an empty polygon mesh for this source.')
+        native_ngon.validate(graph);gid=created
     elif op=='mesh-settings':
         for n,val in r['values'].items():
             one(n,MESH_SETTINGS);finite(val)

@@ -2,7 +2,7 @@
 // Every edit still submits the original parameter ID and native value.
 export function geometryTypeLabel(type){
  if(type.toUpperCase().startsWith('STUDIOPART_')||type.toUpperCase()==='CUSTOM')return 'Custom component';
- const names={WING:'Wing',FUSELAGE:'Fuselage',POD:'Pod / fairing',PROP:'Propeller',STACK:'Section stack',ELLIPSOID:'Ellipsoid',BODYOFREVOLUTION:'Body of revolution',BLANK:'Reference / point mass',HINGE:'Hinge / folding joint',CONFORMAL:'Conformal surface',GEAR:'Landing gear',ROUTING:'Routing path',AUXILIARY:'Auxiliary geometry',COBRA:'Cobra body',HUMAN:'Human',MESH:'Imported mesh',WIREFRAME:'Imported wire geometry',PTCLOUD:'Point cloud',BOX:'Box',BOXGROUP:'Box array',DUCT:'Duct',DISK:'Disk',CONE:'Cone',TRANSPORTFUSE:'Transport fuselage',ONOFFEXAMPLE:'Conditional component example'};
+ const names={WING:'Wing',FUSELAGE:'Fuselage',POD:'Pod / fairing',PROP:'Propeller',STACK:'Section stack',ELLIPSOID:'Ellipsoid',BODYOFREVOLUTION:'Body of revolution',BLANK:'Reference / point mass',HINGE:'Hinge / folding joint',CONFORMAL:'Conformal surface',GEAR:'Landing gear',ROUTING:'Routing path',AUXILIARY:'Auxiliary geometry',COBRA:'Cobra body',HUMAN:'Human',MESH:'Triangle mesh',NGONMESH:'Polygon mesh',NGON_MESH:'Polygon mesh',WIREFRAME:'Imported wire geometry',PTCLOUD:'Point cloud',BOX:'Box',BOXGROUP:'Box array',DUCT:'Duct',DISK:'Disk',CONE:'Cone',TRANSPORTFUSE:'Transport fuselage',ONOFFEXAMPLE:'Conditional component example'};
  return names[type.toUpperCase()]||type;
 }
 export function geometryControlGroups(component){

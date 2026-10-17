@@ -35,6 +35,20 @@ def snapshot(v, gid):
     return result
 
 
+def prepare_mesh(v,gid):
+    """Restore original native tag-manager setup omitted by a saved triangle mesh."""
+    if gid not in v.FindGeoms() or v.GetGeomTypeName(gid).upper()!='MESH':raise ValueError('Choose a native triangle mesh.')
+    path=distribution()/'python/openvsp/openvsp/_vsp.so';stat=path.stat()
+    _verified_private_layout(str(path),stat.st_size,stat.st_mtime_ns)
+    guard=v.FindParm(gid,'Scale_From_Original','XForm')
+    if not v.ValidParm(guard):raise ValueError('Native triangle mesh scale parameter unavailable.')
+    _,engine,bridge=adapter(v);function=bridge.studio_mesh_prepare_polygon
+    function.argtypes=[ctypes.c_char_p]*3;function.restype=ctypes.c_char_p
+    result=json.loads(function(engine,gid.encode(),guard.encode()))
+    if 'error' in result:raise ValueError(result['error'])
+    return result
+
+
 def validate(data):
     """Validate pointer-free graph ownership and reciprocal references before native allocation."""
     def fail():raise ValueError('Invalid polygon graph snapshot.')

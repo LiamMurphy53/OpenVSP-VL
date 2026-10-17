@@ -12,6 +12,7 @@
 #include "WaveDragMgr.h"
 #include "PGMesh.h"
 #include "NGonLayout.h"
+#include "MeshTagLayout.h"
 #include <dlfcn.h>
 #include <fstream>
 #include <mach-o/dyld.h>
@@ -95,6 +96,23 @@ extern "C" const char* studio_ngon_snapshot(const char* engine,const char* geom,
         output=studio_ngon::snapshot(*reinterpret_cast<const PGMulti*>(component+studio_ngon_layout::m_PGMulti));
         double matrix[16];symbol<void(*)(const void*,double*)>(library,"_ZNK8Matrix4d6getMatEPd")(component+studio_ngon_layout::m_ScaleMatrix,matrix);
         std::ostringstream extra;extra<<std::setprecision(17)<<",\"scaleMatrix\":";studio_ngon::array(extra,matrix);extra<<'}';output.pop_back();output+=extra.str();
+    }catch(const std::exception& e){output="{\"error\":"+quote(e.what())+"}";}
+    if(library)dlclose(library);return output.c_str();
+}
+
+extern "C" const char* studio_mesh_prepare_polygon(const char* engine,const char* geom,const char* scaleGuard){
+    static thread_local std::string output;void* library=nullptr;
+    try{
+        library=dlopen(engine,RTLD_NOW);if(!library)throw std::runtime_error(dlerror());
+        auto find=symbol<void*(*)(const std::string&,const std::string&)>(library,"_ZN3vsp13FindGeomForOpERKNSt3__112basic_stringIcNS0_11char_traitsIcEENS0_9allocatorIcEEEES8_");
+        char* component=static_cast<char*>(find(geom,"Studio polygon conversion setup"));if(!component)throw std::runtime_error("Native triangle mesh unavailable.");
+        auto manager=symbol<void*>(library,"_ZZN16ParmMgrSingleton11getInstanceEvE8instance");auto parm=symbol<Parm*(*)(void*,const std::string&)>(library,"_ZN16ParmMgrSingleton8FindParmERKNSt3__112basic_stringIcNS0_11char_traitsIcEENS0_9allocatorIcEEEE");
+        if(!scaleGuard || !*scaleGuard || reinterpret_cast<char*>(parm(manager,std::string(scaleGuard)))!=component+studio_mesh_layout::m_ScaleFromOrig)throw std::runtime_error("Native triangle mesh layout does not match the pinned engine.");
+        auto& meshes=*reinterpret_cast<std::vector<TMesh*>*>(component+studio_mesh_layout::m_TMeshVec);
+        if(meshes.empty())throw std::runtime_error("Choose a triangle mesh with geometry.");
+        const std::vector<std::string> surfaces;
+        symbol<void(*)(bool,std::vector<TMesh*>&,const std::vector<std::string>&)>(library,"_Z10SubTagTrisbRNSt3__16vectorIP5TMeshNS_9allocatorIS2_EEEERKNS0_INS_12basic_stringIcNS_11char_traitsIcEENS3_IcEEEENS3_ISB_EEEE")(true,meshes,surfaces);
+        output="{\"prepared\":true}";
     }catch(const std::exception& e){output="{\"error\":"+quote(e.what())+"}";}
     if(library)dlclose(library);return output.c_str();
 }

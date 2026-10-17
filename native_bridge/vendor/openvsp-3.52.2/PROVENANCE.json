@@ -132,6 +132,16 @@
       },
       "engineSHA256": "b18ffe72b538ea33d14f482d19f274800ccff8442ce4270f9e4e6443d9955bd6",
       "runtimeGuard": "Scale_From_Original native Parm address"
+    },
+    "MeshTagLayout.h": {
+      "generator": "tools/generate_ngon_layout.py --mesh",
+      "sha256": "f05a2073a1c6b88e9f67b0763d47ba542a0aeb2fb017ccacd678c3f3f97a0d27",
+      "completeHeaderHashes": {
+        "Geom.h": "34c7959d2ceb05a59ccbaf8242022a546ab56b56e995016f88db348b7271b360",
+        "MeshGeom.h": "04ca3470216910f8ca7e5aca5a484545fded2e220b15c478632ef5776f12acca"
+      },
+      "engineSHA256": "b18ffe72b538ea33d14f482d19f274800ccff8442ce4270f9e4e6443d9955bd6",
+      "runtimeGuard": "Original MeshGeom Scale_From_Original Parm address"
     }
   }
 }
