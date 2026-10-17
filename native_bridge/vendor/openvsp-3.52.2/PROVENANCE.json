@@ -18,7 +18,8 @@
     "BndBox.h": "0818150c30edcf93feabb479948f4cf907694860e2dc8bcf3d50b49e364fbc11",
     "Matrix4d.h": "3f6052204b3c19e1411002e9daa1ca7f51b491dab817c7e861be2875687be3c7",
     "PGMesh.h": "92674845a0380995226ee01ccf01018310892a63fccc9c766beb7864b223c128",
-    "TMesh.h": "fb44fdcfa74f593651dc4cf0569a241ca198e64259ca205b8d134de7edfaac5a"
+    "TMesh.h": "fb44fdcfa74f593651dc4cf0569a241ca198e64259ca205b8d134de7edfaac5a",
+    "SubSurfaceMgr.h": "114da49411474f585ed439c177155087a42516235341c50d0c0f84ba8be0e22b"
   },
   "sources": {
     "Parm.h": "src/geom_core/Parm.h",
@@ -35,7 +36,8 @@
     "BndBox.h": "src/util/BndBox.h",
     "Matrix4d.h": "src/util_api/Matrix4d.h",
     "PGMesh.h": "src/geom_core/PGMesh.h",
-    "TMesh.h": "src/geom_core/TMesh.h"
+    "TMesh.h": "src/geom_core/TMesh.h",
+    "SubSurfaceMgr.h": "src/geom_core/SubSurfaceMgr.h"
   },
   "excerpts": {
     "PropDriverGroup.h": {
@@ -65,6 +67,12 @@
       "sourceSHA256": "54b5be19b342b42f2c541fef768fb61a7eaaf5169bd071304a870fe59de49c76",
       "sha256": "8ae50c6f02b418770b592de78e47f3060f31b7f3f861d9244b08387646745400",
       "change": "Replace unused Vehicle/Geom includes with complete existing ParmContainer, DrawObj and ResultsMgr declarations; entire class unchanged."
+    },
+    "SubSurfaceMgr.h": {
+      "source": "src/geom_core/SubSurfaceMgr.h",
+      "sourceSHA256": "fd0f1bc2d550825ac26e93060a6179945fb45b23da7373bfa301fc71b7931609",
+      "sha256": "114da49411474f585ed439c177155087a42516235341c50d0c0f84ba8be0e22b",
+      "transformation": "Complete class retained. Replace unused Geom/SubSurface includes with forward declarations and supply std::greater alias. Adapter temporarily exposes protected fields; original complete-header layout is independently compiler-generated and every field/size statically checked."
     }
   },
   "generated": {
@@ -144,6 +152,16 @@
       },
       "engineSHA256": "b18ffe72b538ea33d14f482d19f274800ccff8442ce4270f9e4e6443d9955bd6",
       "runtimeGuard": "Original MeshGeom Scale_From_Original Parm address"
+    },
+    "SubSurfaceTagLayout.h": {
+      "generator": "tools/generate_ngon_layout.py --tag-manager",
+      "sha256": "904c9d5b6790086bb4b1239d08bd5b127f27d299d9382993cb35202ff6f0a815",
+      "completeHeaderHashes": {
+        "Geom.h": "34c7959d2ceb05a59ccbaf8242022a546ab56b56e995016f88db348b7271b360",
+        "SubSurfaceMgr.h": "fd0f1bc2d550825ac26e93060a6179945fb45b23da7373bfa301fc71b7931609"
+      },
+      "engineSHA256": "b18ffe72b538ea33d14f482d19f274800ccff8442ce4270f9e4e6443d9955bd6",
+      "guards": "Original MeshGeom Scale_From_Original Parm address, initialized original singleton guard and compiled full-declaration layout assertions"
     }
   }
 }

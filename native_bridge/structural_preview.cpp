@@ -14,6 +14,29 @@
 #include "NGonLayout.h"
 #include "MeshTagLayout.h"
 #include "TMesh.h"
+#define protected public
+#include "SubSurfaceMgr.h"
+#undef protected
+
+#include "SubSurfaceTagLayout.h"
+static_assert(sizeof(SubSurfaceMgrSingleton)==studio_tag_layout::size,"Native tag manager size mismatch.");
+static_assert(__builtin_offsetof(SubSurfaceMgrSingleton,m_TagCombos)==studio_tag_layout::m_TagCombos,"Native tag manager field mismatch: m_TagCombos");
+static_assert(__builtin_offsetof(SubSurfaceMgrSingleton,m_TagNames)==studio_tag_layout::m_TagNames,"Native tag manager field mismatch: m_TagNames");
+static_assert(__builtin_offsetof(SubSurfaceMgrSingleton,m_TagIDs)==studio_tag_layout::m_TagIDs,"Native tag manager field mismatch: m_TagIDs");
+static_assert(__builtin_offsetof(SubSurfaceMgrSingleton,m_CompNames)==studio_tag_layout::m_CompNames,"Native tag manager field mismatch: m_CompNames");
+static_assert(__builtin_offsetof(SubSurfaceMgrSingleton,m_CompIDs)==studio_tag_layout::m_CompIDs,"Native tag manager field mismatch: m_CompIDs");
+static_assert(__builtin_offsetof(SubSurfaceMgrSingleton,m_CompTypes)==studio_tag_layout::m_CompTypes,"Native tag manager field mismatch: m_CompTypes");
+static_assert(__builtin_offsetof(SubSurfaceMgrSingleton,m_CompPlate)==studio_tag_layout::m_CompPlate,"Native tag manager field mismatch: m_CompPlate");
+static_assert(__builtin_offsetof(SubSurfaceMgrSingleton,m_CompCopyIndex)==studio_tag_layout::m_CompCopyIndex,"Native tag manager field mismatch: m_CompCopyIndex");
+static_assert(__builtin_offsetof(SubSurfaceMgrSingleton,m_CompWmin)==studio_tag_layout::m_CompWmin,"Native tag manager field mismatch: m_CompWmin");
+static_assert(__builtin_offsetof(SubSurfaceMgrSingleton,m_CompUscale)==studio_tag_layout::m_CompUscale,"Native tag manager field mismatch: m_CompUscale");
+static_assert(__builtin_offsetof(SubSurfaceMgrSingleton,m_CompWscale)==studio_tag_layout::m_CompWscale,"Native tag manager field mismatch: m_CompWscale");
+static_assert(__builtin_offsetof(SubSurfaceMgrSingleton,m_CompThick)==studio_tag_layout::m_CompThick,"Native tag manager field mismatch: m_CompThick");
+static_assert(__builtin_offsetof(SubSurfaceMgrSingleton,m_CurrSurfInd)==studio_tag_layout::m_CurrSurfInd,"Native tag manager field mismatch: m_CurrSurfInd");
+static_assert(__builtin_offsetof(SubSurfaceMgrSingleton,m_TagKeys)==studio_tag_layout::m_TagKeys,"Native tag manager field mismatch: m_TagKeys");
+static_assert(__builtin_offsetof(SubSurfaceMgrSingleton,m_SingleTagMap)==studio_tag_layout::m_SingleTagMap,"Native tag manager field mismatch: m_SingleTagMap");
+static_assert(__builtin_offsetof(SubSurfaceMgrSingleton,m_GeomIDs)==studio_tag_layout::m_GeomIDs,"Native tag manager field mismatch: m_GeomIDs");
+static_assert(__builtin_offsetof(SubSurfaceMgrSingleton,m_GeomCopySet)==studio_tag_layout::m_GeomCopySet,"Native tag manager field mismatch: m_GeomCopySet");
 #include <dlfcn.h>
 #include <fstream>
 #include <mach-o/dyld.h>
@@ -119,6 +142,15 @@ extern "C" const char* studio_mesh_prepare_polygon(const char* engine,const char
 }
 
 namespace studio_ngon {
+static SubSurfaceMgrSingleton* tagManager(void* library){
+    auto guard=symbol<unsigned char*>(library,"_ZGVZN22SubSurfaceMgrSingleton11GetInstanceEvE8instance");if(!(*guard&1))throw std::runtime_error("Native tag manager is not initialized.");
+    return symbol<SubSurfaceMgrSingleton*>(library,"_ZZN22SubSurfaceMgrSingleton11GetInstanceEvE8instance");
+}
+static void tagData(std::ostream& s,const SubSurfaceMgrSingleton& m){
+    s<<"{\"names\":";stringMap(s,m.m_TagNames);s<<",\"ids\":";stringMap(s,m.m_TagIDs);s<<",\"componentNames\":";array(s,m.m_CompNames);s<<",\"componentIDs\":";array(s,m.m_CompIDs);s<<",\"types\":";array(s,m.m_CompTypes);s<<",\"plates\":";array(s,m.m_CompPlate);s<<",\"copies\":";array(s,m.m_CompCopyIndex);s<<",\"wmin\":";array(s,m.m_CompWmin);s<<",\"uscale\":";array(s,m.m_CompUscale);s<<",\"wscale\":";array(s,m.m_CompWscale);s<<",\"thick\":";array(s,m.m_CompThick);s<<",\"currentSurface\":"<<m.m_CurrSurfInd;
+    s<<",\"combinations\":[";bool first=true;for(const auto& v:m.m_TagCombos){if(!first)s<<',';first=false;array(s,v);}s<<"],\"keys\":[";first=true;for(const auto& v:m.m_TagKeys){if(!first)s<<',';first=false;array(s,v);}s<<"],\"single\":[";first=true;for(const auto& p:m.m_SingleTagMap){if(!first)s<<',';first=false;s<<'[';array(s,p.first);s<<','<<p.second<<']';}
+    s<<"],\"geometryIDs\":";array(s,m.m_GeomIDs);s<<",\"geometryCopies\":[";first=true;for(const auto& p:m.m_GeomCopySet){if(!first)s<<',';first=false;s<<'['<<quote(p.first)<<','<<p.second<<']';}s<<"]}";
+}
 static void triangleMetadata(std::ostream& s,const TTri* t,int depth,size_t& count){
     if(!t || depth>64 || ++count>10000000)throw std::runtime_error("Invalid native triangle hierarchy.");
     const TNode* corners[]={t->m_N0,t->m_N1,t->m_N2};for(auto n:corners)if(!n)throw std::runtime_error("Missing native triangle corner.");
@@ -129,7 +161,7 @@ static void triangleMetadata(std::ostream& s,const TTri* t,int depth,size_t& cou
 }
 static void grid(std::ostream& s,const std::vector<std::vector<vec3d>>& rows){s<<'[';bool first=true;for(const auto& row:rows){if(!first)s<<',';first=false;s<<'[';bool next=true;for(const auto& v:row){if(!next)s<<',';next=false;array(s,v.v);}s<<']';}s<<']';}
 static std::string meshMetadata(const std::vector<TMesh*>& meshes){
-    std::ostringstream s;s<<std::setprecision(17)<<std::boolalpha<<"{\"format\":1,\"meshes\":[";bool first=true;size_t triangles=0;
+    std::ostringstream s;s<<std::setprecision(17)<<std::boolalpha<<"{\"format\":2,\"meshes\":[";bool first=true;size_t triangles=0;
     for(auto m:meshes){if(!m)throw std::runtime_error("Missing native triangle mesh.");if(!first)s<<',';first=false;
         s<<"{\"origin\":"<<quote(m->m_OriginGeomID)<<",\"name\":"<<quote(m->m_NameStr)<<",\"surface\":"<<m->m_SurfNum<<",\"plate\":"<<m->m_PlateNum<<",\"copy\":"<<m->m_CopyIndex<<",\"material\":"<<m->m_MaterialID<<",\"cfdType\":"<<m->m_SurfCfdType<<",\"surfaceType\":"<<m->m_SurfType<<",\"thick\":"<<m->m_ThickSurf<<",\"flatPatch\":"<<m->m_FlatPatch<<",\"massPriority\":"<<m->m_MassPrior<<",\"density\":";value(s,m->m_Density);s<<",\"shellAreaDensity\":";value(s,m->m_ShellMassArea);s<<",\"shell\":"<<m->m_ShellFlag;
         s<<",\"wmin\":";value(s,m->m_Wmin);s<<",\"uscale\":";value(s,m->m_Uscale);s<<",\"wscale\":";value(s,m->m_Wscale);s<<",\"groups\":";array(s,m->m_InGroup);s<<",\"uwGrid\":";grid(s,m->m_UWPnts);s<<",\"xyzGrid\":";grid(s,m->m_XYZPnts);
@@ -146,7 +178,7 @@ extern "C" const char* studio_mesh_metadata(const char* engine,const char* geom,
         auto find=symbol<void*(*)(const std::string&,const std::string&)>(library,"_ZN3vsp13FindGeomForOpERKNSt3__112basic_stringIcNS0_11char_traitsIcEENS0_9allocatorIcEEEES8_");auto component=static_cast<const char*>(find(geom,"Studio triangle metadata"));if(!component)throw std::runtime_error("Native triangle mesh unavailable.");
         auto manager=symbol<void*>(library,"_ZZN16ParmMgrSingleton11getInstanceEvE8instance");auto parm=symbol<Parm*(*)(void*,const std::string&)>(library,"_ZN16ParmMgrSingleton8FindParmERKNSt3__112basic_stringIcNS0_11char_traitsIcEENS0_9allocatorIcEEEE");
         if(!scaleGuard || !*scaleGuard || reinterpret_cast<const char*>(parm(manager,std::string(scaleGuard)))!=component+studio_mesh_layout::m_ScaleFromOrig)throw std::runtime_error("Native triangle mesh layout does not match the pinned engine.");
-        output=studio_ngon::meshMetadata(*reinterpret_cast<const std::vector<TMesh*>*>(component+studio_mesh_layout::m_TMeshVec));double matrix[16];symbol<void(*)(const void*,double*)>(library,"_ZNK8Matrix4d6getMatEPd")(component+studio_mesh_layout::m_ScaleMatrix,matrix);std::ostringstream extra;extra<<std::setprecision(17)<<",\"scaleMatrix\":";studio_ngon::array(extra,matrix);extra<<'}';output.pop_back();output+=extra.str();
+        output=studio_ngon::meshMetadata(*reinterpret_cast<const std::vector<TMesh*>*>(component+studio_mesh_layout::m_TMeshVec));double matrix[16];symbol<void(*)(const void*,double*)>(library,"_ZNK8Matrix4d6getMatEPd")(component+studio_mesh_layout::m_ScaleMatrix,matrix);std::ostringstream extra;extra<<std::setprecision(17)<<",\"scaleMatrix\":";studio_ngon::array(extra,matrix);extra<<",\"tagData\":";studio_ngon::tagData(extra,*studio_ngon::tagManager(library));extra<<'}';output.pop_back();output+=extra.str();
     }catch(const std::exception& e){output="{\"error\":"+quote(e.what())+"}";}
     if(library)dlclose(library);return output.c_str();
 }
@@ -219,6 +251,87 @@ extern "C" const char* studio_ngon_restore(const char* engine,const char* geom,c
         char* component=static_cast<char*>(find(geom,"Studio polygon restore"));if(!component)throw std::runtime_error("Native polygon component unavailable.");auto manager=symbol<void*>(library,"_ZZN16ParmMgrSingleton11getInstanceEvE8instance");auto parm=symbol<Parm*(*)(void*,const std::string&)>(library,"_ZN16ParmMgrSingleton8FindParmERKNSt3__112basic_stringIcNS0_11char_traitsIcEENS0_9allocatorIcEEEE");
         if(!scaleGuard || !*scaleGuard || reinterpret_cast<char*>(parm(manager,std::string(scaleGuard)))!=component+studio_ngon_layout::m_ScaleFromOrig)throw std::runtime_error("Native polygon layout does not match the pinned engine.");
         studio_ngon::restore(library,component,root);output="{\"restored\":true}";
+    }catch(const std::exception& e){output="{\"error\":"+quote(e.what())+"}";}
+    if(doc)xmlFreeDoc(doc);if(library)dlclose(library);return output.c_str();
+}
+
+namespace studio_ngon {
+struct TagTables {
+    std::set<std::vector<int>> combos;std::unordered_map<int,std::string> names,ids;std::vector<std::string> componentNames,componentIDs;
+    std::vector<int> types,plates,copies,thick;std::vector<double> wmin,uscale,wscale;int current;
+    std::vector<std::vector<int>> keys;std::map<std::vector<int>,int> single;std::set<std::string,std::greater<std::string>> geometryIDs;std::set<std::pair<std::string,int>,PairGreaterLess> geometryCopies;
+};
+static void restoreTagTables(void* library,xmlNodePtr root){
+    auto target=tagManager(library);TagTables stage;
+    auto strings=[](xmlNodePtr n){std::vector<std::string> out;for(auto x:items(n))out.push_back(unhex(x));return out;};
+    for(auto p:items(field(root,"names"))){auto xs=items(p);if(xs.size()!=2 || !stage.names.emplace(integer(xs[0]),unhex(xs[1])).second)throw std::runtime_error("Invalid native tag name table.");}
+    for(auto p:items(field(root,"ids"))){auto xs=items(p);if(xs.size()!=2 || !stage.ids.emplace(integer(xs[0]),unhex(xs[1])).second)throw std::runtime_error("Invalid native tag identity table.");}
+    stage.componentNames=strings(field(root,"componentNames"));stage.componentIDs=strings(field(root,"componentIDs"));stage.types=ints(field(root,"types"));stage.plates=ints(field(root,"plates"));stage.copies=ints(field(root,"copies"));stage.thick=ints(field(root,"thick"));stage.wmin=reals(field(root,"wmin"));stage.uscale=reals(field(root,"uscale"));stage.wscale=reals(field(root,"wscale"));stage.current=integer(field(root,"currentSurface"));
+    const size_t n=stage.componentNames.size();if(stage.componentIDs.size()!=n || stage.types.size()!=n || stage.plates.size()!=n || stage.copies.size()!=n || stage.thick.size()!=n || stage.wmin.size()!=n || stage.uscale.size()!=n || stage.wscale.size()!=n)throw std::runtime_error("Native tag component table sizes disagree.");
+    for(auto x:items(field(root,"combinations")))if(!stage.combos.insert(ints(x)).second)throw std::runtime_error("Duplicate native tag combination.");
+    for(auto x:items(field(root,"keys")))stage.keys.push_back(ints(x));
+    for(auto x:items(field(root,"single"))){auto xs=items(x);if(xs.size()!=2 || !stage.single.emplace(ints(xs[0]),integer(xs[1])).second)throw std::runtime_error("Invalid native single-tag table.");}
+    for(auto x:strings(field(root,"geometryIDs")))if(!stage.geometryIDs.insert(x).second)throw std::runtime_error("Duplicate native tag geometry.");
+    for(auto x:items(field(root,"geometryCopies"))){auto xs=items(x);if(xs.size()!=2 || !stage.geometryCopies.emplace(unhex(xs[0]),integer(xs[1])).second)throw std::runtime_error("Invalid native tag symmetry table.");}
+    // No allocation or parsing follows these swaps into original native tables.
+    target->m_TagCombos.swap(stage.combos);target->m_TagNames.swap(stage.names);target->m_TagIDs.swap(stage.ids);target->m_CompNames.swap(stage.componentNames);target->m_CompIDs.swap(stage.componentIDs);target->m_CompTypes.swap(stage.types);target->m_CompPlate.swap(stage.plates);target->m_CompCopyIndex.swap(stage.copies);target->m_CompThick.swap(stage.thick);target->m_CompWmin.swap(stage.wmin);target->m_CompUscale.swap(stage.uscale);target->m_CompWscale.swap(stage.wscale);target->m_CurrSurfInd=stage.current;target->m_TagKeys.swap(stage.keys);target->m_SingleTagMap.swap(stage.single);target->m_GeomIDs.swap(stage.geometryIDs);target->m_GeomCopySet.swap(stage.geometryCopies);
+}
+struct TriangleStages {
+    void(*destroy)(TMesh*);void(*construct)(TMesh*);void(*copy)(TMesh*,TMesh*);std::vector<TMesh*> values;
+    TriangleStages(void* library,size_t count):destroy(symbol<void(*)(TMesh*)>(library,"_ZN5TMeshD1Ev")),construct(symbol<void(*)(TMesh*)>(library,"_ZN5TMeshC1Ev")),copy(symbol<void(*)(TMesh*,TMesh*)>(library,"_ZN5TMesh4copyEPS_")){values.reserve(count);}
+    TMesh* add(TMesh* source){auto p=static_cast<TMesh*>(::operator new(sizeof(TMesh)));try{construct(p);}catch(...){::operator delete(p);throw;}values.push_back(p);copy(p,source);return p;}
+    ~TriangleStages(){for(auto p:values){destroy(p);::operator delete(p);}}
+};
+static bool sameDouble(double a,double b){return a==b && (a!=0 || std::signbit(a)==std::signbit(b));}
+static void sameGeometry(const std::vector<double>& values,const double* actual){if(values.size()!=3)throw std::runtime_error("Invalid triangle metadata coordinate.");for(int k=0;k<3;++k)if(!sameDouble(values[k],actual[k]))throw std::runtime_error("Triangle metadata does not match native geometry.");}
+static std::vector<std::vector<vec3d>> gridValues(void* library,xmlNodePtr node){
+    auto construct=symbol<void(*)(void*,double,double,double)>(library,"_ZN5vec3dC1Eddd");std::vector<std::vector<vec3d>> out;
+    for(auto row:items(node)){out.emplace_back();for(auto p:items(row)){auto coords=reals(p);if(coords.size()!=3)throw std::runtime_error("Invalid triangle interpolation grid.");alignas(vec3d) unsigned char storage[sizeof(vec3d)];construct(storage,coords[0],coords[1],coords[2]);out.back().push_back(*reinterpret_cast<vec3d*>(storage));}}
+    return out;
+}
+
+extern "C" const char* studio_mesh_restore_tags(const char* engine,const char* geom,const char* scaleGuard,const char* payload){
+    static thread_local std::string output;void* library=nullptr;xmlDocPtr doc=nullptr;
+    try{
+        if(!payload || strlen(payload)>128*1024*1024)throw std::runtime_error("Invalid native tag payload.");doc=xmlReadMemory(payload,int(strlen(payload)),"triangle-tags.xml",nullptr,XML_PARSE_NONET|XML_PARSE_NOBLANKS);if(!doc || doc->intSubset || doc->extSubset)throw std::runtime_error("Invalid native tag document.");auto root=xmlDocGetRootElement(doc);if(!root || !xmlStrEqual(root->name,BAD_CAST "snapshot"))throw std::runtime_error("Invalid native tag root.");
+        library=dlopen(engine,RTLD_NOW);if(!library)throw std::runtime_error(dlerror());auto find=symbol<void*(*)(const std::string&,const std::string&)>(library,"_ZN3vsp13FindGeomForOpERKNSt3__112basic_stringIcNS0_11char_traitsIcEENS0_9allocatorIcEEEES8_");char* component=static_cast<char*>(find(geom,"Studio triangle tag restoration"));if(!component)throw std::runtime_error("Native triangle mesh unavailable.");auto manager=symbol<void*>(library,"_ZZN16ParmMgrSingleton11getInstanceEvE8instance");auto parm=symbol<Parm*(*)(void*,const std::string&)>(library,"_ZN16ParmMgrSingleton8FindParmERKNSt3__112basic_stringIcNS0_11char_traitsIcEENS0_9allocatorIcEEEE");
+        if(!scaleGuard || !*scaleGuard || reinterpret_cast<char*>(parm(manager,std::string(scaleGuard)))!=component+studio_mesh_layout::m_ScaleFromOrig)throw std::runtime_error("Native triangle mesh layout does not match the pinned engine.");studio_ngon::restoreTagTables(library,root);output="{\"prepared\":true,\"restoredTagData\":true}";
+    }catch(const std::exception& e){output="{\"error\":"+quote(e.what())+"}";}
+    if(doc)xmlFreeDoc(doc);if(library)dlclose(library);return output.c_str();
+}
+static void triangleFields(TTri* stage,const TTri* source,xmlNodePtr node){
+    if(!items(field(node,"split")).empty() || !source->m_SplitVec.empty())throw std::runtime_error("Triangle split hierarchy must be flattened by the original engine before metadata restoration.");
+    sameGeometry(reals(field(node,"normal")),source->m_Norm.v);auto corners=items(field(node,"corners"));if(corners.size()!=3)throw std::runtime_error("Invalid triangle metadata corners.");
+    const TNode* original[]={source->m_N0,source->m_N1,source->m_N2};TNode* target[]={stage->m_N0,stage->m_N1,stage->m_N2};
+    for(int i=0;i<3;++i){auto n=corners[i];if(!original[i] || !target[i])throw std::runtime_error("Missing native triangle corner.");sameGeometry(reals(field(n,"xyz")),original[i]->m_Pnt.v);auto uw=reals(field(n,"uw"));if(uw.size()!=3)throw std::runtime_error("Invalid triangle UV metadata.");for(int k=0;k<3;++k)target[i]->m_UWPnt.v[k]=uw[k];target[i]->SetXYZFlag(flag(field(n,"xyzFlag")));int info=integer(field(n,"coordInfo"));if(info<0 || info>3)throw std::runtime_error("Invalid native triangle coordinate flags.");target[i]->SetCoordInfo(info);target[i]->m_IsectFlag=integer(field(n,"intersection"));target[i]->m_ID=integer(field(n,"id"));}
+    stage->m_iQuad=integer(field(node,"quad"));stage->m_jref=integer(field(node,"jref"));stage->m_kref=integer(field(node,"kref"));stage->m_ID=integer(field(node,"id"));stage->m_IgnoreTriFlag=flag(field(node,"ignore"));stage->m_InvalidFlag=flag(field(node,"invalid"));stage->m_GeomID=unhex(field(node,"geomID"));stage->m_Density=real(field(node,"density"));stage->m_Tags=ints(field(node,"tags"));stage->m_insideSurf.clear();for(auto n:items(field(node,"inside")))stage->m_insideSurf.push_back(flag(n));
+}
+static bool sameNodeMetadata(const TNode* a,const TNode* b){for(int k=0;k<3;++k)if(!sameDouble(a->m_UWPnt.v[k],b->m_UWPnt.v[k]))return false;return a->m_ID==b->m_ID && a->m_IsectFlag==b->m_IsectFlag && a->GetXYZFlag()==b->GetXYZFlag() && a->GetCoordInfo()==b->GetCoordInfo();}
+static void commitNodeMetadata(TNode* to,const TNode* from){for(int k=0;k<3;++k)to->m_UWPnt.v[k]=from->m_UWPnt.v[k];to->m_ID=from->m_ID;to->m_IsectFlag=from->m_IsectFlag;to->SetXYZFlag(from->GetXYZFlag());to->SetCoordInfo(from->GetCoordInfo());}
+static void restoreMeshMetadata(void* library,char* component,xmlNodePtr root){
+    if(integer(field(root,"format"))!=2)throw std::runtime_error("Unsupported triangle metadata format.");auto records=items(field(root,"meshes"));auto& meshes=*reinterpret_cast<std::vector<TMesh*>*>(component+studio_mesh_layout::m_TMeshVec);
+    if(records.size()!=meshes.size())throw std::runtime_error("Triangle metadata mesh count does not match native geometry.");
+    auto matrix=reals(field(root,"scaleMatrix"));if(matrix.size()!=16)throw std::runtime_error("Invalid triangle scale matrix.");auto init=symbol<void(*)(void*,const double*)>(library,"_ZN8Matrix4d7initMatEPKd");TriangleStages stages(library,meshes.size());std::map<const TNode*,const TNode*> aliases;
+    for(size_t i=0;i<meshes.size();++i){auto source=meshes[i];if(!source)throw std::runtime_error("Missing native triangle mesh.");auto record=records[i];auto tris=items(field(record,"triangles"));if(tris.size()!=source->m_TVec.size())throw std::runtime_error("Triangle metadata count does not match native geometry.");auto stage=stages.add(source);
+        stage->m_OriginGeomID=unhex(field(record,"origin"));stage->m_NameStr=unhex(field(record,"name"));stage->m_SurfNum=integer(field(record,"surface"));stage->m_PlateNum=integer(field(record,"plate"));stage->m_CopyIndex=integer(field(record,"copy"));stage->m_MaterialID=integer(field(record,"material"));stage->m_SurfCfdType=integer(field(record,"cfdType"));stage->m_SurfType=integer(field(record,"surfaceType"));stage->m_ThickSurf=integer(field(record,"thick"));stage->m_FlatPatch=flag(field(record,"flatPatch"));stage->m_MassPrior=integer(field(record,"massPriority"));stage->m_Density=real(field(record,"density"));stage->m_ShellMassArea=real(field(record,"shellAreaDensity"));stage->m_ShellFlag=flag(field(record,"shell"));stage->m_Wmin=real(field(record,"wmin"));stage->m_Uscale=real(field(record,"uscale"));stage->m_Wscale=real(field(record,"wscale"));stage->m_InGroup=ints(field(record,"groups"));stage->m_UWPnts=gridValues(library,field(record,"uwGrid"));stage->m_XYZPnts=gridValues(library,field(record,"xyzGrid"));
+        for(size_t j=0;j<tris.size();++j){triangleFields(stage->m_TVec[j],source->m_TVec[j],tris[j]);TNode* old[]={source->m_TVec[j]->m_N0,source->m_TVec[j]->m_N1,source->m_TVec[j]->m_N2};TNode* fresh[]={stage->m_TVec[j]->m_N0,stage->m_TVec[j]->m_N1,stage->m_TVec[j]->m_N2};for(int k=0;k<3;++k){auto found=aliases.emplace(old[k],fresh[k]);if(!found.second && !sameNodeMetadata(found.first->second,fresh[k]))throw std::runtime_error("Conflicting metadata for a shared native triangle corner.");}}
+    }
+    // Every parse, native clone allocation and geometry/alias check is complete.
+    // Preserve native node/triangle ownership and all existing edge references.
+    for(size_t i=0;i<meshes.size();++i){auto to=meshes[i];auto from=stages.values[i];to->m_OriginGeomID.swap(from->m_OriginGeomID);to->m_NameStr.swap(from->m_NameStr);to->m_SurfNum=from->m_SurfNum;to->m_PlateNum=from->m_PlateNum;to->m_CopyIndex=from->m_CopyIndex;to->m_MaterialID=from->m_MaterialID;to->m_SurfCfdType=from->m_SurfCfdType;to->m_SurfType=from->m_SurfType;to->m_ThickSurf=from->m_ThickSurf;to->m_FlatPatch=from->m_FlatPatch;to->m_MassPrior=from->m_MassPrior;to->m_Density=from->m_Density;to->m_ShellMassArea=from->m_ShellMassArea;to->m_ShellFlag=from->m_ShellFlag;to->m_Wmin=from->m_Wmin;to->m_Uscale=from->m_Uscale;to->m_Wscale=from->m_Wscale;to->m_InGroup.swap(from->m_InGroup);to->m_UWPnts.swap(from->m_UWPnts);to->m_XYZPnts.swap(from->m_XYZPnts);
+        for(size_t j=0;j<to->m_TVec.size();++j){auto a=to->m_TVec[j];auto b=from->m_TVec[j];a->m_iQuad=b->m_iQuad;a->m_jref=b->m_jref;a->m_kref=b->m_kref;a->m_ID=b->m_ID;a->m_IgnoreTriFlag=b->m_IgnoreTriFlag;a->m_InvalidFlag=b->m_InvalidFlag;a->m_GeomID.swap(b->m_GeomID);a->m_Density=b->m_Density;a->m_Tags.swap(b->m_Tags);a->m_insideSurf.swap(b->m_insideSurf);}
+    }
+    for(const auto& pair:aliases)commitNodeMetadata(const_cast<TNode*>(pair.first),pair.second);
+    init(component+studio_mesh_layout::m_ScaleMatrix,matrix.data());
+}
+}
+
+extern "C" const char* studio_mesh_restore_metadata(const char* engine,const char* geom,const char* scaleGuard,const char* payload){
+    static thread_local std::string output;void* library=nullptr;xmlDocPtr doc=nullptr;
+    try{
+        if(!payload || strlen(payload)>128*1024*1024)throw std::runtime_error("Invalid triangle metadata payload.");doc=xmlReadMemory(payload,int(strlen(payload)),"triangle-metadata.xml",nullptr,XML_PARSE_NONET|XML_PARSE_NOBLANKS);if(!doc || doc->intSubset || doc->extSubset)throw std::runtime_error("Invalid triangle metadata document.");auto root=xmlDocGetRootElement(doc);if(!root || !xmlStrEqual(root->name,BAD_CAST "snapshot"))throw std::runtime_error("Invalid triangle metadata root.");
+        library=dlopen(engine,RTLD_NOW);if(!library)throw std::runtime_error(dlerror());auto find=symbol<void*(*)(const std::string&,const std::string&)>(library,"_ZN3vsp13FindGeomForOpERKNSt3__112basic_stringIcNS0_11char_traitsIcEENS0_9allocatorIcEEEES8_");char* component=static_cast<char*>(find(geom,"Studio triangle metadata restoration"));if(!component)throw std::runtime_error("Native triangle mesh unavailable.");auto manager=symbol<void*>(library,"_ZZN16ParmMgrSingleton11getInstanceEvE8instance");auto parm=symbol<Parm*(*)(void*,const std::string&)>(library,"_ZN16ParmMgrSingleton8FindParmERKNSt3__112basic_stringIcNS0_11char_traitsIcEENS0_9allocatorIcEEEE");
+        if(!scaleGuard || !*scaleGuard || reinterpret_cast<char*>(parm(manager,std::string(scaleGuard)))!=component+studio_mesh_layout::m_ScaleFromOrig)throw std::runtime_error("Native triangle mesh layout does not match the pinned engine.");studio_ngon::restoreMeshMetadata(library,component,root);output="{\"restored\":true}";
     }catch(const std::exception& e){output="{\"error\":"+quote(e.what())+"}";}
     if(doc)xmlFreeDoc(doc);if(library)dlclose(library);return output.c_str();
 }

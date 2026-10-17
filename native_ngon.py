@@ -6,6 +6,7 @@ import hashlib
 import os
 from pathlib import Path
 import tempfile
+import copy
 import xml.etree.ElementTree as ET
 from native_preview import adapter, _verified_private_layout
 from vsp_runtime import distribution
@@ -42,6 +43,15 @@ def prepare_mesh(v,gid):
     _verified_private_layout(str(path),stat.st_size,stat.st_mtime_ns)
     guard=v.FindParm(gid,'Scale_From_Original','XForm')
     if not v.ValidParm(guard):raise ValueError('Native triangle mesh scale parameter unavailable.')
+    registry=getattr(v,'_studio_mesh_tag_data',{})
+    if gid in registry:
+        mesh_metadata(v,gid)  # Invalidate archived tags if actual source metadata changed.
+        if gid in registry:
+            _,engine,bridge=adapter(v);function=bridge.studio_mesh_restore_tags
+            function.argtypes=[ctypes.c_char_p]*4;function.restype=ctypes.c_char_p
+            result=json.loads(function(engine,gid.encode(),guard.encode(),_payload(registry[gid]['data'])))
+            if 'error' in result:raise ValueError(result['error'])
+            return result
     _,engine,bridge=adapter(v);function=bridge.studio_mesh_prepare_polygon
     function.argtypes=[ctypes.c_char_p]*3;function.restype=ctypes.c_char_p
     result=json.loads(function(engine,gid.encode(),guard.encode()))
@@ -54,12 +64,127 @@ def mesh_metadata(v,gid):
     if gid not in v.FindGeoms() or v.GetGeomTypeName(gid).upper()!='MESH':raise ValueError('Choose a native triangle mesh.')
     path=distribution()/'python/openvsp/openvsp/_vsp.so';stat=path.stat()
     _verified_private_layout(str(path),stat.st_size,stat.st_mtime_ns)
+    v.GetAllSubSurfIDs()  # Original SDK initializes its singleton without changing tag tables.
     _,engine,bridge=adapter(v);function=bridge.studio_mesh_metadata
     function.argtypes=[ctypes.c_char_p]*3;function.restype=ctypes.c_char_p
     guard=v.FindParm(gid,'Scale_From_Original','XForm')
     if not v.ValidParm(guard):raise ValueError('Native triangle mesh scale parameter unavailable.')
     result=json.loads(function(engine,gid.encode(),guard.encode()))
     if 'error' in result:raise ValueError(result['error'])
+    registry=getattr(v,'_studio_mesh_tag_data',{})
+    if gid in registry:
+        if registry[gid]['source']==_mesh_tag_signature(result):result['tagData']=copy.deepcopy(registry[gid]['data'])
+        else:registry.pop(gid)
+    return result
+
+
+def _mesh_tag_signature(data):
+    # Native conversion renumbers scratch node/triangle IDs; uniform model
+    # scaling changes only the separate scale matrix, not the tag definitions.
+    def source(x):
+        if isinstance(x,dict):return {k:source(v) for k,v in x.items() if k!='id'}
+        if isinstance(x,list):return [source(v) for v in x]
+        return x
+    return hashlib.sha256(json.dumps(source(data['meshes']),allow_nan=False,separators=(',',':'),sort_keys=True).encode()).hexdigest()
+
+
+def validate_mesh_metadata(data):
+    def fail():raise ValueError('Invalid triangle metadata snapshot.')
+    def fields(obj,names):
+        if type(obj)!=dict or set(obj)!=set(names.split()):fail()
+    def integer(x):
+        if type(x)!=int or not -(2**31)<=x<2**31:fail()
+    def number(x):
+        if type(x) not in (int,float) or not math.isfinite(x):fail()
+    def array(xs,check,count=None):
+        if type(xs)!=list or count is not None and len(xs)!=count:fail()
+        for x in xs:check(x)
+    def boolean(x):
+        if type(x)!=bool:fail()
+    def text(x):
+        if type(x)!=str:fail()
+    def vector(xs):array(xs,number,3)
+    def grid(xs):array(xs,lambda row:array(row,vector))
+    total=0
+    def triangle(t,depth=0):
+        nonlocal total
+        total+=1
+        if depth>64 or total>10000000:fail()
+        fields(t,'quad jref kref id ignore invalid geomID density tags inside normal corners split')
+        for k in ('quad','jref','kref','id'):integer(t[k])
+        for k in ('ignore','invalid'):boolean(t[k])
+        text(t['geomID']);number(t['density']);array(t['tags'],integer);array(t['inside'],boolean);vector(t['normal'])
+        def corner(n):
+            fields(n,'xyz uw xyzFlag coordInfo intersection id');vector(n['xyz']);vector(n['uw']);boolean(n['xyzFlag'])
+            for k in ('coordInfo','intersection','id'):integer(n[k])
+            if not 0<=n['coordInfo']<=3:fail()
+        array(t['corners'],corner,3);array(t['split'],lambda child:triangle(child,depth+1))
+    try:
+        fields(data,'format meshes scaleMatrix tagData');integer(data['format'])
+        if data['format']!=2:fail()
+        array(data['scaleMatrix'],number,16)
+        def mesh(m):
+            fields(m,'origin name surface plate copy material cfdType surfaceType thick flatPatch massPriority density shellAreaDensity shell wmin uscale wscale groups uwGrid xyzGrid triangles')
+            for k in ('origin','name'):text(m[k])
+            for k in ('surface','plate','copy','material','cfdType','surfaceType','thick','massPriority'):integer(m[k])
+            for k in ('flatPatch','shell'):boolean(m[k])
+            for k in ('density','shellAreaDensity','wmin','uscale','wscale'):number(m[k])
+            array(m['groups'],integer);grid(m['uwGrid']);grid(m['xyzGrid'])
+            if [len(row) for row in m['uwGrid']]!=[len(row) for row in m['xyzGrid']]:fail()
+            array(m['triangles'],triangle)
+        array(data['meshes'],mesh)
+        tags=data['tagData']
+        fields(tags,'names ids componentNames componentIDs types plates copies wmin uscale wscale thick currentSurface combinations keys single geometryIDs geometryCopies')
+        for k in ('names','ids'):
+            def pair(p):
+                if type(p)!=list or len(p)!=2:fail()
+                integer(p[0]);text(p[1])
+            array(tags[k],pair)
+            if len({p[0] for p in tags[k]})!=len(tags[k]):fail()
+        for k in ('componentNames','componentIDs','geometryIDs'):array(tags[k],text)
+        for k in ('types','plates','copies','thick'):array(tags[k],integer)
+        for k in ('wmin','uscale','wscale'):array(tags[k],number)
+        count=len(tags['componentNames'])
+        if any(len(tags[k])!=count for k in ('componentIDs','types','plates','copies','thick','wmin','uscale','wscale')):fail()
+        integer(tags['currentSurface'])
+        for k in ('combinations','keys'):
+            array(tags[k],lambda xs:array(xs,integer))
+            if len({tuple(xs) for xs in tags[k]})!=len(tags[k]):fail()
+        def single(p):
+            if type(p)!=list or len(p)!=2:fail()
+            array(p[0],integer);integer(p[1])
+        array(tags['single'],single)
+        lookup={tuple(xs):value for xs,value in tags['single']}
+        if len(lookup)!=len(tags['single']):fail()
+        def geometry_copy(p):
+            if type(p)!=list or len(p)!=2:fail()
+            text(p[0]);integer(p[1])
+        array(tags['geometryCopies'],geometry_copy)
+        if len(set(tags['geometryIDs']))!=len(tags['geometryIDs']) or len({tuple(p) for p in tags['geometryCopies']})!=len(tags['geometryCopies']):fail()
+        def covered(t):
+            if t['split']:
+                for child in t['split']:covered(child)
+            elif not t['ignore']:
+                key=t['tags'];value=lookup.get(tuple(key),-1);index=value-1-(1000 if value>1000 else 0)
+                if not key or not 1<=key[0]<=count or not 0<=index<len(tags['keys']) or tags['keys'][index]!=key:fail()
+        for m in data['meshes']:
+            for t in m['triangles']:covered(t)
+    except (KeyError,TypeError,IndexError,ValueError,OverflowError,RecursionError):fail()
+    return data
+
+
+def restore_mesh_metadata(v,gid,data):
+    validate_mesh_metadata(data)
+    if gid not in v.FindGeoms() or v.GetGeomTypeName(gid).upper()!='MESH':raise ValueError('Choose a native triangle mesh.')
+    path=distribution()/'python/openvsp/openvsp/_vsp.so';stat=path.stat();_verified_private_layout(str(path),stat.st_size,stat.st_mtime_ns)
+    _,engine,bridge=adapter(v);function=bridge.studio_mesh_restore_metadata
+    function.argtypes=[ctypes.c_char_p]*4;function.restype=ctypes.c_char_p
+    guard=v.FindParm(gid,'Scale_From_Original','XForm')
+    if not v.ValidParm(guard):raise ValueError('Native triangle mesh scale parameter unavailable.')
+    result=json.loads(function(engine,gid.encode(),guard.encode(),_payload(data)))
+    if 'error' in result:raise ValueError(result['error'])
+    if not hasattr(v,'_studio_mesh_tag_data'):v._studio_mesh_tag_data={}
+    v._studio_mesh_tag_data[gid]=dict(source=_mesh_tag_signature(data),data=copy.deepcopy(data['tagData']))
     return result
 
 
