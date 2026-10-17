@@ -9,6 +9,11 @@ import native_studies as studies
 
 ROOT=Path(__file__).resolve().parent
 
+class StudioHTTPServer(ThreadingHTTPServer):
+    # The editor imports many modules at once. The default five-connection
+    # listen backlog drops burst connections before handlers can accept them.
+    request_queue_size=128
+
 class Handler(SimpleHTTPRequestHandler):
     def __init__(self,*args,**kwargs):
         super().__init__(*args,directory=str(ROOT/'web'),**kwargs)
@@ -108,4 +113,4 @@ if __name__=='__main__':
     service.restore_session()
     port=int(os.environ.get('PORT','8765'))
     print(f'OpenVSP workspace → http://127.0.0.1:{port}',flush=True)
-    ThreadingHTTPServer(('127.0.0.1',port),Handler).serve_forever()
+    StudioHTTPServer(('127.0.0.1',port),Handler).serve_forever()

@@ -53,7 +53,7 @@ class StudioLauncher(unittest.TestCase):
 
     def test_app_launcher_is_relative_and_modern(self):
         import subprocess,plistlib
-        bundle=launcher.ROOT/'OpenVSP Studio.app/Contents'
+        bundle=launcher.ROOT.parent.parent if launcher.ROOT.parent.name=='Resources' else launcher.ROOT/'OpenVSP Studio.app/Contents'
         info=plistlib.loads((bundle/'Info.plist').read_bytes())
         self.assertEqual(info['CFBundleDisplayName'],'OpenVSP Studio')
         result=subprocess.run([str(bundle/'MacOS/launch'),'--check'],cwd='/',capture_output=True,text=True,timeout=35)
