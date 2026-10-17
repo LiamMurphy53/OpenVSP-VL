@@ -26,7 +26,7 @@ def main():
     p.add_argument('--mesh', action='store_true', help='Generate MeshGeom tag-preparation layout instead.')
     a = p.parse_args()
     target = 'MeshGeom' if a.mesh else 'NGonMeshGeom'
-    fields = ('m_TMeshVec','m_ScaleFromOrig') if a.mesh else FIELDS
+    fields = ('m_TMeshVec','m_ScaleFromOrig','m_ScaleMatrix') if a.mesh else FIELDS
     hashes = {'MeshGeom.h': '04ca3470216910f8ca7e5aca5a484545fded2e220b15c478632ef5776f12acca'} if a.mesh else POLYGON_SHA
     if (platform.system(), platform.machine()) != ('Darwin', 'arm64'):
         p.error('Generate using macOS arm64, matching the installed engine.')

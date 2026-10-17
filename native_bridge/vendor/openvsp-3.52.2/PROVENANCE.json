@@ -17,7 +17,8 @@
     "ParmContainer.h": "e84d73819f2fc02e69d8285f09224bd1635e304c117ceb5fa2ad1f95feb50c41",
     "BndBox.h": "0818150c30edcf93feabb479948f4cf907694860e2dc8bcf3d50b49e364fbc11",
     "Matrix4d.h": "3f6052204b3c19e1411002e9daa1ca7f51b491dab817c7e861be2875687be3c7",
-    "PGMesh.h": "92674845a0380995226ee01ccf01018310892a63fccc9c766beb7864b223c128"
+    "PGMesh.h": "92674845a0380995226ee01ccf01018310892a63fccc9c766beb7864b223c128",
+    "TMesh.h": "fb44fdcfa74f593651dc4cf0569a241ca198e64259ca205b8d134de7edfaac5a"
   },
   "sources": {
     "Parm.h": "src/geom_core/Parm.h",
@@ -33,7 +34,8 @@
     "ParmContainer.h": "src/geom_core/ParmContainer.h",
     "BndBox.h": "src/util/BndBox.h",
     "Matrix4d.h": "src/util_api/Matrix4d.h",
-    "PGMesh.h": "src/geom_core/PGMesh.h"
+    "PGMesh.h": "src/geom_core/PGMesh.h",
+    "TMesh.h": "src/geom_core/TMesh.h"
   },
   "excerpts": {
     "PropDriverGroup.h": {
@@ -135,7 +137,7 @@
     },
     "MeshTagLayout.h": {
       "generator": "tools/generate_ngon_layout.py --mesh",
-      "sha256": "f05a2073a1c6b88e9f67b0763d47ba542a0aeb2fb017ccacd678c3f3f97a0d27",
+      "sha256": "0656b45b740d79ad6a991f51bb721c019cf12fae1edd94b989ebec8c163b8ce1",
       "completeHeaderHashes": {
         "Geom.h": "34c7959d2ceb05a59ccbaf8242022a546ab56b56e995016f88db348b7271b360",
         "MeshGeom.h": "04ca3470216910f8ca7e5aca5a484545fded2e220b15c478632ef5776f12acca"

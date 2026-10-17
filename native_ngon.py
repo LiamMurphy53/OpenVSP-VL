@@ -49,6 +49,20 @@ def prepare_mesh(v,gid):
     return result
 
 
+def mesh_metadata(v,gid):
+    """Read live triangle conversion metadata without altering its native mesh."""
+    if gid not in v.FindGeoms() or v.GetGeomTypeName(gid).upper()!='MESH':raise ValueError('Choose a native triangle mesh.')
+    path=distribution()/'python/openvsp/openvsp/_vsp.so';stat=path.stat()
+    _verified_private_layout(str(path),stat.st_size,stat.st_mtime_ns)
+    _,engine,bridge=adapter(v);function=bridge.studio_mesh_metadata
+    function.argtypes=[ctypes.c_char_p]*3;function.restype=ctypes.c_char_p
+    guard=v.FindParm(gid,'Scale_From_Original','XForm')
+    if not v.ValidParm(guard):raise ValueError('Native triangle mesh scale parameter unavailable.')
+    result=json.loads(function(engine,gid.encode(),guard.encode()))
+    if 'error' in result:raise ValueError(result['error'])
+    return result
+
+
 def validate(data):
     """Validate pointer-free graph ownership and reciprocal references before native allocation."""
     def fail():raise ValueError('Invalid polygon graph snapshot.')

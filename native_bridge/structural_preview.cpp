@@ -13,6 +13,7 @@
 #include "PGMesh.h"
 #include "NGonLayout.h"
 #include "MeshTagLayout.h"
+#include "TMesh.h"
 #include <dlfcn.h>
 #include <fstream>
 #include <mach-o/dyld.h>
@@ -113,6 +114,39 @@ extern "C" const char* studio_mesh_prepare_polygon(const char* engine,const char
         const std::vector<std::string> surfaces;
         symbol<void(*)(bool,std::vector<TMesh*>&,const std::vector<std::string>&)>(library,"_Z10SubTagTrisbRNSt3__16vectorIP5TMeshNS_9allocatorIS2_EEEERKNS0_INS_12basic_stringIcNS_11char_traitsIcEENS3_IcEEEENS3_ISB_EEEE")(true,meshes,surfaces);
         output="{\"prepared\":true}";
+    }catch(const std::exception& e){output="{\"error\":"+quote(e.what())+"}";}
+    if(library)dlclose(library);return output.c_str();
+}
+
+namespace studio_ngon {
+static void triangleMetadata(std::ostream& s,const TTri* t,int depth,size_t& count){
+    if(!t || depth>64 || ++count>10000000)throw std::runtime_error("Invalid native triangle hierarchy.");
+    const TNode* corners[]={t->m_N0,t->m_N1,t->m_N2};for(auto n:corners)if(!n)throw std::runtime_error("Missing native triangle corner.");
+    s<<"{\"quad\":"<<t->m_iQuad<<",\"jref\":"<<t->m_jref<<",\"kref\":"<<t->m_kref<<",\"id\":"<<t->m_ID<<",\"ignore\":"<<t->m_IgnoreTriFlag<<",\"invalid\":"<<t->m_InvalidFlag<<",\"geomID\":"<<quote(t->m_GeomID)<<",\"density\":";value(s,t->m_Density);
+    s<<",\"tags\":";array(s,t->m_Tags);s<<",\"inside\":";array(s,t->m_insideSurf);s<<",\"normal\":";array(s,t->m_Norm.v);
+    s<<",\"corners\":[";for(int i=0;i<3;++i){if(i)s<<',';auto n=corners[i];s<<"{\"xyz\":";array(s,n->m_Pnt.v);s<<",\"uw\":";array(s,n->m_UWPnt.v);s<<",\"xyzFlag\":"<<n->GetXYZFlag()<<",\"coordInfo\":"<<n->GetCoordInfo()<<",\"intersection\":"<<n->m_IsectFlag<<",\"id\":"<<n->m_ID<<'}';}
+    s<<"],\"split\":[";bool first=true;for(auto child:t->m_SplitVec){if(!first)s<<',';first=false;triangleMetadata(s,child,depth+1,count);}s<<"]}";
+}
+static void grid(std::ostream& s,const std::vector<std::vector<vec3d>>& rows){s<<'[';bool first=true;for(const auto& row:rows){if(!first)s<<',';first=false;s<<'[';bool next=true;for(const auto& v:row){if(!next)s<<',';next=false;array(s,v.v);}s<<']';}s<<']';}
+static std::string meshMetadata(const std::vector<TMesh*>& meshes){
+    std::ostringstream s;s<<std::setprecision(17)<<std::boolalpha<<"{\"format\":1,\"meshes\":[";bool first=true;size_t triangles=0;
+    for(auto m:meshes){if(!m)throw std::runtime_error("Missing native triangle mesh.");if(!first)s<<',';first=false;
+        s<<"{\"origin\":"<<quote(m->m_OriginGeomID)<<",\"name\":"<<quote(m->m_NameStr)<<",\"surface\":"<<m->m_SurfNum<<",\"plate\":"<<m->m_PlateNum<<",\"copy\":"<<m->m_CopyIndex<<",\"material\":"<<m->m_MaterialID<<",\"cfdType\":"<<m->m_SurfCfdType<<",\"surfaceType\":"<<m->m_SurfType<<",\"thick\":"<<m->m_ThickSurf<<",\"flatPatch\":"<<m->m_FlatPatch<<",\"massPriority\":"<<m->m_MassPrior<<",\"density\":";value(s,m->m_Density);s<<",\"shellAreaDensity\":";value(s,m->m_ShellMassArea);s<<",\"shell\":"<<m->m_ShellFlag;
+        s<<",\"wmin\":";value(s,m->m_Wmin);s<<",\"uscale\":";value(s,m->m_Uscale);s<<",\"wscale\":";value(s,m->m_Wscale);s<<",\"groups\":";array(s,m->m_InGroup);s<<",\"uwGrid\":";grid(s,m->m_UWPnts);s<<",\"xyzGrid\":";grid(s,m->m_XYZPnts);
+        s<<",\"triangles\":[";bool next=true;for(auto t:m->m_TVec){if(!next)s<<',';next=false;triangleMetadata(s,t,0,triangles);}s<<"]}";
+    }
+    s<<"]}";return s.str();
+}
+}
+
+extern "C" const char* studio_mesh_metadata(const char* engine,const char* geom,const char* scaleGuard){
+    static thread_local std::string output;void* library=nullptr;
+    try{
+        library=dlopen(engine,RTLD_NOW);if(!library)throw std::runtime_error(dlerror());
+        auto find=symbol<void*(*)(const std::string&,const std::string&)>(library,"_ZN3vsp13FindGeomForOpERKNSt3__112basic_stringIcNS0_11char_traitsIcEENS0_9allocatorIcEEEES8_");auto component=static_cast<const char*>(find(geom,"Studio triangle metadata"));if(!component)throw std::runtime_error("Native triangle mesh unavailable.");
+        auto manager=symbol<void*>(library,"_ZZN16ParmMgrSingleton11getInstanceEvE8instance");auto parm=symbol<Parm*(*)(void*,const std::string&)>(library,"_ZN16ParmMgrSingleton8FindParmERKNSt3__112basic_stringIcNS0_11char_traitsIcEENS0_9allocatorIcEEEE");
+        if(!scaleGuard || !*scaleGuard || reinterpret_cast<const char*>(parm(manager,std::string(scaleGuard)))!=component+studio_mesh_layout::m_ScaleFromOrig)throw std::runtime_error("Native triangle mesh layout does not match the pinned engine.");
+        output=studio_ngon::meshMetadata(*reinterpret_cast<const std::vector<TMesh*>*>(component+studio_mesh_layout::m_TMeshVec));double matrix[16];symbol<void(*)(const void*,double*)>(library,"_ZNK8Matrix4d6getMatEPd")(component+studio_mesh_layout::m_ScaleMatrix,matrix);std::ostringstream extra;extra<<std::setprecision(17)<<",\"scaleMatrix\":";studio_ngon::array(extra,matrix);extra<<'}';output.pop_back();output+=extra.str();
     }catch(const std::exception& e){output="{\"error\":"+quote(e.what())+"}";}
     if(library)dlclose(library);return output.c_str();
 }

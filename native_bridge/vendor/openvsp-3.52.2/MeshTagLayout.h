@@ -7,5 +7,6 @@
 namespace studio_mesh_layout {
 inline constexpr std::size_t m_TMeshVec = 37032;
 inline constexpr std::size_t m_ScaleFromOrig = 37256;
+inline constexpr std::size_t m_ScaleMatrix = 37128;
 inline constexpr std::size_t size = 39536;
 }
