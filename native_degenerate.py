@@ -18,7 +18,7 @@ def annotate(v,name,inputs):
             if key=='ModeID':
                 e['applicableWhen']=dict(input='UseModeFlag',values=[1]);e['description']='This analysis applies the mode presets and uses its normal geometry set. The mode’s thin/degenerate set is not included.'
                 if e['values'][0] not in [c['value'] for c in modes]:e['choices'].append(dict(value=e['values'][0],label='Unavailable native mode · '+e['values'][0]))
-    note='OpenVSP computes full surface grids, flat plates, camber coordinates, section sticks and point properties. Symmetry copies and native records stay separate. Inspect and export these representations before using them in downstream analysis.' if name=='DegenGeom' else 'OpenVSP creates its degenerate MeshGeom or NGonMeshGeom from the selected geometry. The generated native aircraft is saved alongside its native Gmsh export. In this release, the quadrilateral setting creates the same triangular MeshGeom; polygon meshes retain their native representation in the saved aircraft and are triangulated by the native Gmsh exporter.'
+    note='OpenVSP computes full surface grids, flat plates, camber coordinates, section sticks and point properties. Symmetry copies and native records stay separate. Inspect and export these representations before using them in downstream analysis.' if name=='DegenGeom' else 'OpenVSP creates its degenerate MeshGeom or NGonMeshGeom from the selected geometry. The generated native aircraft is saved alongside its native Gmsh export. In this release, the quadrilateral setting creates the same triangular MeshGeom; polygon meshes are triangulated for viewing. Their original polygon data is saved as a native VSPGEOM file with its companion files; this engine does not serialize polygon mesh data in VSP3.'
     sections=[dict(title='Geometry',inputs=['UseModeFlag','ModeID','Set']),dict(title='Native files',inputs=['WriteCSVFlag','WriteMFileFlag'])] if name=='DegenGeom' else [dict(title='Geometry and representation',inputs=['Set','DegenGeomMeshType'])]
     return dict(guide=dict(title='Degenerate geometry representations' if name=='DegenGeom' else 'Degenerate geometry mesh',note=note,sensitivityNote='Compare native tessellation and section counts. These geometry outputs do not establish aerodynamic convergence or mesh quality.',sections=sections))
 
@@ -49,6 +49,21 @@ def export_mesh(v,ids,filename):
         for g in set(v.FindGeoms())-before:v.DeleteGeom(g)
         for g,(member,shown) in flags.items():
             v.SetSetFlag(g,slot,member);v.SetSetFlag(g,v.SET_SHOWN,shown)
+
+def export_polygon(v,ids,filename):
+    """Preserve the live original polygon mesh before native VSP3 loses it."""
+    from native_worker import errors
+    folder=Path.cwd();before_files=set(folder.iterdir());slot=v.GetNumSets()-1;before=set(v.FindGeoms())
+    flags={g:(v.GetSetFlag(g,slot),v.GetSetFlag(g,v.SET_SHOWN)) for g in before}
+    try:
+        for g in before:v.SetSetFlag(g,slot,g in ids)
+        v.ExportFile(str(folder/filename),slot,v.EXPORT_VSPGEOM,1);errors(v)
+        if not (folder/filename).is_file() or not (folder/filename).stat().st_size:raise ValueError('OpenVSP did not write the native polygon export.')
+        return sorted(p.name for p in set(folder.iterdir())-before_files if p.is_file() and not p.is_symlink())
+    finally:
+        for g in set(v.FindGeoms())-before:v.DeleteGeom(g)
+        for g,(member,shown) in flags.items():v.SetSetFlag(g,slot,member);v.SetSetFlag(g,v.SET_SHOWN,shown)
+
 
 def geometry(results):
     by_id={r['id']:r for r in results};nodes=[];elements=[];groups=[];warnings=[]
@@ -96,8 +111,10 @@ def save(v,data,name):
     result=next(r for r in data['results'] if r['name']=='DegenGeomMesh');ids=next(e['values'] for e in result['entries'] if e['name']=='Mesh_GeomID')
     if not ids or ids[0] not in v.FindGeoms():raise ValueError('OpenVSP did not create a degenerate mesh for this selection.')
     gid=ids[0];kind=v.GetGeomTypeName(gid);filename='degenerate-geometry.msh';mesh=export_mesh(v,ids,filename)
+    polygon=kind.upper() in ('NGONMESH','NGON_MESH');polygon_file='degenerate-polygons.vspgeom' if polygon else None
+    polygon_files=export_polygon(v,ids,polygon_file) if polygon else []
     model='degenerate-mesh.vsp3';v.WriteVSPFile(str(Path.cwd()/model),v.SET_ALL)
     from native_worker import errors
     errors(v)
-    data.update(meshFile=filename,meshSummary=native_mesh.summary(mesh),degenerateMesh=dict(nativeGeomType=kind,nativeGeomID=gid,modelFile=model,requestedMeshType=next(e['values'][0] for e in data['inputs'] if e['name']=='DegenGeomMeshType')))
+    data.update(meshFile=filename,meshSummary=native_mesh.summary(mesh),degenerateMesh=dict(nativeGeomType=kind,nativeGeomID=gid,modelFile=model,modelGeometrySaved=not polygon,polygonFile=polygon_file,polygonFiles=polygon_files,requestedMeshType=next(e['values'][0] for e in data['inputs'] if e['name']=='DegenGeomMeshType')))
     return data

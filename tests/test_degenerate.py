@@ -67,12 +67,35 @@ class NativeDegenerate(unittest.TestCase):
                 filename=self.path/'direct-degenerate.msh';v.ExportFile(str(filename),slot,v.EXPORT_GMSH,1);native_worker.errors(v);mesh=read_gmsh(filename)
                 for g in set(v.FindGeoms())-before:v.DeleteGeom(g)
                 for g,(member,shown) in flags.items():v.SetSetFlag(g,slot,member);v.SetSetFlag(g,v.SET_SHOWN,shown)
+                polygon_bytes=None;polygon_companions={}
+                if typ==v.NGON_MESH_TYPE:
+                    selected=set(v.FindGeoms());saved_flags={g:(v.GetSetFlag(g,slot),v.GetSetFlag(g,v.SET_SHOWN)) for g in selected}
+                    for g in selected:v.SetSetFlag(g,slot,g==gid)
+                    existing_files=set(self.path.iterdir())
+                    direct_polygon=self.path/'direct-polygons.vspgeom';v.ExportFile(str(direct_polygon),slot,v.EXPORT_VSPGEOM,1);native_worker.errors(v);polygon_bytes=direct_polygon.read_bytes()
+                    polygon_companions={p.name.replace('direct-polygons','degenerate-polygons'):p.read_bytes() for p in set(self.path.iterdir())-existing_files if p.is_file()}
+                    for g in set(v.FindGeoms())-selected:v.DeleteGeom(g)
+                    for g,(member,shown) in saved_flags.items():v.SetSetFlag(g,slot,member);v.SetSetFlag(g,v.SET_SHOWN,shown)
                 data,path=self.worker(dict(action='analysis',name='DegenGeomMesh',inputs=[dict(name='Set',values=[0]),dict(name='DegenGeomMeshType',values=[typ])]))
                 self.assertResults(expected,data['results']);actual=read_gmsh(path.parent/data['meshFile'])
                 for key in ('nodes','nodeIDs','elements','groups','higherOrder','unsupportedElements'):self.assertEqual(actual[key],mesh[key])
                 self.assertEqual(data['degenerateMesh']['nativeGeomType'],kind)
+                self.assertEqual(data['degenerateMesh']['modelGeometrySaved'],typ!=v.NGON_MESH_TYPE)
+                if polygon_bytes is not None:
+                    meta=data['degenerateMesh'];self.assertEqual((path.parent/meta['polygonFile']).read_bytes(),polygon_bytes)
+                    self.assertIn(meta['polygonFile'],meta['polygonFiles']);self.assertEqual(set(meta['polygonFiles']),set(polygon_companions))
+                    for filename,raw in polygon_companions.items():self.assertEqual((path.parent/filename).read_bytes(),raw.replace(str(self.path/'direct-polygons').encode(),str((path.parent/'degenerate-polygons').resolve()).encode()).replace(b'direct-polygons',b'degenerate-polygons'))
+                    self.assertTrue(all((path.parent/name).is_file() for name in meta['polygonFiles']))
+
                 v.ClearVSPModel();v.ReadVSPFile(str(path.parent/data['degenerateMesh']['modelFile']));v.Update();native_worker.errors(v)
                 self.assertEqual(set(v.FindGeoms()),{self.gid,self.pod,data['degenerateMesh']['nativeGeomID']});self.assertEqual(v.GetGeomTypeName(data['degenerateMesh']['nativeGeomID']),kind)
+                if typ==v.NGON_MESH_TYPE:
+                    # The original engine retains the type/parameters but loses
+                    # polygon data in VSP3. Do not treat type identity as geometry.
+                    for g in v.FindGeoms():v.SetSetFlag(g,slot,g==data['degenerateMesh']['nativeGeomID'])
+                    cold_mesh=self.path/'cold-polygons.msh';v.ExportFile(str(cold_mesh),slot,v.EXPORT_GMSH,1);native_worker.errors(v)
+                    with self.assertRaisesRegex(ValueError,'no displayable mesh'):read_gmsh(cold_mesh)
+                    v.SetSetFlag(self.gid,slot,True);v.SetSetFlag(self.pod,slot,False)
                 self.assertTrue(v.GetSetFlag(self.gid,slot));self.assertFalse(v.GetSetFlag(self.pod,slot));self.assertEqual(v.GetSetName(slot),'Existing members')
                 self.assertEqual(path.read_bytes(),baseline);self.assertEqual(self.model.read_bytes(),baseline);meshes.append(actual)
         self.assertEqual(meshes[0]['nodes'],meshes[1]['nodes']);self.assertEqual(meshes[0]['elements'],meshes[1]['elements'])
