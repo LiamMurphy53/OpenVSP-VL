@@ -163,6 +163,19 @@ def export(v,r):
 
 def mesh_geometry(v,gid):
     """Read engine-evaluated, transformed triangles through Results Manager."""
+    if v.GetGeomTypeName(gid).upper() in ('NGONMESH','NGON_MESH'):
+        import native_ngon
+        if not native_ngon.snapshot(v,gid)['points']:return dict(points=[],triangles=[],source='Empty native polygon mesh')
+        from native_degenerate import export_mesh
+        import uuid
+        path=Path.cwd()/('polygon-preview-'+uuid.uuid4().hex+'.msh')
+        try:
+            mesh=export_mesh(v,[gid],str(path))
+            faces=[e['nodes'] for e in mesh['elements'] if e['kind']=='face']
+            if any(len(t)!=3 for t in faces):raise ValueError('The native polygon preview exporter did not return triangles.')
+            if len(mesh['nodes'])>1_000_000 or len(faces)>1_000_000:raise ValueError('Polygon mesh exceeds the one-million-element display limit.')
+            return dict(points=mesh['nodes'],triangles=faces,source='Native Gmsh polygon export')
+        finally:path.unlink(missing_ok=True)
     rid=v.CreateGeomResults(gid,'Studio_Display_Mesh')
     keys=set(v.GetAllDataNames(rid));points=[];faces=[]
     if 'Tri_Pnts' in keys:

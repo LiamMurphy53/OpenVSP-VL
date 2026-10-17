@@ -5,6 +5,8 @@ The current workspace focuses on autonomous aircraft. Human/crew creation and de
 An independent modern interface over the **official, unmodified OpenVSP 3.52.2 engine**. Aircraft geometry, parameter dependencies, fitting and analyses are evaluated by OpenVSP. The browser displays native geometry and results. Full workflow parity remains under development; see [FEATURE_STATUS.md](FEATURE_STATUS.md) and [CAPABILITY_PLAN.md](CAPABILITY_PLAN.md) for verified coverage and remaining work.
 
 
+Polygon-mesh projects include a checksummed Studio snapshot inside the `.vsp3` file. Studio restores the native polygon graph when reopening, editing or undoing changes. The original OpenVSP 3.52.2 reader ignores this extra data, and saving through that application discards it. Use the native VSPGEOM export and its companion files for polygon data in other tools. Polygon coarsening and other specialized operations remain under development.
+
 ## Workspace layout and modeling controls
 
 Use **Panels** to hide or reopen panels and reset the current tab’s layout. Drag a panel title onto another panel to exchange their positions, or use its left/right buttons. Drag a panel edge to resize it. The maximize button gives that panel the available workspace; **Restore panels** or Escape returns to the previous arrangement. Design, Modeling tools, Analyze, and Studies remember their own panel order, widths, and closed panels in this browser. Small screens stack the panels and retain move, close, and maximize controls.

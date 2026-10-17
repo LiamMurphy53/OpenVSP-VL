@@ -80,7 +80,7 @@ class NativeDegenerate(unittest.TestCase):
                 self.assertResults(expected,data['results']);actual=read_gmsh(path.parent/data['meshFile'])
                 for key in ('nodes','nodeIDs','elements','groups','higherOrder','unsupportedElements'):self.assertEqual(actual[key],mesh[key])
                 self.assertEqual(data['degenerateMesh']['nativeGeomType'],kind)
-                self.assertEqual(data['degenerateMesh']['modelGeometrySaved'],typ!=v.NGON_MESH_TYPE)
+                self.assertTrue(data['degenerateMesh']['modelGeometrySaved']);self.assertEqual(data['degenerateMesh']['nativeModelGeometrySaved'],typ!=v.NGON_MESH_TYPE)
                 if polygon_bytes is not None:
                     meta=data['degenerateMesh'];self.assertEqual((path.parent/meta['polygonFile']).read_bytes(),polygon_bytes)
                     self.assertIn(meta['polygonFile'],meta['polygonFiles']);self.assertEqual(set(meta['polygonFiles']),set(polygon_companions))
@@ -95,6 +95,11 @@ class NativeDegenerate(unittest.TestCase):
                     for g in v.FindGeoms():v.SetSetFlag(g,slot,g==data['degenerateMesh']['nativeGeomID'])
                     cold_mesh=self.path/'cold-polygons.msh';v.ExportFile(str(cold_mesh),slot,v.EXPORT_GMSH,1);native_worker.errors(v)
                     with self.assertRaisesRegex(ValueError,'no displayable mesh'):read_gmsh(cold_mesh)
+                    import native_ngon
+                    self.assertTrue(data['degenerateMesh']['studioPolygonSnapshot'])
+                    native_ngon.restore_file(v,path.parent/data['degenerateMesh']['modelFile'])
+                    restored=native_degenerate.export_mesh(v,[data['degenerateMesh']['nativeGeomID']],str(self.path/'restored-polygons.msh'))
+                    for key in ('nodes','nodeIDs','elements','groups','higherOrder','unsupportedElements'):self.assertEqual(restored[key],mesh[key])
                     v.SetSetFlag(self.gid,slot,True);v.SetSetFlag(self.pod,slot,False)
                 self.assertTrue(v.GetSetFlag(self.gid,slot));self.assertFalse(v.GetSetFlag(self.pod,slot));self.assertEqual(v.GetSetName(slot),'Existing members')
                 self.assertEqual(path.read_bytes(),baseline);self.assertEqual(self.model.read_bytes(),baseline);meshes.append(actual)

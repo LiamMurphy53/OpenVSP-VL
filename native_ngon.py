@@ -2,6 +2,10 @@
 import ctypes
 import json
 import math
+import hashlib
+import os
+from pathlib import Path
+import tempfile
 import xml.etree.ElementTree as ET
 from native_preview import adapter, _verified_private_layout
 from vsp_runtime import distribution
@@ -164,4 +168,66 @@ def restore(v,gid,data):
     function.argtypes=[ctypes.c_char_p]*4;function.restype=ctypes.c_char_p
     result=json.loads(function(engine,gid.encode(),guard.encode(),payload))
     if 'error' in result:raise ValueError(result['error'])
+    # The native constructor exposes levels 0..10 even when only level 0
+    # exists. GetActiveMesh indexes its vector without a bounds check.
+    active=v.FindParm(gid,'ActiveMesh','RefMesh')
+    v.SetParmUpperLimit(active,len(data['meshes'])-1)
+    v.SetParmVal(active,data['activeMesh'])
     return result
+
+
+def write(v,path):
+    """Keep native VSP3 parameters and Studio's full polygon graph in one file."""
+    path=Path(path)
+    graphs={g:snapshot(v,g) for g in v.FindGeoms() if v.GetGeomTypeName(g).upper() in ('NGONMESH','NGON_MESH')}
+    if not graphs:
+        v.WriteVSPFile(str(path),v.SET_ALL)
+        return
+    for data in graphs.values():validate(data)
+    filename=v.GetVSPFileName()
+    fd,name=tempfile.mkstemp(prefix='.studio-polygons-',suffix='.vsp3',dir=path.parent)
+    os.close(fd);temporary=Path(name)
+    try:
+        v.WriteVSPFile(str(temporary),v.SET_ALL)
+        tree=ET.parse(temporary);found=set()
+        for geom in tree.findall('./Vehicle/Geom'):
+            gid=geom.findtext('./ParmContainer/ID')
+            if gid not in graphs:continue
+            if geom.find('NGonMeshGeom') is None or gid in found:raise ValueError('Native polygon file identity is inconsistent.')
+            found.add(gid)
+            text=json.dumps(graphs[gid],allow_nan=False,ensure_ascii=True,separators=(',',':'))
+            if len(text)>128*1024*1024:raise ValueError('Polygon snapshot exceeds the project limit.')
+            ET.SubElement(geom,'StudioPolygonSnapshot',format='1',sha256=hashlib.sha256(text.encode()).hexdigest()).text=text
+        if found!=set(graphs):raise ValueError('OpenVSP did not save every polygon component.')
+        tree.write(temporary,encoding='utf-8',xml_declaration=True)
+        os.replace(temporary,path);v.SetVSP3FileName(str(path))
+    except BaseException:
+        v.SetVSP3FileName(filename)
+        raise
+    finally:temporary.unlink(missing_ok=True)
+
+
+def restore_file(v,path):
+    """Restore Studio extension data after an ordinary original-engine VSP3 read."""
+    raw=Path(path).read_bytes()
+    if b'<StudioPolygonSnapshot' not in raw:return []
+    tree=ET.ElementTree(ET.fromstring(raw));pending={}
+    def pairs(items):
+        result={}
+        for key,value in items:
+            if key in result:raise ValueError('Duplicate polygon snapshot field.')
+            result[key]=value
+        return result
+    for geom in tree.findall('./Vehicle/Geom'):
+        entries=geom.findall('StudioPolygonSnapshot')
+        if not entries:continue
+        gid=geom.findtext('./ParmContainer/ID');entry=entries[0];text=entry.text or ''
+        if len(entries)!=1 or not gid or gid in pending or geom.find('NGonMeshGeom') is None:raise ValueError('Invalid saved polygon component identity.')
+        if entry.get('format')!='1' or len(text)>128*1024*1024 or hashlib.sha256(text.encode()).hexdigest()!=entry.get('sha256'):raise ValueError('Saved polygon snapshot is corrupt or unsupported.')
+        data=json.loads(text,object_pairs_hook=pairs);validate(data)
+        _target(v,gid);pending[gid]=data
+    # Validate every component before changing any native graph. Worker-level
+    # rollback still protects the project if a later native restoration fails.
+    for gid,data in pending.items():restore(v,gid,data)
+    if pending:v.Update()
+    return list(pending)

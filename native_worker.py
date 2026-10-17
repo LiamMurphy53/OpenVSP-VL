@@ -1,4 +1,5 @@
 """Execute a single transaction using unmodified OpenVSP, in a separate process."""
+import native_ngon
 import json
 import math
 from pathlib import Path
@@ -624,6 +625,7 @@ def run(req, model):
         # In particular, wing TotalSpan/TotalArea setters depend on the last
         # evaluated value, which is not serialized in the native document.
         v.Update()
+        native_ngon.restore_file(v,model)
         import native_cloud
         native_cloud.refresh(v)
         import native_profile_controls
@@ -659,7 +661,7 @@ def run(req, model):
         v.SetGeomName(wing,'Main wing')
         v.Update()
         errors(v)
-        v.WriteVSPFile(str(model),v.SET_ALL)
+        native_ngon.write(v,model)
     if action=='query':
         if req['operation']=='flow-plane-preview':
             import native_flow_planes
@@ -710,7 +712,7 @@ def run(req, model):
                 available=v.ValidParm(p);after=v.GetParmVal(p) if available else None
                 data['studyParameters'].append(dict(id=p,value=after if available else before[p],valueBeforeAnalysis=before[p],valueAfterAnalysis=after,availableAfterAnalysis=available))
                 if not available:data['studyParameterWarnings'].append(f'{p}: OpenVSP replaced this setting during the analysis. Its last native value before replacement was {before[p]}; no value is available afterward.')
-            v.WriteVSPFile(str(Path.cwd()/'native-model-after-analysis.vsp3'),v.SET_ALL)
+            native_ngon.write(v,Path.cwd()/'native-model-after-analysis.vsp3')
             errors(v)
         return data
 
@@ -739,7 +741,7 @@ def run(req, model):
         native_custom_assets.require_reads(v)
         if req.get('operation')=='property-lock' and req.get('locked') is False:locked=[item for item in locked if item['id'] not in req['parameters']]
         native_property_locks.require_unchanged(v,locked)
-        v.WriteVSPFile(str(model),v.SET_ALL)
+        native_ngon.write(v,model)
         errors(v)
         # DecodeXml reconstructs file-curve limits and wing chord values at
         # native precision. Return authoritative saved geometry/metadata

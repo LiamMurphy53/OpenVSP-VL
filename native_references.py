@@ -4,6 +4,7 @@ Keys follow FeaLayer/FeaBC/FeaConnection/FeaFixPoint EncodeXml in the matching o
 FeaStructure.cpp. All writes are to a transactional native file and reloaded
 by OpenVSP; material and constraint math remain in the native engine.
 """
+import native_ngon
 from pathlib import Path
 import uuid
 import os
@@ -21,7 +22,7 @@ def document(v):
     path=Path.cwd()/('reference-'+uuid.uuid4().hex+'.vsp3')
     filename=v.GetVSPFileName()
     try:
-        v.WriteVSPFile(str(path),v.SET_ALL)
+        native_ngon.write(v,path)
         return path,ET.parse(path)
     finally:
         v.SetVSP3FileName(filename)

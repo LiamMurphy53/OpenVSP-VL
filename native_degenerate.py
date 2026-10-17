@@ -1,4 +1,5 @@
 """Guides and exact saved geometry for native degenerate analyses."""
+import native_ngon
 import json,math
 from pathlib import Path
 
@@ -18,7 +19,7 @@ def annotate(v,name,inputs):
             if key=='ModeID':
                 e['applicableWhen']=dict(input='UseModeFlag',values=[1]);e['description']='This analysis applies the mode presets and uses its normal geometry set. The mode’s thin/degenerate set is not included.'
                 if e['values'][0] not in [c['value'] for c in modes]:e['choices'].append(dict(value=e['values'][0],label='Unavailable native mode · '+e['values'][0]))
-    note='OpenVSP computes full surface grids, flat plates, camber coordinates, section sticks and point properties. Symmetry copies and native records stay separate. Inspect and export these representations before using them in downstream analysis.' if name=='DegenGeom' else 'OpenVSP creates its degenerate MeshGeom or NGonMeshGeom from the selected geometry. The generated native aircraft is saved alongside its native Gmsh export. In this release, the quadrilateral setting creates the same triangular MeshGeom; polygon meshes are triangulated for viewing. Their original polygon data is saved as a native VSPGEOM file with its companion files; this engine does not serialize polygon mesh data in VSP3.'
+    note='OpenVSP computes full surface grids, flat plates, camber coordinates, section sticks and point properties. Symmetry copies and native records stay separate. Inspect and export these representations before using them in downstream analysis.' if name=='DegenGeom' else 'OpenVSP creates its degenerate MeshGeom or NGonMeshGeom from the selected geometry. The generated native aircraft is saved alongside its native Gmsh export. In this release, the quadrilateral setting creates the same triangular MeshGeom; polygon meshes are triangulated for viewing. Their original polygon data is saved as a native VSPGEOM file with its companion files; Studio also saves polygon snapshots in its project file for reopening here. Original OpenVSP does not restore those snapshots.'
     sections=[dict(title='Geometry',inputs=['UseModeFlag','ModeID','Set']),dict(title='Native files',inputs=['WriteCSVFlag','WriteMFileFlag'])] if name=='DegenGeom' else [dict(title='Geometry and representation',inputs=['Set','DegenGeomMeshType'])]
     return dict(guide=dict(title='Degenerate geometry representations' if name=='DegenGeom' else 'Degenerate geometry mesh',note=note,sensitivityNote='Compare native tessellation and section counts. These geometry outputs do not establish aerodynamic convergence or mesh quality.',sections=sections))
 
@@ -113,8 +114,8 @@ def save(v,data,name):
     gid=ids[0];kind=v.GetGeomTypeName(gid);filename='degenerate-geometry.msh';mesh=export_mesh(v,ids,filename)
     polygon=kind.upper() in ('NGONMESH','NGON_MESH');polygon_file='degenerate-polygons.vspgeom' if polygon else None
     polygon_files=export_polygon(v,ids,polygon_file) if polygon else []
-    model='degenerate-mesh.vsp3';v.WriteVSPFile(str(Path.cwd()/model),v.SET_ALL)
+    model='degenerate-mesh.vsp3';native_ngon.write(v,Path.cwd()/model)
     from native_worker import errors
     errors(v)
-    data.update(meshFile=filename,meshSummary=native_mesh.summary(mesh),degenerateMesh=dict(nativeGeomType=kind,nativeGeomID=gid,modelFile=model,modelGeometrySaved=not polygon,polygonFile=polygon_file,polygonFiles=polygon_files,requestedMeshType=next(e['values'][0] for e in data['inputs'] if e['name']=='DegenGeomMeshType')))
+    data.update(meshFile=filename,meshSummary=native_mesh.summary(mesh),degenerateMesh=dict(nativeGeomType=kind,nativeGeomID=gid,modelFile=model,modelGeometrySaved=True,nativeModelGeometrySaved=not polygon,studioPolygonSnapshot=polygon,polygonFile=polygon_file,polygonFiles=polygon_files,requestedMeshType=next(e['values'][0] for e in data['inputs'] if e['name']=='DegenGeomMeshType')))
     return data

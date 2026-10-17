@@ -4,6 +4,7 @@ The caller temporarily relocates its native XML node into the parent geometry's
 region list because the installed generic API does not search FEA regions.
 Only OpenVSP generates the intersection and native editable curve.
 """
+import native_ngon
 import json
 from pathlib import Path
 import sys
@@ -17,6 +18,7 @@ def compute(model,region,target,curve):
     finally:
         if readable!=Path(model):readable.unlink(missing_ok=True)
     v.SetVSP3FileName(str(model));v.Update()
+    native_ngon.restore_file(v,model)
     import native_cloud
     native_cloud.refresh(v)
     import native_gear_retraction
@@ -35,7 +37,7 @@ def compute(model,region,target,curve):
     count=int(v.GetParmVal(v.FindParm(region,'NCurves','SS_Intersect')))
     if not count:raise ValueError('OpenVSP found no intersection curves on this surface. The saved region is unchanged.')
     if curve>=count:raise ValueError(f'OpenVSP found {count} intersection curves. Choose a curve from 1 to {count}.')
-    v.WriteVSPFile(str(model),v.SET_ALL);check()
+    native_ngon.write(v,model);check()
     return dict(nativeCurveCount=count,nativeCurveIndex=int(v.GetParmVal(pid)))
 
 

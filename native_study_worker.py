@@ -1,4 +1,5 @@
 """Study setup and case files; all parameter evaluation stays in OpenVSP."""
+import native_ngon
 import copy
 import math
 import native_analytical
@@ -525,5 +526,5 @@ def prepare(v,req,model,errors):
         require_case_parameter(item)
         item['effective']=v.GetParmVal(item['id'])
     native_property_locks.require_unchanged(v,locked)
-    v.WriteVSPFile(str(model),v.SET_ALL);errors(v)
+    native_ngon.write(v,model);errors(v)
     return dict(version=v.GetVSPVersion(),parameters=records,warnings=[f'{x["id"]}: requested {x["requested"]}, native value {x["effective"]} after dependencies.' for x in records if not math.isclose(x['requested'],x['effective'],rel_tol=1e-10,abs_tol=1e-12)])
