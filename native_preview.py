@@ -23,7 +23,7 @@ def adapter(v):
             sdk=subprocess.run(['/usr/bin/xcrun','--show-sdk-path'],capture_output=True,text=True,timeout=30)
             if sdk.returncode:raise ValueError('Apple SDK headers are required to build the native drawing adapter.')
             xml_headers=Path(sdk.stdout.strip())/'usr/include/libxml2'
-            result=subprocess.run(['/usr/bin/clang++','-std=c++17','-O2','-dynamiclib','-I',str(headers),'-I',str(xml_headers),str(source),'-o',str(target)],capture_output=True,text=True,timeout=60)
+            result=subprocess.run(['/usr/bin/clang++','-std=c++17','-O2','-dynamiclib','-I',str(headers),'-I',str(xml_headers),str(source),'-lxml2','-o',str(target)],capture_output=True,text=True,timeout=60)
             if result.returncode:raise ValueError('Could not build the native drawing adapter: '+result.stderr[-3000:])
             target.replace(library)
     engine=distribution()/'python/openvsp/openvsp/_vsp.so'

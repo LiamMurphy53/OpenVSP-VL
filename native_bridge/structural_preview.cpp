@@ -23,6 +23,7 @@
 #include <vector>
 #include <cmath>
 #include <algorithm>
+#include <limits>
 #include <libxml/tree.h>
 
 // Declaration below; the implementation uses the exact named native destructor.
@@ -96,6 +97,78 @@ extern "C" const char* studio_ngon_snapshot(const char* engine,const char* geom,
         std::ostringstream extra;extra<<std::setprecision(17)<<",\"scaleMatrix\":";studio_ngon::array(extra,matrix);extra<<'}';output.pop_back();output+=extra.str();
     }catch(const std::exception& e){output="{\"error\":"+quote(e.what())+"}";}
     if(library)dlclose(library);return output.c_str();
+}
+
+namespace studio_ngon {
+static xmlNodePtr field(xmlNodePtr p,const char* name){xmlNodePtr result=nullptr;for(auto n=p->children;n;n=n->next)if(n->type==XML_ELEMENT_NODE && xmlStrEqual(n->name,BAD_CAST name)){if(result)throw std::runtime_error("Duplicate polygon snapshot field.");result=n;}if(!result)throw std::runtime_error(std::string("Missing polygon snapshot field: ")+name);return result;}
+static std::vector<xmlNodePtr> items(xmlNodePtr p){std::vector<xmlNodePtr> out;for(auto n=p->children;n;n=n->next)if(n->type==XML_ELEMENT_NODE){if(!xmlStrEqual(n->name,BAD_CAST "item"))throw std::runtime_error("Invalid polygon snapshot list.");out.push_back(n);}return out;}
+static std::string text(xmlNodePtr p){xmlChar* raw=xmlNodeGetContent(p);if(!raw)throw std::runtime_error("Missing polygon snapshot value.");std::string result(reinterpret_cast<const char*>(raw));xmlFree(raw);return result;}
+static int integer(xmlNodePtr p){auto raw=text(p);size_t used=0;long long n=std::stoll(raw,&used);if(used!=raw.size() || n<std::numeric_limits<int>::min() || n>std::numeric_limits<int>::max())throw std::runtime_error("Invalid polygon snapshot integer.");return int(n);}
+static double real(xmlNodePtr p){auto raw=text(p);char* end=nullptr;double n=std::strtod(raw.c_str(),&end);if(raw.empty() || end!=raw.c_str()+raw.size() || !std::isfinite(n))throw std::runtime_error("Invalid polygon snapshot number.");return n;}
+static bool flag(xmlNodePtr p){int n=integer(p);if(n!=0 && n!=1)throw std::runtime_error("Invalid polygon snapshot flag.");return n;}
+static std::string unhex(xmlNodePtr p){auto raw=text(p);if(raw.size()%2)throw std::runtime_error("Invalid polygon snapshot string.");std::string out;for(size_t i=0;i<raw.size();i+=2){auto digit=[](char c){if(c>='0' && c<='9')return c-'0';if(c>='a' && c<='f')return c-'a'+10;throw std::runtime_error("Invalid polygon snapshot string.");};out.push_back(char(16*digit(raw[i])+digit(raw[i+1])));}return out;}
+static std::vector<int> ints(xmlNodePtr p){std::vector<int> out;for(auto n:items(p))out.push_back(integer(n));return out;}
+static std::vector<double> reals(xmlNodePtr p){std::vector<double> out;for(auto n:items(p))out.push_back(real(n));return out;}
+template<class T> static T* ref(int i,const std::vector<T*>& objects,bool nullable=false){if(nullable && i==-1)return nullptr;if(i<0 || size_t(i)>=objects.size() || !objects[i])throw std::runtime_error("Invalid polygon snapshot reference.");return objects[i];}
+template<class T> static std::vector<T*> references(xmlNodePtr p,const std::vector<T*>& objects){std::vector<T*> out;for(int i:ints(p))out.push_back(ref(i,objects));return out;}
+template<class T> static std::vector<std::vector<T*>> loops(xmlNodePtr p,const std::vector<T*>& objects){std::vector<std::vector<T*>> out;for(auto n:items(p))out.push_back(references(n,objects));return out;}
+struct Stage {
+    void(*destroy)(PGMulti*);PGMulti* multi;
+    explicit Stage(void* library):destroy(symbol<void(*)(PGMulti*)>(library,"_ZN7PGMultiD1Ev")),multi(static_cast<PGMulti*>(::operator new(sizeof(PGMulti)))){
+        try{symbol<void(*)(PGMulti*)>(library,"_ZN7PGMultiC1Ev")(multi);}catch(...){::operator delete(multi);throw;}
+    }
+    ~Stage(){destroy(multi);::operator delete(multi);}
+};
+static void restore(void* library,char* component,xmlNodePtr root){
+    if(integer(field(root,"format"))!=1)throw std::runtime_error("Unsupported polygon snapshot format.");
+    auto ps=items(field(root,"points")),ns=items(field(root,"nodes")),es=items(field(root,"edges")),fs=items(field(root,"faces")),ms=items(field(root,"meshes"));
+    if(ps.size()+ns.size()+es.size()+fs.size()+ms.size()>10000000)throw std::runtime_error("Polygon snapshot is too large.");
+    Stage stage(library);auto& multi=*stage.multi;symbol<void(*)(PGMulti*)>(library,"_ZN7PGMulti5ClearEv")(&multi);
+    auto addPoint=symbol<PGPoint*(*)(PGMulti*,const vec3d&)>(library,"_ZN7PGMulti8AddPointERK5vec3d");auto addMesh=symbol<PGMesh*(*)(PGMulti*)>(library,"_ZN7PGMulti7AddMeshEv");
+    auto addNode=symbol<PGNode*(*)(PGMesh*,PGPoint*)>(library,"_ZN6PGMesh7AddNodeEP7PGPoint");auto addEdge=symbol<PGEdge*(*)(PGMesh*,PGNode*,PGNode*)>(library,"_ZN6PGMesh7AddEdgeEP6PGNodeS1_");auto addFace=symbol<PGFace*(*)(PGMesh*)>(library,"_ZN6PGMesh7AddFaceEv");
+    auto xyz=symbol<void(*)(void*,double,double,double)>(library,"_ZN5vec3dC1Eddd");auto uv=symbol<void(*)(void*,double,double)>(library,"_ZN5vec2dC1Edd");
+    std::vector<PGPoint*> points;std::vector<PGNode*> nodes(ns.size(),nullptr);std::vector<PGEdge*> edges(es.size(),nullptr);std::vector<PGFace*> faces(fs.size(),nullptr);std::set<PGEdge*> allocatedEdges;
+    for(auto p:ps){auto coords=reals(field(p,"xyz"));if(coords.size()!=3)throw std::runtime_error("Invalid polygon point.");alignas(vec3d) unsigned char storage[sizeof(vec3d)];xyz(storage,coords[0],coords[1],coords[2]);auto point=addPoint(&multi,*reinterpret_cast<vec3d*>(storage));point->m_ID=integer(field(p,"id"));point->m_DeleteMeFlag=flag(field(p,"deleted"));points.push_back(point);}
+    for(auto m:ms){auto mesh=addMesh(&multi);mesh->m_DeleteMeFlag=flag(field(m,"deleted"));
+        for(int i:ints(field(m,"nodes"))){if(i<0 || size_t(i)>=ns.size() || nodes[i])throw std::runtime_error("Duplicate polygon node ownership.");auto n=ns[i];nodes[i]=addNode(mesh,ref(integer(field(n,"point")),points));nodes[i]->m_DeleteMeFlag=flag(field(n,"deleted"));for(auto pair:items(field(n,"tagUW"))){auto values=items(pair);if(values.size()!=2)throw std::runtime_error("Invalid polygon UV map.");auto coords=reals(values[1]);if(coords.size()!=2)throw std::runtime_error("Invalid polygon UV coordinates.");alignas(vec2d) unsigned char storage[sizeof(vec2d)];uv(storage,coords[0],coords[1]);if(!nodes[i]->m_TagUWMap.emplace(integer(values[0]),*reinterpret_cast<vec2d*>(storage)).second)throw std::runtime_error("Duplicate polygon UV tag.");}}
+        for(int i:ints(field(m,"edges"))){if(i<0 || size_t(i)>=es.size() || edges[i])throw std::runtime_error("Duplicate polygon edge ownership.");auto e=es[i];auto endpoints=ints(field(e,"nodes"));if(endpoints.size()!=2)throw std::runtime_error("Invalid polygon edge.");auto edge=addEdge(mesh,ref(endpoints[0],nodes),ref(endpoints[1],nodes));if(!allocatedEdges.insert(edge).second)throw std::runtime_error("Duplicate native polygon edge.");edges[i]=edge;edge->m_ID=integer(field(e,"id"));edge->m_DeleteMeFlag=flag(field(e,"deleted"));edge->m_InLoopFlag=flag(field(e,"inLoop"));edge->m_InCurrentLoopFlag=flag(field(e,"inCurrentLoop"));}
+        for(int i:ints(field(m,"faces"))){if(i<0 || size_t(i)>=fs.size() || faces[i])throw std::runtime_error("Duplicate polygon face ownership.");faces[i]=addFace(mesh);}
+    }
+    for(size_t i=0;i<ps.size();++i)points[i]->m_NodeVec=references(field(ps[i],"nodes"),nodes);
+    for(size_t i=0;i<ns.size();++i)ref(int(i),nodes)->m_EdgeVec=references(field(ns[i],"edges"),edges);
+    for(size_t i=0;i<es.size();++i)ref(int(i),edges)->m_FaceVec=references(field(es[i],"faces"),faces);
+    for(size_t i=0;i<fs.size();++i){auto f=ref(int(i),faces);auto x=fs[i];auto normal=reals(field(x,"normal"));if(normal.size()!=3)throw std::runtime_error("Invalid polygon face normal.");for(int k=0;k<3;++k)f->m_Nvec.v[k]=normal[k];
+        f->m_ID=integer(field(x,"id"));f->m_iQuad=integer(field(x,"quad"));f->m_Tag=integer(field(x,"tag"));f->m_jref=integer(field(x,"jref"));f->m_kref=integer(field(x,"kref"));f->m_Region=integer(field(x,"region"));f->m_DeleteMeFlag=flag(field(x,"deleted"));f->m_Parent=ref(integer(field(x,"parent")),faces,true);f->m_EdgeVec=references(field(x,"edges"),edges);f->m_TriNodeVec=references(field(x,"triNodes"),nodes);f->m_ChildVec=references(field(x,"children"),faces);
+    }
+    for(size_t i=0;i<ms.size();++i){auto m=multi.m_MeshVec[i];auto x=ms[i];m->m_DoubleBackNode=references(field(x,"doubleBackNodes"),nodes);m->m_EdgeLoopVec=loops(field(x,"edgeLoops"),edges);m->m_WingWakeVec=loops(field(x,"wingWakes"),edges);m->m_WingWakePartVec=ints(field(x,"wingWakeParts"));m->m_BodyWakeVec=loops(field(x,"bodyWakes"),edges);m->m_BodyWakePartVec=ints(field(x,"bodyWakeParts"));m->m_BodyNodeWakeVec=references(field(x,"bodyWakeNodes"),nodes);m->m_BodyNodeWakePartVec=ints(field(x,"bodyWakeNodeParts"));m->m_Regions=references(field(x,"regions"),faces);}
+    multi.m_ActiveMesh=integer(field(root,"activeMesh"));if(multi.m_ActiveMesh<0 || size_t(multi.m_ActiveMesh)>=ms.size())throw std::runtime_error("Invalid active polygon mesh.");
+    for(auto pair:items(field(root,"tagNames"))){auto values=items(pair);if(values.size()!=2)throw std::runtime_error("Invalid polygon tag name.");multi.m_TagNames.emplace(integer(values[0]),unhex(values[1]));}
+    for(auto pair:items(field(root,"tagIDs"))){auto values=items(pair);if(values.size()!=2)throw std::runtime_error("Invalid polygon tag ID.");multi.m_TagIDs.emplace(integer(values[0]),unhex(values[1]));}
+    multi.m_ThickVec=ints(field(root,"thick"));multi.m_TypeVec=ints(field(root,"type"));multi.m_PlateVec=ints(field(root,"plate"));multi.m_CopyIndxVec=ints(field(root,"copyIndex"));multi.m_WminVec=reals(field(root,"wmin"));multi.m_UscaleVec=reals(field(root,"uscale"));multi.m_WscaleVec=reals(field(root,"wscale"));
+    for(auto n:items(field(root,"tagKeys")))multi.m_TagKeys.push_back(ints(n));for(auto pair:items(field(root,"singleTagMap"))){auto values=items(pair);if(values.size()!=2)throw std::runtime_error("Invalid polygon tag map.");multi.m_SingleTagMap.emplace(ints(values[0]),integer(values[1]));}
+    auto matrix=reals(field(root,"scaleMatrix"));if(matrix.size()!=16)throw std::runtime_error("Invalid polygon scale matrix.");
+    // Resolve all native functions and validate the staged graph before replacing live ownership.
+    auto check=symbol<bool(*)(PGMulti*)>(library,"_ZN7PGMulti5CheckEv");auto garbage=symbol<void(*)(PGMulti*)>(library,"_ZN7PGMulti11DumpGarbageEv");auto init=symbol<void(*)(void*,const double*)>(library,"_ZN8Matrix4d7initMatEPKd");
+    if(!check(&multi))throw std::runtime_error("Native polygon graph validation failed.");auto meshCheck=symbol<bool(*)(PGMesh*)>(library,"_ZN6PGMesh5CheckEv");for(auto m:multi.m_MeshVec)if(!meshCheck(m))throw std::runtime_error("Native polygon mesh validation failed.");snapshot(multi);
+    auto& destination=*reinterpret_cast<PGMulti*>(component+studio_ngon_layout::m_PGMulti);garbage(&destination);
+    using std::swap;swap(destination.m_MeshVec,multi.m_MeshVec);swap(destination.m_PointList,multi.m_PointList);swap(destination.m_ActiveMesh,multi.m_ActiveMesh);swap(destination.m_TagNames,multi.m_TagNames);swap(destination.m_TagIDs,multi.m_TagIDs);swap(destination.m_ThickVec,multi.m_ThickVec);swap(destination.m_TypeVec,multi.m_TypeVec);swap(destination.m_PlateVec,multi.m_PlateVec);swap(destination.m_CopyIndxVec,multi.m_CopyIndxVec);swap(destination.m_WminVec,multi.m_WminVec);swap(destination.m_UscaleVec,multi.m_UscaleVec);swap(destination.m_WscaleVec,multi.m_WscaleVec);swap(destination.m_TagKeys,multi.m_TagKeys);swap(destination.m_SingleTagMap,multi.m_SingleTagMap);
+    for(auto m:destination.m_MeshVec)m->m_PGMulti=&destination;for(auto m:multi.m_MeshVec)m->m_PGMulti=&multi;
+    init(component+studio_ngon_layout::m_ScaleMatrix,matrix.data());
+}
+}
+
+extern "C" const char* studio_ngon_restore(const char* engine,const char* geom,const char* scaleGuard,const char* payload){
+    static thread_local std::string output;void* library=nullptr;xmlDocPtr doc=nullptr;
+    try{
+        if(!payload || strlen(payload)>128*1024*1024)throw std::runtime_error("Invalid polygon restore payload.");
+        doc=xmlReadMemory(payload,int(strlen(payload)),"polygon-snapshot.xml",nullptr,XML_PARSE_NONET|XML_PARSE_NOBLANKS);
+        if(!doc || doc->intSubset || doc->extSubset)throw std::runtime_error("Invalid polygon restore document.");auto root=xmlDocGetRootElement(doc);if(!root || !xmlStrEqual(root->name,BAD_CAST "snapshot"))throw std::runtime_error("Invalid polygon snapshot root.");
+        library=dlopen(engine,RTLD_NOW);if(!library)throw std::runtime_error(dlerror());auto find=symbol<void*(*)(const std::string&,const std::string&)>(library,"_ZN3vsp13FindGeomForOpERKNSt3__112basic_stringIcNS0_11char_traitsIcEENS0_9allocatorIcEEEES8_");
+        char* component=static_cast<char*>(find(geom,"Studio polygon restore"));if(!component)throw std::runtime_error("Native polygon component unavailable.");auto manager=symbol<void*>(library,"_ZZN16ParmMgrSingleton11getInstanceEvE8instance");auto parm=symbol<Parm*(*)(void*,const std::string&)>(library,"_ZN16ParmMgrSingleton8FindParmERKNSt3__112basic_stringIcNS0_11char_traitsIcEENS0_9allocatorIcEEEE");
+        if(!scaleGuard || !*scaleGuard || reinterpret_cast<char*>(parm(manager,std::string(scaleGuard)))!=component+studio_ngon_layout::m_ScaleFromOrig)throw std::runtime_error("Native polygon layout does not match the pinned engine.");
+        studio_ngon::restore(library,component,root);output="{\"restored\":true}";
+    }catch(const std::exception& e){output="{\"error\":"+quote(e.what())+"}";}
+    if(doc)xmlFreeDoc(doc);if(library)dlclose(library);return output.c_str();
 }
 
 // Offsets are compiler-generated from the complete pinned Geom declaration.
