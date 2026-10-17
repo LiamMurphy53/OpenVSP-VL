@@ -77,6 +77,9 @@ def snapshot(v,parameter):
 
 def query(v,r):
     op=r['operation']
+    if op=='cloud-fit-plane':
+        import native_cloud
+        return native_cloud.fit_plane(v,r)
     if op=='airfoil-coordinate-evaluate':
         import native_airfoil_coordinates
         return native_airfoil_coordinates.query(v,r)

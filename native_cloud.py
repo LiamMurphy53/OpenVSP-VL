@@ -101,3 +101,19 @@ def filter_points(v,g,request):
         if not matches:raise ValueError('The native filter returned a point outside the original cloud.')
         kept.append(matches.popleft())
     replace_points(v,g,kept)
+
+
+def fit_plane(v,request):
+    from native_tools import one
+    g=one(request.get('geom'),[g for g in v.FindGeoms() if v.GetGeomTypeName(g).upper() in ('PTCLOUD','POINTCLOUD','POINT_CLOUD')],'Choose an existing native point cloud.');points=world_points(v,g)
+    if len(points)<3:raise ValueError('A plane fit needs at least three cloud points.')
+    center=v.vec3d();normal=v.vec3d();v.FitPlane(v.Vec3dVec(points),center,normal)
+    xyz=lambda p:[p.x(),p.y(),p.z()]
+    if not all(math.isfinite(x) for p in [center,normal] for x in xyz(p)) or normal.mag()==0:raise ValueError('OpenVSP did not return a defined plane.')
+    # Native vector operations identify exact degeneracy without substituting
+    # a fitted plane, sign convention or numerical rank threshold.
+    axis=next((p-points[0] for p in points[1:] if (p-points[0]).mag()>0),None)
+    spread='coincident' if axis is None else 'noncollinear' if any(v.cross(axis,p-points[0]).mag()>0 for p in points[1:]) else 'collinear'
+    offsets=[v.dot(p-center,normal) for p in points]
+    if not all(math.isfinite(x) for x in offsets):raise ValueError('OpenVSP returned an undefined point-to-plane offset.')
+    return dict(nativeOperation='FitPlane',geom=g,name=v.GetGeomName(g),coordinateFrame='Model coordinates',pointCount=len(points),center=xyz(center),normal=xyz(normal),pointSpread=spread,points=[xyz(p) for p in points],signedOffsets=offsets)
