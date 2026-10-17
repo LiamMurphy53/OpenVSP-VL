@@ -10,6 +10,8 @@
 #include "APIDefines.h"
 #include "GeomCapLayout.h"
 #include "WaveDragMgr.h"
+#include "PGMesh.h"
+#include "NGonLayout.h"
 #include <dlfcn.h>
 #include <fstream>
 #include <mach-o/dyld.h>
@@ -42,6 +44,58 @@ template<class T> static T symbol(void* library, const char* name) {
     void* value=dlsym(library,name);
     if (!value) throw std::runtime_error(std::string("Native preview symbol unavailable: ")+name);
     return reinterpret_cast<T>(value);
+}
+
+namespace studio_ngon {
+template<class T> void value(std::ostream& s,const T& x){s<<x;}
+inline void value(std::ostream& s,const std::string& x){s<<quote(x);}
+inline void value(std::ostream& s,const double& x){if(!std::isfinite(x))throw std::runtime_error("Undefined native polygon coordinate.");if(x==0 && std::signbit(x))s<<"-0.0";else s<<x;}
+template<class T> void array(std::ostream& s,const T& xs){s<<'[';bool first=true;for(const auto& x:xs){if(!first)s<<',';first=false;value(s,x);}s<<']';}
+template<class T> void value(std::ostream& s,const std::vector<T>& xs){array(s,xs);}
+template<class T> struct Index {
+    std::map<const T*,int> ids;
+    std::vector<const T*> items;
+    void add(const T* p){if(!p || ids.count(p))throw std::runtime_error("Invalid native polygon ownership.");ids[p]=items.size();items.push_back(p);}
+    int at(const T* p)const{if(!p)return -1;auto it=ids.find(p);if(it==ids.end())throw std::runtime_error("Native polygon reference is outside live graph.");return it->second;}
+    template<class C> void refs(std::ostream& s,const C& xs)const{s<<'[';bool first=true;for(auto x:xs){if(!first)s<<',';first=false;s<<at(x);}s<<']';}
+    template<class C> void loops(std::ostream& s,const C& xs)const{s<<'[';bool first=true;for(const auto& x:xs){if(!first)s<<',';first=false;refs(s,x);}s<<']';}
+};
+template<class T> void stringMap(std::ostream& s,const T& xs){std::map<int,std::string> ordered(xs.begin(),xs.end());s<<'[';bool first=true;for(const auto& x:ordered){if(!first)s<<',';first=false;s<<'['<<x.first<<','<<quote(x.second)<<']';}s<<']';}
+static std::string snapshot(const PGMulti& multi){
+    Index<PGPoint> points;Index<PGNode> nodes;Index<PGEdge> edges;Index<PGFace> faces;
+    for(auto p:multi.m_PointList)points.add(p);
+    for(auto m:multi.m_MeshVec){if(!m)throw std::runtime_error("Missing native polygon mesh level.");for(auto p:m->m_NodeList)nodes.add(p);for(auto p:m->m_EdgeList)edges.add(p);for(auto p:m->m_FaceList)faces.add(p);}
+    std::ostringstream s;s<<std::setprecision(17)<<std::boolalpha<<"{\"format\":1,\"activeMesh\":"<<multi.m_ActiveMesh<<",\"points\":[";bool first=true;
+    for(auto p:points.items){if(!first)s<<',';first=false;s<<"{\"xyz\":";array(s,p->m_Pnt.v);s<<",\"id\":"<<p->m_ID<<",\"deleted\":"<<p->m_DeleteMeFlag<<",\"nodes\":";nodes.refs(s,p->m_NodeVec);s<<'}';}
+    s<<"],\"nodes\":[";first=true;
+    for(auto n:nodes.items){if(!first)s<<',';first=false;s<<"{\"point\":"<<points.at(n->m_Pt)<<",\"deleted\":"<<n->m_DeleteMeFlag<<",\"edges\":";edges.refs(s,n->m_EdgeVec);s<<",\"tagUW\":[";std::map<int,vec2d> ordered(n->m_TagUWMap.begin(),n->m_TagUWMap.end());bool t=true;for(const auto& pair:ordered){if(!t)s<<',';t=false;s<<'['<<pair.first<<',';array(s,pair.second.v);s<<']';}s<<"]}";}
+    s<<"],\"edges\":[";first=true;
+    for(auto e:edges.items){if(!first)s<<',';first=false;s<<"{\"nodes\":["<<nodes.at(e->m_N0)<<','<<nodes.at(e->m_N1)<<"],\"id\":"<<e->m_ID<<",\"deleted\":"<<e->m_DeleteMeFlag<<",\"inLoop\":"<<e->m_InLoopFlag<<",\"inCurrentLoop\":"<<e->m_InCurrentLoopFlag<<",\"faces\":";faces.refs(s,e->m_FaceVec);s<<'}';}
+    s<<"],\"faces\":[";first=true;
+    for(auto f:faces.items){if(!first)s<<',';first=false;s<<"{\"normal\":";array(s,f->m_Nvec.v);s<<",\"id\":"<<f->m_ID<<",\"quad\":"<<f->m_iQuad<<",\"tag\":"<<f->m_Tag<<",\"jref\":"<<f->m_jref<<",\"kref\":"<<f->m_kref<<",\"region\":"<<f->m_Region<<",\"deleted\":"<<f->m_DeleteMeFlag<<",\"parent\":"<<faces.at(f->m_Parent)<<",\"edges\":";edges.refs(s,f->m_EdgeVec);s<<",\"triNodes\":";nodes.refs(s,f->m_TriNodeVec);s<<",\"children\":";faces.refs(s,f->m_ChildVec);s<<'}';}
+    s<<"],\"meshes\":[";first=true;
+    for(auto m:multi.m_MeshVec){if(!first)s<<',';first=false;s<<"{\"deleted\":"<<m->m_DeleteMeFlag<<",\"nodes\":";nodes.refs(s,m->m_NodeList);s<<",\"edges\":";edges.refs(s,m->m_EdgeList);s<<",\"faces\":";faces.refs(s,m->m_FaceList);
+        s<<",\"doubleBackNodes\":";nodes.refs(s,m->m_DoubleBackNode);s<<",\"edgeLoops\":";edges.loops(s,m->m_EdgeLoopVec);s<<",\"wingWakes\":";edges.loops(s,m->m_WingWakeVec);s<<",\"wingWakeParts\":";array(s,m->m_WingWakePartVec);s<<",\"bodyWakes\":";edges.loops(s,m->m_BodyWakeVec);s<<",\"bodyWakeParts\":";array(s,m->m_BodyWakePartVec);s<<",\"bodyWakeNodes\":";nodes.refs(s,m->m_BodyNodeWakeVec);s<<",\"bodyWakeNodeParts\":";array(s,m->m_BodyNodeWakePartVec);s<<",\"regions\":";faces.refs(s,m->m_Regions);s<<'}';}
+    s<<"],\"tagNames\":";stringMap(s,multi.m_TagNames);s<<",\"tagIDs\":";stringMap(s,multi.m_TagIDs);
+    s<<",\"thick\":";array(s,multi.m_ThickVec);s<<",\"type\":";array(s,multi.m_TypeVec);s<<",\"plate\":";array(s,multi.m_PlateVec);s<<",\"copyIndex\":";array(s,multi.m_CopyIndxVec);s<<",\"wmin\":";array(s,multi.m_WminVec);s<<",\"uscale\":";array(s,multi.m_UscaleVec);s<<",\"wscale\":";array(s,multi.m_WscaleVec);
+    s<<",\"tagKeys\": [";first=true;for(const auto& xs:multi.m_TagKeys){if(!first)s<<',';first=false;array(s,xs);}s<<"],\"singleTagMap\":[";first=true;for(const auto& pair:multi.m_SingleTagMap){if(!first)s<<',';first=false;s<<'[';array(s,pair.first);s<<','<<pair.second<<']';}s<<"]}";return s.str();
+}
+}
+
+extern "C" const char* studio_ngon_snapshot(const char* engine,const char* geom,const char* scaleGuard){
+    static thread_local std::string output;void* library=nullptr;
+    try{
+        library=dlopen(engine,RTLD_NOW);if(!library)throw std::runtime_error(dlerror());
+        auto find=symbol<void*(*)(const std::string&,const std::string&)>(library,"_ZN3vsp13FindGeomForOpERKNSt3__112basic_stringIcNS0_11char_traitsIcEENS0_9allocatorIcEEEES8_");
+        const char* component=static_cast<const char*>(find(geom,"Studio polygon snapshot"));if(!component)throw std::runtime_error("Native polygon component unavailable.");
+        void* manager=symbol<void*>(library,"_ZZN16ParmMgrSingleton11getInstanceEvE8instance");
+        auto parm=symbol<Parm*(*)(void*,const std::string&)>(library,"_ZN16ParmMgrSingleton8FindParmERKNSt3__112basic_stringIcNS0_11char_traitsIcEENS0_9allocatorIcEEEE");
+        if(!scaleGuard || !*scaleGuard || reinterpret_cast<const char*>(parm(manager,std::string(scaleGuard)))!=component+studio_ngon_layout::m_ScaleFromOrig)throw std::runtime_error("Native polygon layout does not match the pinned engine.");
+        output=studio_ngon::snapshot(*reinterpret_cast<const PGMulti*>(component+studio_ngon_layout::m_PGMulti));
+        double matrix[16];symbol<void(*)(const void*,double*)>(library,"_ZNK8Matrix4d6getMatEPd")(component+studio_ngon_layout::m_ScaleMatrix,matrix);
+        std::ostringstream extra;extra<<std::setprecision(17)<<",\"scaleMatrix\":";studio_ngon::array(extra,matrix);extra<<'}';output.pop_back();output+=extra.str();
+    }catch(const std::exception& e){output="{\"error\":"+quote(e.what())+"}";}
+    if(library)dlclose(library);return output.c_str();
 }
 
 // Offsets are compiler-generated from the complete pinned Geom declaration.

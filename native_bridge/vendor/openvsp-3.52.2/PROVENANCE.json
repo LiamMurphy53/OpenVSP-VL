@@ -16,7 +16,8 @@
     "GridDensity.h": "ac6c688c76f5b449d1e39d27d0288a84a61816293c2fd09b4d83c580a5e4a3ac",
     "ParmContainer.h": "e84d73819f2fc02e69d8285f09224bd1635e304c117ceb5fa2ad1f95feb50c41",
     "BndBox.h": "0818150c30edcf93feabb479948f4cf907694860e2dc8bcf3d50b49e364fbc11",
-    "Matrix4d.h": "3f6052204b3c19e1411002e9daa1ca7f51b491dab817c7e861be2875687be3c7"
+    "Matrix4d.h": "3f6052204b3c19e1411002e9daa1ca7f51b491dab817c7e861be2875687be3c7",
+    "PGMesh.h": "92674845a0380995226ee01ccf01018310892a63fccc9c766beb7864b223c128"
   },
   "sources": {
     "Parm.h": "src/geom_core/Parm.h",
@@ -31,7 +32,8 @@
     "GridDensity.h": "src/geom_core/GridDensity.h",
     "ParmContainer.h": "src/geom_core/ParmContainer.h",
     "BndBox.h": "src/util/BndBox.h",
-    "Matrix4d.h": "src/util_api/Matrix4d.h"
+    "Matrix4d.h": "src/util_api/Matrix4d.h",
+    "PGMesh.h": "src/geom_core/PGMesh.h"
   },
   "excerpts": {
     "PropDriverGroup.h": {
@@ -119,6 +121,17 @@
         "Tess_W"
       ],
       "engineSHA256": "b18ffe72b538ea33d14f482d19f274800ccff8442ce4270f9e4e6443d9955bd6"
+    },
+    "NGonLayout.h": {
+      "generator": "tools/generate_ngon_layout.py",
+      "sha256": "69761395a298682984f493e842f5776c027be995a7e223f53075eeb275dec80a",
+      "completeHeaderHashes": {
+        "Geom.h": "34c7959d2ceb05a59ccbaf8242022a546ab56b56e995016f88db348b7271b360",
+        "NGonMeshGeom.h": "137a505dc570d0d3183a88691d60ab033f7a1ce0c0192750602129f56607eef6",
+        "PGMesh.h": "92674845a0380995226ee01ccf01018310892a63fccc9c766beb7864b223c128"
+      },
+      "engineSHA256": "b18ffe72b538ea33d14f482d19f274800ccff8442ce4270f9e4e6443d9955bd6",
+      "runtimeGuard": "Scale_From_Original native Parm address"
     }
   }
 }
