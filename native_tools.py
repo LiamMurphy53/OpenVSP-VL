@@ -130,8 +130,8 @@ def mutate(v,r):
         return native_geometry_cases.mutate(v,r)
     if gid is not None: one(gid,v.FindGeoms())
     if op=='duplicate':
-        v.CopyGeomToClipboard(gid)
-        parent=v.GetGeomParent(gid);copies=v.PasteGeomClipboard('' if parent=='NONE' else parent);gid=copies[0]
+        import native_ngon
+        gid=native_ngon.duplicate(v,gid)
         v.SetGeomName(gid,name(r.get('name',v.GetGeomName(gid)+' copy')))
     elif op=='reparent':
         parent=r.get('parent','')

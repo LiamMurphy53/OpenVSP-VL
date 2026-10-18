@@ -36,6 +36,29 @@ def snapshot(v, gid):
     return result
 
 
+def duplicate(v,gid):
+    """Keep native clipboard parameters and the complete Studio mesh payload."""
+    kind=v.GetGeomTypeName(gid).upper()
+    graph=snapshot(v,gid) if kind in ('NGONMESH','NGON_MESH') else None
+    metadata=mesh_project_data(v,gid)['metadata'] if kind=='MESH' and gid in getattr(v,'_studio_mesh_tag_data',{}) else None
+    active=v.FindParm(gid,'ActiveMesh','RefMesh') if graph is not None else None
+    try:
+        # Native clipboard decoding has the same missing-level hazard as file
+        # decoding. Restore the selected level only after the graph exists.
+        if active:v.SetParmVal(active,0)
+        v.CopyGeomToClipboard(gid)
+        parent=v.GetGeomParent(gid)
+        copies=list(v.PasteGeomClipboard('' if parent=='NONE' else parent))
+    finally:
+        if active:v.SetParmVal(active,graph['activeMesh']);v.Update()
+    if len(copies)!=1:raise ValueError('OpenVSP did not duplicate exactly one component.')
+    created=copies[0]
+    if graph is not None:restore(v,created,graph)
+    if metadata is not None:restore_mesh_metadata(v,created,metadata)
+    if graph is not None or metadata is not None:v.Update()
+    return created
+
+
 def convert(v,gid,levels=0,cull=False,fraction=.03,body_wakes=False):
     """Original MeshGeom conversion, including its native coarsening pipeline."""
     if type(levels)!=int or not 0<=levels<=2147483647:raise ValueError('Extra mesh levels must be a nonnegative native integer.')
