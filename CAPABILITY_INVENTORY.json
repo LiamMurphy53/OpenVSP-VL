@@ -104,6 +104,15 @@
             ".workspace/evidence/custom-slider-verification/"
           ],
           "scope": "Twenty selected native tests; browser edit/Undo/Redo/reopen and external lock rejection; exact full native parameter and surface comparisons. W05 closure remains unproven."
+        },
+        {
+          "date": "2026-10-18",
+          "change": "Original transient section-global setter/getter operations verified through embedded custom scripts with two independent surface transforms.",
+          "evidence": [
+            "tests/test_custom_transforms.py",
+            "CUSTOM_CONTROL_AUDIT.md"
+          ],
+          "scope": "Original compiler surface equality at two configurations, native parameter edits, source deletion and independent cold workers; no W05 closure claim."
         }
       ]
     },
@@ -410,8 +419,14 @@
           "SetXSecSurfGlobalXForm",
           "GetXSecSurfGlobalXForm"
         ],
-        "finding": "No direct Studio control found. Original SDK probes on STACK/WING/FUSELAGE/PROP retain a translation live but discard it on native save/reload. Persistence and intended custom-script workflow need investigation before adding an ordinary property control.",
-        "evidence": ".workspace/evidence/release-inventory-20261018/section-global-transform-probe.json"
+        "finding": "Original custom scripts use these transient transforms while constructing surfaces. Studio imports and embeds those scripts and exposes their native design inputs. A new two-surface setter/getter script matches original compiler geometry after input edits, removal of original source and independent cold workers. No direct saved ordinary-component transform property is claimed; the native ordinary save/reload probe discards this matrix.",
+        "evidence": [
+          "tests/test_custom_transforms.py",
+          ".workspace/evidence/release-inventory-20261018/section-global-transform-probe.json",
+          ".runtime/OpenVSP-3.52.2-MacOS/CustomScripts/OnOffExample.vsppart",
+          ".workspace/evidence/XSecSurf-3.52.2.cpp"
+        ],
+        "remaining": "Dedicated browser verification of transformed custom inputs and broader script-generated topology combinations."
       }
     ],
     "nextAudit": "Map installed native actions to current user workflows, distinguishing direct implementations, dynamic calls, equivalent original-engine paths and genuinely missing workflows. Resolve known failures in their existing rows; do not create tasks solely from absent function spellings."
