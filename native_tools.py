@@ -340,6 +340,9 @@ def mutate(v,r):
     elif op=='preset-apply':
         group=one(r['group'],v.GetVarPresetGroups());setting=one(r['setting'],v.GetVarPresetSettings(group));v.ApplyVarPresetSetting(group,setting)
     elif op=='preset-delete': v.DeleteVarPresetGroup(one(r['id'],v.GetVarPresetGroups()))
+    elif op=='polygon-triangulate':
+        import native_ngon
+        native_ngon.triangulate(v,gid)
     elif op=='mesh-to-polygon':
         if gid not in v.FindGeoms() or v.GetGeomTypeName(gid).upper()!='MESH':raise ValueError('Choose a native triangle mesh to create a polygon mesh.')
         from native_references import document

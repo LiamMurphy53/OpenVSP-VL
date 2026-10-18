@@ -36,6 +36,18 @@ def snapshot(v, gid):
     return result
 
 
+def triangulate(v,gid):
+    """Use the same original native action as the polygon geometry screen."""
+    graph=snapshot(v,gid)
+    if not graph['faces']:raise ValueError('Choose a polygon mesh with geometry.')
+    engine,bridge,guard=_target(v,gid);function=bridge.studio_ngon_triangulate
+    function.argtypes=[ctypes.c_char_p]*3;function.restype=ctypes.c_char_p
+    result=json.loads(function(engine,gid.encode(),guard.encode()))
+    if 'error' in result:raise ValueError(result['error'])
+    v.Update();validate(snapshot(v,gid))
+    return result
+
+
 def prepare_mesh(v,gid):
     """Restore original native tag-manager setup omitted by a saved triangle mesh."""
     if gid not in v.FindGeoms() or v.GetGeomTypeName(gid).upper()!='MESH':raise ValueError('Choose a native triangle mesh.')

@@ -351,6 +351,21 @@ extern "C" const char* studio_mesh_project_data(const char* engine,const char* g
     if(buffer && freeBuffer)freeBuffer(buffer);if(root && freeNode)freeNode(root);if(library)dlclose(library);return output.c_str();
 }
 
+extern "C" const char* studio_ngon_triangulate(const char* engine,const char* geom,const char* scaleGuard){
+    static thread_local std::string output;void* library=nullptr;
+    try{
+        library=dlopen(engine,RTLD_NOW);if(!library)throw std::runtime_error(dlerror());
+        auto find=symbol<void*(*)(const std::string&,const std::string&)>(library,"_ZN3vsp13FindGeomForOpERKNSt3__112basic_stringIcNS0_11char_traitsIcEENS0_9allocatorIcEEEES8_");
+        auto component=static_cast<char*>(find(geom,"Studio polygon triangulation"));if(!component)throw std::runtime_error("Native polygon component unavailable.");
+        auto manager=symbol<void*>(library,"_ZZN16ParmMgrSingleton11getInstanceEvE8instance");auto parm=symbol<Parm*(*)(void*,const std::string&)>(library,"_ZN16ParmMgrSingleton8FindParmERKNSt3__112basic_stringIcNS0_11char_traitsIcEENS0_9allocatorIcEEEE");
+        if(!scaleGuard || !*scaleGuard || reinterpret_cast<char*>(parm(manager,std::string(scaleGuard)))!=component+studio_ngon_layout::m_ScaleFromOrig)throw std::runtime_error("Native polygon layout does not match the pinned engine.");
+        auto& multi=*reinterpret_cast<PGMulti*>(component+studio_ngon_layout::m_PGMulti);
+        if(multi.m_ActiveMesh<0 || static_cast<size_t>(multi.m_ActiveMesh)>=multi.m_MeshVec.size() || !multi.m_MeshVec[multi.m_ActiveMesh])throw std::runtime_error("Choose an available polygon mesh level.");
+        symbol<void(*)(void*)>(library,"_ZN12NGonMeshGeom11TriangulateEv")(component);output="{\"triangulated\":true}";
+    }catch(const std::exception& e){output="{\"error\":"+quote(e.what())+"}";}
+    if(library)dlclose(library);return output.c_str();
+}
+
 // Offsets are compiler-generated from the complete pinned Geom declaration.
 // Check native Parm addresses before accessing either private result vector.
 extern "C" const char* studio_cap_results(const char* engine,const char* geom,const char* const* guards,int count) {
