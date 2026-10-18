@@ -241,3 +241,7 @@ The older modeling API search falsely suggested missing aliases, one-sided airfo
 ### 2026-10-18 — transient transform audit resolved for scripted construction
 
 The original example scripts and native serializer clarify the two section-global matrix APIs: custom scripts recreate those transient matrices during surface construction. Studio already embeds and reruns that construction. A new two-surface native regression verifies setter/getter use, independent input changes, exact original compiler geometry and cold recovery after deleting source scripts. This replaces the unresolved script-path hypothesis in the inventory; it does not add a saved ordinary-component matrix control or close W05. Dedicated browser coverage remains pending. See CUSTOM_CONTROL_AUDIT.md.
+
+### 2026-10-18 — history readiness and transformed custom browser checks
+
+Design Undo/Redo previously remained clickable while the native transaction was running; a second click could be silently ignored by the busy guard. Both controls now disable during the transaction and re-enable using the returned model's actual history availability, including after a render. Browser two-edit/two-Undo/two-Redo/reload checks pass with exact original-engine surface equality and unchanged reference geometry. JavaScript syntax and package source hashes are checked. See CUSTOM_CONTROL_AUDIT.md for evidence; overall workflow completion remains unproved.

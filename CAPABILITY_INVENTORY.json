@@ -340,6 +340,15 @@
             ".workspace/evidence/startup-burst/ready.png"
           ],
           "scope": "48 real simultaneous modules:7/48 baseline versus48/48 corrected; source/package checks and3 cold starts plus3 reloads. W25 closure remains unproven."
+        },
+        {
+          "date": "2026-10-18",
+          "change": "Design Undo/Redo now disable throughout native transactions and use the returned model history availability when re-enabled.",
+          "evidence": [
+            "web/app.js",
+            ".workspace/evidence/custom-transform-browser/verification.json"
+          ],
+          "scope": "Real two-edit/two-Undo/two-Redo/reload workflow and complete native surface equality; no W25 closure claim."
         }
       ]
     }
@@ -424,9 +433,10 @@
           "tests/test_custom_transforms.py",
           ".workspace/evidence/release-inventory-20261018/section-global-transform-probe.json",
           ".runtime/OpenVSP-3.52.2-MacOS/CustomScripts/OnOffExample.vsppart",
-          ".workspace/evidence/XSecSurf-3.52.2.cpp"
+          ".workspace/evidence/XSecSurf-3.52.2.cpp",
+          ".workspace/evidence/custom-transform-browser/verification.json"
         ],
-        "remaining": "Dedicated browser verification of transformed custom inputs and broader script-generated topology combinations."
+        "remaining": "Broader script-generated topology combinations; selected browser controls/history/reload now verified."
       }
     ],
     "nextAudit": "Map installed native actions to current user workflows, distinguishing direct implementations, dynamic calls, equivalent original-engine paths and genuinely missing workflows. Resolve known failures in their existing rows; do not create tasks solely from absent function spellings."
