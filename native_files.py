@@ -9,7 +9,7 @@ EXPORTS={
  'CART3D':('EXPORT_CART3D','tri'),'VSPGEOM':('EXPORT_VSPGEOM','vspgeom'),'VORXSEC':('EXPORT_VORXSEC','hrm'),'XSECGEOM':('EXPORT_XSECGEOM','dat'),'X3D':('EXPORT_X3D','x3d'),
  'PLOT3D':('EXPORT_PLOT3D','p3d'),'BEM':('EXPORT_BEM','bem'),'DXF':('EXPORT_DXF','dxf'),'FACET':('EXPORT_FACET','facet'),'PMARC':('EXPORT_PMARC','pma'),
  'SELIG_AIRFOILS':('EXPORT_SELIG_AIRFOIL','csv'),'BEZIER_AIRFOILS':('EXPORT_BEZIER_AIRFOIL','csv'),'IGES_STRUCTURE':('EXPORT_IGES_STRUCTURE','igs'),'STEP_STRUCTURE':('EXPORT_STEP_STRUCTURE','stp')}
-IMPORTS={'CUSTOM_PACKAGE':(None,'zip'),'CUSTOM_SCRIPT':(None,'vsppart'),'STL':('IMPORT_STL','stl'),'NASCART':('IMPORT_NASCART','dat'),'CART3D':('IMPORT_CART3D_TRI','tri'),'XSEC_MESH':('IMPORT_XSEC_MESH','hrm'),'POINTS':('IMPORT_PTS','pts'),'VSP_V2':('IMPORT_V2','vsp'),'BEM':('IMPORT_BEM','bem'),'XSEC_WIRE':('IMPORT_XSEC_WIRE','hrm'),'PLOT3D_WIRE':('IMPORT_P3D_WIRE','p3d')}
+IMPORTS={'VSP3':(None,'vsp3'),'CUSTOM_PACKAGE':(None,'zip'),'CUSTOM_SCRIPT':(None,'vsppart'),'STL':('IMPORT_STL','stl'),'NASCART':('IMPORT_NASCART','dat'),'CART3D':('IMPORT_CART3D_TRI','tri'),'XSEC_MESH':('IMPORT_XSEC_MESH','hrm'),'POINTS':('IMPORT_PTS','pts'),'VSP_V2':('IMPORT_V2','vsp'),'BEM':('IMPORT_BEM','bem'),'XSEC_WIRE':('IMPORT_XSEC_WIRE','hrm'),'PLOT3D_WIRE':('IMPORT_P3D_WIRE','p3d')}
 LEGACY_EXPORTS=['FELISA','AWAVE','VORXSEC','XSECGEOM']
 # These enum constants remain in the API, but Vehicle::ExportFile in 3.52.2
 # has no corresponding exporter. Do not present a no-op as a working format.
@@ -85,6 +85,11 @@ def import_geometry(v,r):
     try:raw=base64.b64decode(content,validate=True)
     except ValueError:raise ValueError('Invalid geometry file data.')
     if not raw or len(raw)>50_000_000:raise ValueError('Choose a nonempty geometry file smaller than 50 MB.')
+    if fmt=='VSP3':
+        from native_project_insert import insert
+        parent=r.get('parent','')
+        if parent:one(parent,v.FindGeoms())
+        return insert(v,raw,parent)
     if fmt in ('CUSTOM_SCRIPT','CUSTOM_PACKAGE'):
         import hashlib
         from native_custom_scripts import import_script,unpack_package
