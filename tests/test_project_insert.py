@@ -1,5 +1,6 @@
 """Geometry-only project insertion retains native identities and Studio meshes."""
 import base64
+import shutil
 import json
 import sys
 import unittest
@@ -7,6 +8,7 @@ import xml.etree.ElementTree as ET
 import native_ngon
 import native_project_insert
 import test_native
+import test_custom_assets
 
 
 @unittest.skipUnless(sys.version_info[:2]==(3,11),'Use the matching native Python runtime.')
@@ -73,3 +75,69 @@ class NativeProjectInsert(unittest.TestCase):
         tree=ET.parse(source);tree.find('./Vehicle/Geom/StudioPolygonSnapshot').set('sha256','0'*64)
         with self.assertRaisesRegex(ValueError,'corrupt'):self.worker(dict(action='mutate',operation='geometry-import',format='VSP3',content=base64.b64encode(ET.tostring(tree.getroot())).decode()))
         self.assertEqual(self.model.read_bytes(),before)
+
+    def test_packaged_custom_profile_insert_is_independently_editable_after_relocation(self):
+        script=test_custom_assets.SCRIPT.replace('void Init(){','void Init(){string p=AddParm(PARM_DOUBLE_TYPE,"Length","Design");SetParmVal(p,8);')
+        script=script.replace('vec3d(8,0,0)','vec3d(GetParmVal(GetParm(GetCurrCustomGeom(),"Length","Design")),0,0)')
+        raw=test_custom_assets.CustomAssets.package(self,script)
+        initial,source=self.worker(dict(action='mutate',operation='geometry-import',format='CUSTOM_PACKAGE',name='Packaged body',content=base64.b64encode(raw).decode()))
+        original=next(c for c in initial['components'] if c['name']=='Packaged body');source_bytes=source.read_bytes();before=set(c['id'] for c in initial['components'])
+        for folder in ['component-package','.studio-custom-assets']:shutil.rmtree(source.parent/folder,ignore_errors=True)
+        state,path=self.worker(dict(action='mutate',operation='geometry-import',format='VSP3',content=base64.b64encode(source_bytes).decode()),source)
+        clone=next(c for c in state['components'] if c['id'] not in before and c['name']=='Packaged body')
+        self.assertEqual(clone['surfaces'],original['surfaces'])
+        pid=next(p['id'] for p in clone['params'] if p['name']=='Length' and p['rawGroup']=='Design')
+        edited,output=self.worker(dict(action='mutate',operation='parameter',id=pid,value=12.),path)
+        expected=next(c for c in edited['components'] if c['id']==clone['id'])['surfaces']
+        self.assertNotEqual(expected,clone['surfaces'])
+        self.assertEqual(next(c for c in edited['components'] if c['id']==original['id'])['surfaces'],original['surfaces'])
+        for folder in [path.parent,output.parent]:shutil.rmtree(folder/'.studio-custom-assets',ignore_errors=True)
+        reopened,_=self.worker(dict(action='state'),output)
+        self.assertEqual(next(c for c in reopened['components'] if c['id']==clone['id'])['surfaces'],expected)
+        # Independent original compiler and literal file reader, without the
+        # Studio insertion or companion-path wrappers, provide the math oracle.
+        from native_custom_scripts import import_script
+        reference=self.path/'reference.vsppart';reference.write_text(script);(self.path/'profile.dat').write_text(test_custom_assets.PROFILE)
+        v=self.v;v.ClearVSPModel();gid=import_script(v,reference,'OriginalInsertProfileReference');v.SetParmValUpdate(gid,'Length','Design',12.);v.Update()
+        actual=[]
+        for i in range(v.GetTotalNumSurfs(gid)):
+            u,w=v.GetUWTess01(gid,i%v.GetNumMainSurfs(gid))
+            points=[[p.x(),p.y(),p.z()] for p in v.CompVecPnt01(gid,i,[a for a in u for _ in w],[b for _ in u for b in w])]
+            actual.append(dict(index=i,rows=len(u),cols=len(w),points=points))
+        self.assertEqual(actual,expected);self.assertEqual(source.read_bytes(),source_bytes)
+        self.assertNotIn(b'Studio.InsertMapping.',output.read_bytes())
+
+    def test_structural_and_link_references_follow_inserted_objects(self):
+        v=self.v
+        state,path=self.worker(dict(action='mutate',operation='structure-add',geom=self.gid,name='Inserted wing structure'))
+        sid=state['tools']['structures'][0]['id'];parts={}
+        for typ,label in [('FEA_RIB','Insert rib'),('FEA_SPAR','Insert spar'),('FEA_TRIM','Insert trim')]:
+            state,path=self.worker(dict(action='mutate',operation='part-add',structure=sid,type=typ,name=label),path)
+            parts[typ]=next(p['id'] for p in state['tools']['structures'][0]['parts'] if p['name']==label)
+        rib,spar,trim=[parts[t] for t in ['FEA_RIB','FEA_SPAR','FEA_TRIM']]
+        state,path=self.worker(dict(action='mutate',operation='part-perpendicular-spar',structure=sid,id=rib,spar=spar),path)
+        state,path=self.worker(dict(action='mutate',operation='part-trim-add',structure=sid,id=trim,target=spar),path)
+        source=v.FindParm(self.gid,'TotalSpan','WingGeom');target=v.FindParm(self.gid,'X_Rel_Location','XForm')
+        state,path=self.worker(dict(action='mutate',operation='link-add',source=source,target=target,scale=.5,offset=0),path)
+        raw=path.read_bytes();before=raw
+        inserted,output=self.worker(dict(action='mutate',operation='geometry-import',format='VSP3',content=base64.b64encode(raw).decode()),path)
+        clone=next(c for c in inserted['components'] if c['id']!=self.gid)
+        structure=next(s for s in inserted['tools']['structures'] if s['geom']==clone['id'])
+        new_parts={p['name']:p for p in structure['parts']}
+        self.assertEqual(new_parts['Insert rib']['perpendicularSpar'],new_parts['Insert spar']['id'])
+        self.assertEqual(new_parts['Insert trim']['trimTargets'],[new_parts['Insert spar']['id']])
+        self.assertNotEqual(structure['id'],sid)
+        props={p['id'] for p in inserted['tools']['properties']}
+        for part in structure['parts']:
+            for prop in part['propertyReferences'].values():
+                if prop:self.assertIn(prop,props)
+        fields={p['name']:p for p in clone['params'] if p['rawGroup'] in ('WingGeom','XForm')}
+        link=next(l for l in inserted['tools']['links'] if l['source']==fields['TotalSpan']['id'])
+        self.assertEqual(link['target'],fields['X_Rel_Location']['id']);self.assertEqual(len(inserted['tools']['links']),2)
+        edited,edited_path=self.worker(dict(action='mutate',operation='parameter',id=fields['TotalSpan']['id'],value=22.),output)
+        changed=next(c for c in edited['components'] if c['id']==clone['id']);original=next(c for c in edited['components'] if c['id']==self.gid)
+        self.assertEqual(next(p['value'] for p in changed['params'] if p['id']==fields['X_Rel_Location']['id']),11.)
+        self.assertEqual(next(p['value'] for p in original['params'] if p['id']==target),9.)
+        reopened,_=self.worker(dict(action='state'),edited_path)
+        self.assertEqual(next(s for s in reopened['tools']['structures'] if s['id']==structure['id']),next(s for s in edited['tools']['structures'] if s['id']==structure['id']))
+        self.assertEqual(path.read_bytes(),before)
