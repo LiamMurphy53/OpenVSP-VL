@@ -352,8 +352,7 @@ def mutate(v,r):
             if not record.findall('MeshGeom/TMesh/Tri_List/Tri'):raise ValueError('Choose a triangle mesh with geometry.')
         finally:path.unlink(missing_ok=True)
         import native_ngon
-        native_ngon.prepare_mesh(v,gid)
-        created=v.CreateNGonMeshGeom(gid)
+        created=native_ngon.convert(v,gid,r.get('levels',0),r.get('cull',False),r.get('fraction',.03),r.get('bodyWakes',False))
         if created not in v.FindGeoms():raise ValueError('OpenVSP did not create a polygon mesh.')
         graph=native_ngon.snapshot(v,created)
         if not graph['points'] or not graph['faces']:raise ValueError('OpenVSP produced an empty polygon mesh for this source.')

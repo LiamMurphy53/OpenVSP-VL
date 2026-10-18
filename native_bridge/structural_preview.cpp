@@ -351,6 +351,19 @@ extern "C" const char* studio_mesh_project_data(const char* engine,const char* g
     if(buffer && freeBuffer)freeBuffer(buffer);if(root && freeNode)freeNode(root);if(library)dlclose(library);return output.c_str();
 }
 
+extern "C" const char* studio_mesh_polygon_options(const char* engine,const char* geom,const char* scaleGuard,int levels,bool cull,double fraction,bool wakes){
+    static thread_local std::string output;void* library=nullptr;
+    try{
+        if(levels<0 || !std::isfinite(fraction) || fraction<0 || fraction>1)throw std::runtime_error("Invalid native polygon conversion options.");
+        library=dlopen(engine,RTLD_NOW);if(!library)throw std::runtime_error(dlerror());
+        auto find=symbol<void*(*)(const std::string&,const std::string&)>(library,"_ZN3vsp13FindGeomForOpERKNSt3__112basic_stringIcNS0_11char_traitsIcEENS0_9allocatorIcEEEES8_");auto component=static_cast<char*>(find(geom,"Studio native polygon conversion"));if(!component)throw std::runtime_error("Native triangle component unavailable.");
+        auto manager=symbol<void*>(library,"_ZZN16ParmMgrSingleton11getInstanceEvE8instance");auto parm=symbol<Parm*(*)(void*,const std::string&)>(library,"_ZN16ParmMgrSingleton8FindParmERKNSt3__112basic_stringIcNS0_11char_traitsIcEENS0_9allocatorIcEEEE");
+        if(!scaleGuard || !*scaleGuard || reinterpret_cast<char*>(parm(manager,std::string(scaleGuard)))!=component+studio_mesh_layout::m_ScaleFromOrig)throw std::runtime_error("Native triangle layout does not match the pinned engine.");
+        auto created=symbol<std::string(*)(void*,bool,double,int,bool)>(library,"_ZN8MeshGeom18CreateNGonMeshGeomEbdib")(component,cull,fraction,levels,wakes);output="{\"created\":"+quote(created)+"}";
+    }catch(const std::exception& e){output="{\"error\":"+quote(e.what())+"}";}
+    if(library)dlclose(library);return output.c_str();
+}
+
 extern "C" const char* studio_ngon_action(const char* engine,const char* geom,const char* scaleGuard,const char* operation){
     static thread_local std::string output;void* library=nullptr;
     try{

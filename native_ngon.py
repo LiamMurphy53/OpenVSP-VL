@@ -36,6 +36,19 @@ def snapshot(v, gid):
     return result
 
 
+def convert(v,gid,levels=0,cull=False,fraction=.03,body_wakes=False):
+    """Original MeshGeom conversion, including its native coarsening pipeline."""
+    if type(levels)!=int or not 0<=levels<=2147483647:raise ValueError('Extra mesh levels must be a nonnegative native integer.')
+    if type(cull)!=bool or type(body_wakes)!=bool:raise ValueError('Polygon conversion flags must be boolean.')
+    if type(fraction) not in (int,float) or not math.isfinite(fraction) or not 0<=fraction<=1:raise ValueError('Orphan-region fraction must be between zero and one.')
+    prepare_mesh(v,gid)
+    _,engine,bridge=adapter(v);function=bridge.studio_mesh_polygon_options
+    function.argtypes=[ctypes.c_char_p]*3+[ctypes.c_int,ctypes.c_bool,ctypes.c_double,ctypes.c_bool];function.restype=ctypes.c_char_p
+    result=json.loads(function(engine,gid.encode(),v.FindParm(gid,'Scale_From_Original','XForm').encode(),levels,cull,fraction,body_wakes))
+    if 'error' in result:raise ValueError(result['error'])
+    return result['created']
+
+
 def triangulate(v,gid):
     """Use the same original native action as the polygon geometry screen."""
     graph=snapshot(v,gid)
@@ -420,6 +433,13 @@ def write(v,path):
             if gid in graphs:
                 if geom.find('NGonMeshGeom') is None:raise ValueError('Native polygon file identity is inconsistent.')
                 data=graphs[gid];tag='StudioPolygonSnapshot';version='1'
+                # The original decoder restores no PGMesh levels. A nonzero
+                # native ActiveMesh therefore crashes during ReadVSPFile,
+                # before Studio can restore the graph. Decode at level zero;
+                # the checked snapshot restores the real level and bounds.
+                active=geom.findall('.//RefMesh/ActiveMesh')
+                if len(active)!=1:raise ValueError('Native polygon active-level parameter is missing or ambiguous.')
+                active[0].set('Value','0')
             else:
                 previous=geom.find('MeshGeom')
                 if previous is None:raise ValueError('Native triangle file identity is inconsistent.')
