@@ -351,6 +351,21 @@ extern "C" const char* studio_mesh_project_data(const char* engine,const char* g
     if(buffer && freeBuffer)freeBuffer(buffer);if(root && freeNode)freeNode(root);if(library)dlclose(library);return output.c_str();
 }
 
+extern "C" const char* studio_user_parm_restore(const char* engine,const char* id,const char* text){
+    static thread_local std::string output;void* library=nullptr;xmlDocPtr doc=nullptr;void(*freeDoc)(xmlDocPtr)=nullptr;
+    try{
+        if(!text)throw std::runtime_error("Missing native user parameter record.");
+        const auto length=std::char_traits<char>::length(text);if(length>128*1024*1024)throw std::runtime_error("Native user parameter record is too large.");
+        library=dlopen(engine,RTLD_NOW);if(!library)throw std::runtime_error(dlerror());
+        auto manager=symbol<void*>(library,"_ZZN16ParmMgrSingleton11getInstanceEvE8instance");auto find=symbol<Parm*(*)(void*,const std::string&)>(library,"_ZN16ParmMgrSingleton8FindParmERKNSt3__112basic_stringIcNS0_11char_traitsIcEENS0_9allocatorIcEEEE");auto p=find(manager,id);if(!p)throw std::runtime_error("Native user parameter unavailable.");
+        freeDoc=symbol<void(*)(xmlDocPtr)>(library,"xmlFreeDoc");doc=symbol<xmlDocPtr(*)(const char*,int,const char*,const char*,int)>(library,"xmlReadMemory")(text,int(length),"studio-user.xml",nullptr,XML_PARSE_NONET);
+        if(!doc || doc->intSubset || doc->extSubset)throw std::runtime_error("Invalid native user parameter XML.");auto node=symbol<xmlNodePtr(*)(const xmlDoc*)>(library,"xmlDocGetRootElement")(doc);
+        if(!node || std::string(reinterpret_cast<const char*>(node->name))!="UserParm")throw std::runtime_error("Invalid native user parameter record.");
+        p->DecodeXml(node,true);output="{\"restored\":true}";
+    }catch(const std::exception& e){output="{\"error\":"+quote(e.what())+"}";}
+    if(doc && freeDoc)freeDoc(doc);if(library)dlclose(library);return output.c_str();
+}
+
 extern "C" const char* studio_mesh_polygon_options(const char* engine,const char* geom,const char* scaleGuard,int levels,bool cull,double fraction,bool wakes){
     static thread_local std::string output;void* library=nullptr;
     try{
