@@ -351,7 +351,7 @@ extern "C" const char* studio_mesh_project_data(const char* engine,const char* g
     if(buffer && freeBuffer)freeBuffer(buffer);if(root && freeNode)freeNode(root);if(library)dlclose(library);return output.c_str();
 }
 
-extern "C" const char* studio_ngon_triangulate(const char* engine,const char* geom,const char* scaleGuard){
+extern "C" const char* studio_ngon_action(const char* engine,const char* geom,const char* scaleGuard,const char* operation){
     static thread_local std::string output;void* library=nullptr;
     try{
         library=dlopen(engine,RTLD_NOW);if(!library)throw std::runtime_error(dlerror());
@@ -361,7 +361,9 @@ extern "C" const char* studio_ngon_triangulate(const char* engine,const char* ge
         if(!scaleGuard || !*scaleGuard || reinterpret_cast<char*>(parm(manager,std::string(scaleGuard)))!=component+studio_ngon_layout::m_ScaleFromOrig)throw std::runtime_error("Native polygon layout does not match the pinned engine.");
         auto& multi=*reinterpret_cast<PGMulti*>(component+studio_ngon_layout::m_PGMulti);
         if(multi.m_ActiveMesh<0 || static_cast<size_t>(multi.m_ActiveMesh)>=multi.m_MeshVec.size() || !multi.m_MeshVec[multi.m_ActiveMesh])throw std::runtime_error("Choose an available polygon mesh level.");
-        symbol<void(*)(void*)>(library,"_ZN12NGonMeshGeom11TriangulateEv")(component);output="{\"triangulated\":true}";
+        if(std::string(operation?operation:"")=="triangulate")symbol<void(*)(void*)>(library,"_ZN12NGonMeshGeom11TriangulateEv")(component);
+        else if(std::string(operation?operation:"")=="report")symbol<void(*)(void*)>(library,"_ZN12NGonMeshGeom6ReportEv")(component);
+        else throw std::runtime_error("Unknown native polygon action.");output="{\"complete\":true}";
     }catch(const std::exception& e){output="{\"error\":"+quote(e.what())+"}";}
     if(library)dlclose(library);return output.c_str();
 }

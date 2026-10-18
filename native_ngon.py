@@ -40,12 +40,33 @@ def triangulate(v,gid):
     """Use the same original native action as the polygon geometry screen."""
     graph=snapshot(v,gid)
     if not graph['faces']:raise ValueError('Choose a polygon mesh with geometry.')
-    engine,bridge,guard=_target(v,gid);function=bridge.studio_ngon_triangulate
-    function.argtypes=[ctypes.c_char_p]*3;function.restype=ctypes.c_char_p
-    result=json.loads(function(engine,gid.encode(),guard.encode()))
+    engine,bridge,guard=_target(v,gid);function=bridge.studio_ngon_action
+    function.argtypes=[ctypes.c_char_p]*4;function.restype=ctypes.c_char_p
+    result=json.loads(function(engine,gid.encode(),guard.encode(),b'triangulate'))
     if 'error' in result:raise ValueError(result['error'])
     v.Update();validate(snapshot(v,gid))
     return result
+
+
+def report(v,gid):
+    """Capture the original native report in this isolated worker process."""
+    graph=snapshot(v,gid)
+    if not graph['meshes']:raise ValueError('Choose a polygon mesh with geometry.')
+    engine,bridge,guard=_target(v,gid);function=bridge.studio_ngon_action
+    function.argtypes=[ctypes.c_char_p]*4;function.restype=ctypes.c_char_p
+    import sys
+    flush=ctypes.CDLL(None).fflush;flush.argtypes=[ctypes.c_void_p];flush.restype=ctypes.c_int
+    sys.stdout.flush();flush(None)
+    with tempfile.TemporaryFile() as captured:
+        original=os.dup(1)
+        try:
+            os.dup2(captured.fileno(),1)
+            result=json.loads(function(engine,gid.encode(),guard.encode(),b'report'))
+        finally:
+            flush(None);os.dup2(original,1);os.close(original)
+        if 'error' in result:raise ValueError(result['error'])
+        captured.seek(0);text=captured.read().decode('utf-8')
+    return dict(text=text,geometry=gid,activeMesh=graph['activeMesh'],engineVersion=v.GetVSPVersion())
 
 
 def prepare_mesh(v,gid):

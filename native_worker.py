@@ -669,7 +669,9 @@ def run(req, model):
         errors(v)
         native_ngon.write(v,model)
     if action=='query':
-        if req['operation']=='flow-plane-preview':
+        if req['operation']=='polygon-report':
+            data=native_ngon.report(v,req['geom'])
+        elif req['operation']=='flow-plane-preview':
             import native_flow_planes
             data=native_flow_planes.preview(v)
         elif req['operation']=='structural-preview':
