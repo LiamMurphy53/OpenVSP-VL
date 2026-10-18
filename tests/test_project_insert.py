@@ -251,3 +251,63 @@ class NativeProjectInsert(unittest.TestCase):
                 self.assertEqual(next(a['values'] for a in rows if a['name']=='Controller span reference'),[expected])
                 self.assertEqual(next(a['values'] for a in rows if a['name']=='Controller text'),['User_0'])
         self.assertEqual(target.read_bytes(),before)
+
+    def test_inserted_assembly_connections_and_native_mesh_use_imported_members(self):
+        v=self.v;v.ClearVSPModel();members=[];points=[];geoms=[]
+        for offset in (0.,3.):
+            gid=v.AddGeom('POD');geoms.append(gid);v.SetParmVal(gid,'X_Rel_Location','XForm',offset)
+            index=v.AddFeaStruct(gid);members.append(v.GetFeaStructID(gid,index));points.append(v.AddFeaPart(gid,index,v.FEA_FIX_POINT))
+        v.Update();v.WriteVSPFile(str(self.model),v.SET_ALL)
+        state,path=self.worker(dict(action='mutate',operation='assembly-add',name='Imported joined pods'))
+        assembly=state['tools']['assemblies'][0]['id']
+        for sid in members:state,path=self.worker(dict(action='mutate',operation='assembly-member',id=assembly,structure=sid,member=True),path)
+        state,path=self.worker(dict(action='mutate',operation='assembly-connection-add',assembly=assembly,startStructure=members[0],startPoint=points[0],endStructure=members[1],endPoint=points[1]),path)
+        original=state['tools']['assemblies'][0];before=path.read_bytes()
+        merged,output=self.worker(dict(action='mutate',operation='geometry-import',format='VSP3',content=base64.b64encode(before).decode()),path)
+        self.assertEqual(len(merged['components']),4)
+        def canonical(value):
+            if isinstance(value,dict):return {k:sorted((canonical(p) for p in x),key=lambda p:p['id']) if k=='params' else canonical(x) for k,x in value.items()}
+            if isinstance(value,list):return [canonical(x) for x in value]
+            return value
+        self.assertEqual(canonical(next(a for a in merged['tools']['assemblies'] if a['id']==assembly)),canonical(original))
+        imported=next(a for a in merged['tools']['assemblies'] if a['id']!=assembly)
+        structures={s['id']:s for s in merged['tools']['structures']}
+        self.assertEqual(len(imported['structures']),2)
+        self.assertTrue(set(imported['structures']).isdisjoint(members))
+        for sid in imported['structures']:self.assertNotIn(structures[sid]['geom'],geoms)
+        self.assertEqual(len(imported['connections']),1)
+        connection=imported['connections'][0]
+        self.assertNotEqual(connection['id'],original['connections'][0]['id'])
+        for side in ('Start','End'):
+            sid=connection['references'][side+'StructID'];pid=connection['references'][side+'FixPtID']
+            self.assertIn(sid,imported['structures']);self.assertIn(pid,[p['id'] for p in structures[sid]['parts']]);self.assertNotIn(pid,points)
+        renamed,output=self.worker(dict(action='mutate',operation='assembly-rename',id=imported['id'],name='Inserted pod assembly'),output)
+        expected=dict(imported,name='Inserted pod assembly')
+        self.assertEqual(canonical(next(a for a in renamed['tools']['assemblies'] if a['id']==imported['id'])),canonical(expected))
+        self.assertEqual(canonical(next(a for a in renamed['tools']['assemblies'] if a['id']==assembly)),canonical(original))
+        reopened,_=self.worker(dict(action='state'),output)
+        self.assertEqual(canonical(next(a for a in reopened['tools']['assemblies'] if a['id']==imported['id'])),canonical(expected))
+        saved=output.read_bytes()
+        result,artifact=self.worker(dict(action='analysis',name='FeaAssemblyMesh',structure=imported['id'],formats=['GMSH','CALCULIX','NASTRAN','MASS'],inputs=[dict(name=n,values=[x]) for n,x in [('BaseLen',1.),('MinLen',.2),('MaxGap',.03)]]),output)
+        self.assertEqual(result['members'],imported['structures']);self.assertGreater(result['meshSummary']['nodes'],100)
+        self.assertIn('*EQUATION',(artifact.parent/'assembly.inp').read_text().upper())
+        self.assertGreater((artifact.parent/'assembly.bdf').stat().st_size,100)
+        # Independent original API export of the cold inserted project. No
+        # Studio analysis helper participates in the reference computation.
+        import native_mesh
+        from mesh_io import read_gmsh
+        v.ClearVSPModel();v.ReadVSPFile(str(output));v.Update()
+        for sid in imported['structures']:
+            gid=v.GetFeaStructParentGeomID(sid);index=v.GetFeaStructIndex(sid)
+            for name,value in [('BaseLen',1.),('MinLen',.2),('MaxGap',.03)]:v.SetFeaMeshVal(gid,index,getattr(v,native_mesh.FEA_INPUTS[name]),value)
+            for pid in v.FindContainerParmIDs(sid):
+                if v.GetParmGroupName(pid)=='ExportFEA' and v.GetParmName(pid).endswith('_Export'):v.SetParmVal(pid,0)
+        for pid in v.FindContainerParmIDs(imported['id']):
+            if v.GetParmGroupName(pid)=='ExportFEA' and v.GetParmName(pid).endswith('_Export'):v.SetParmVal(pid,int(v.GetParmName(pid) in ['GMSH_Export','CALCULIX_Export']))
+        v.SetFeaAssemblyFileName(imported['id'],v.FEA_GMSH_FILE_NAME,str(self.path/'direct.msh'))
+        v.SetFeaAssemblyFileName(imported['id'],v.FEA_CALCULIX_FILE_NAME,str(self.path/'direct.inp'))
+        v.ComputeFeaAssemblyMesh(imported['id'])
+        expected=read_gmsh(self.path/'direct.msh');actual=read_gmsh(artifact.parent/'assembly.msh')
+        for key in ['nodeIDs','nodes','elements','groups']:self.assertEqual(actual[key],expected[key],key)
+        self.assertEqual((artifact.parent/'assembly.inp').read_bytes(),(self.path/'direct.inp').read_bytes())
+        self.assertEqual(output.read_bytes(),saved);self.assertEqual(path.read_bytes(),before)

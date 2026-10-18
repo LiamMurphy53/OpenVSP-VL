@@ -227,3 +227,7 @@ All18 selected insertion/attribute/expression/preset/mode tests also pass throug
 ### 2026-10-18 — imported controller workflow verified in Studio
 
 Browser checks now verify the promoted controller fields, independent geometry edits, Undo/Redo, page reload and applying the imported preset. Existing aircraft controls and geometry remain unchanged throughout. The strengthened native regression also checks exact values and attribute references after preset application and cold reopening; source and packaged worker pass. See MODELING_AUDIT.md and .workspace/evidence/project-insert-controller-browser/. Full engineering parity remains unproved.
+
+### 2026-10-18 — assembly insertion and analysis
+
+Added the missing assembly rename control and verified inserted assembly membership/connections through cold recovery, original-engine mesh generation and solver exports. Browser assembly analysis completes with3316nodes/1104elements and matches an independent original-engine mesh exactly. Source and packaged integration checks pass; see MODELING_AUDIT.md for evidence and scope. This does not establish full workflow parity.
