@@ -236,4 +236,18 @@ class NativeProjectInsert(unittest.TestCase):
         changed,saved=self.worker(dict(action='mutate',operation='parameter',id=imported_controller,value=10.),output)
         self.assertEqual(next(p['value'] for c in changed['components'] if c['id']==clone['id'] for p in c['params'] if p['id']==new_span),21.)
         self.assertEqual(next(p['value'] for c in changed['components'] if c['id']==self.gid for p in c['params'] if p['id']==position),5.)
-        self.worker(dict(action='state'),saved);self.assertEqual(target.read_bytes(),before)
+        preset=next(p for p in changed['tools']['presets'] if p['name']=='Imported controller configuration')
+        applied,saved=self.worker(dict(action='mutate',operation='preset-apply',group=preset['id'],setting=preset['settings'][0]['id']),saved)
+        reopened,_=self.worker(dict(action='state'),saved)
+        for state in (applied,reopened):
+            users={p['id']:p['value'] for p in state['tools']['userParameters']}
+            self.assertEqual((users['User_0'],users['User_1'],users[imported_controller]),(5.,19.,8.))
+            for gid,pid,value in [(self.gid,position,5.),(clone['id'],new_span,17.)]:
+                self.assertEqual(next(p['value'] for c in state['components'] if c['id']==gid for p in c['params'] if p['id']==pid),value)
+            for owner,expected in [('User_0',span),(imported_controller,new_span)]:
+                collection=next(c['id'] for c in state['tools']['attributeCollections'] if c['object']==owner)
+                rows=[a for a in state['tools']['attributes'] if a['collection']==collection]
+                self.assertEqual(len(rows),2)
+                self.assertEqual(next(a['values'] for a in rows if a['name']=='Controller span reference'),[expected])
+                self.assertEqual(next(a['values'] for a in rows if a['name']=='Controller text'),['User_0'])
+        self.assertEqual(target.read_bytes(),before)
