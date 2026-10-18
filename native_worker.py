@@ -200,6 +200,8 @@ def snapshot(v):
         design_assist=native_design_assist.metadata(v,gid)
         from native_preview import blank_drawings
         reference_drawings=blank_drawings(v,gid) if kind.upper()=='BLANK' else []
+        if kind.upper() in ('NGONMESH','NGON_MESH'):
+            reference_drawings=[dict(obj,selectionOnly=False) for obj in native_ngon.drawings(v,gid) if obj['visible']]
         if kind.upper()=='HINGE':
             import native_hinge
             reference_drawings=[obj for part in native_hinge.preview(v,gid)['parts'] for obj in part['objects']]

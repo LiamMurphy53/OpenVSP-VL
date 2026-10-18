@@ -48,6 +48,16 @@ def triangulate(v,gid):
     return result
 
 
+def drawings(v,gid):
+    """Original active-level wake and diagnostic drawings in world XYZ."""
+    engine,bridge,guard=_target(v,gid)
+    if not snapshot(v,gid)['meshes']:return []
+    function=bridge.studio_ngon_action;function.argtypes=[ctypes.c_char_p]*4;function.restype=ctypes.c_char_p
+    result=json.loads(function(engine,gid.encode(),guard.encode(),b'drawings'))
+    if isinstance(result,dict):raise ValueError(result.get('error','Native polygon drawings unavailable.'))
+    return result
+
+
 def report(v,gid):
     """Capture the original native report in this isolated worker process."""
     graph=snapshot(v,gid)

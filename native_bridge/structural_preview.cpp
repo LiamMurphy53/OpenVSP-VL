@@ -363,7 +363,20 @@ extern "C" const char* studio_ngon_action(const char* engine,const char* geom,co
         if(multi.m_ActiveMesh<0 || static_cast<size_t>(multi.m_ActiveMesh)>=multi.m_MeshVec.size() || !multi.m_MeshVec[multi.m_ActiveMesh])throw std::runtime_error("Choose an available polygon mesh level.");
         if(std::string(operation?operation:"")=="triangulate")symbol<void(*)(void*)>(library,"_ZN12NGonMeshGeom11TriangulateEv")(component);
         else if(std::string(operation?operation:"")=="report")symbol<void(*)(void*)>(library,"_ZN12NGonMeshGeom6ReportEv")(component);
-        else throw std::runtime_error("Unknown native polygon action.");output="{\"complete\":true}";
+        else if(std::string(operation?operation:"")=="drawings"){
+            symbol<void(*)(void*)>(library,"_ZN12NGonMeshGeom13UpdateDrawObjEv")(component);
+            std::vector<DrawObj*> objects;symbol<void(*)(void*,std::vector<DrawObj*>&)>(library,"_ZN12NGonMeshGeom12LoadDrawObjsERNSt3__16vectorIP7DrawObjNS0_9allocatorIS3_EEEE")(component,objects);
+            std::ostringstream s;s<<std::setprecision(17)<<'[';bool first=true;
+            for(auto object:objects){
+                bool lines=object->m_Type==DrawObj::VSP_LINES,points=object->m_Type==DrawObj::VSP_POINTS;
+                if((!lines&&!points)||object->m_GeomID.rfind(std::string(geom),0)!=0)continue;
+                if(!first)s<<',';first=false;const auto& color=lines?object->m_LineColor:object->m_PointColor;
+                s<<"{\"nativeID\":"<<quote(object->m_GeomID)<<",\"kind\":"<<quote(lines?"lines":"points")<<",\"visible\":"<<(object->m_Visible?"true":"false")<<",\"lineWidth\":"<<object->m_LineWidth<<",\"pointSize\":"<<object->m_PointSize<<",\"color\":["<<color.x()<<','<<color.y()<<','<<color.z()<<"],\"points\":[";
+                for(size_t i=0;i<object->m_PntVec.size();++i){if(i)s<<',';const auto& p=object->m_PntVec[i];s<<'['<<p.x()<<','<<p.y()<<','<<p.z()<<']';}s<<"]}";
+            }s<<']';output=s.str();
+        }
+        else throw std::runtime_error("Unknown native polygon action.");
+        if(std::string(operation?operation:"")!="drawings")output="{\"complete\":true}";
     }catch(const std::exception& e){output="{\"error\":"+quote(e.what())+"}";}
     if(library)dlclose(library);return output.c_str();
 }
