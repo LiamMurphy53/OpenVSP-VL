@@ -94,7 +94,7 @@ def _verified_private_layout(path, size, modified):
 
 
 def cap_results(v,gid):
-    """Copy actual per-main-surface Geom cap-success flags, without geometry inference."""
+    """Copy original cap-result vectors; split surface counts may differ."""
     if gid not in v.FindGeoms():raise ValueError('Choose an existing component.')
     guards=[v.FindParm(gid,name,group) for name,group in
             [('CapUMinOption','EndCap'),('CapUMaxOption','EndCap'),

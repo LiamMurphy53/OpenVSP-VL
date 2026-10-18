@@ -432,9 +432,8 @@ extern "C" const char* studio_cap_results(const char* engine,const char* geom,co
             if(end)s<<',';
             const auto& flags=*reinterpret_cast<const std::vector<bool>*>(component+(end?m_CapUMaxSuccess:m_CapUMinSuccess));
             if(flags.empty()){s<<"null";continue;}
-            if(flags.size()!=static_cast<std::size_t>(count))throw std::runtime_error("Native end-cap results do not match the surface count.");
             s<<'[';
-            for(int i=0;i<count;++i){if(i)s<<',';s<<(flags[i]?"true":"false");}
+            for(std::size_t i=0;i<flags.size();++i){if(i)s<<',';s<<(flags[i]?"true":"false");}
             s<<']';
         }
         s<<']';output=s.str();

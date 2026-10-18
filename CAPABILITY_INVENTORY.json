@@ -70,6 +70,15 @@
             ".workspace/evidence/wing-taper-verification/"
           ],
           "scope": "Selected multisection, symmetry, Pro-driver, zero/reverse, lock/rejection and browser/SDK cases; W02 closure remains unproven."
+        },
+        {
+          "date": "2026-10-18",
+          "change": "Valid native flow-through stack presets no longer fail because cap-result vector lengths differ from generated main-surface counts.",
+          "evidence": [
+            "tests/test_cap_topology.py",
+            "MODELING_AUDIT.md"
+          ],
+          "scope": "Exact original preset/capped geometry, native source flags, edits, cold reads and browser Undo/reload; W02 closure remains unproven."
         }
       ]
     },
@@ -136,7 +145,19 @@
       "workflow": "Components and sets",
       "category": "Modeling",
       "closure": "Unproven",
-      "originalPlanRow": "| Components and sets | Accessible native hierarchy; sibling ordering; individual/combined native set transforms and engine bounds; named-set creation/copy/count controls; settings/mode/preset reference reassignment; save/reopen and undo/redo verified | Broader geometry/attachment and large-set coverage; native slots keep their indices, with index/name display sorting; arbitrary slot-content reordering remains unimplemented |"
+      "originalPlanRow": "| Components and sets | Accessible native hierarchy; sibling ordering; individual/combined native set transforms and engine bounds; named-set creation/copy/count controls; settings/mode/preset reference reassignment; save/reopen and undo/redo verified | Broader geometry/attachment and large-set coverage; native slots keep their indices, with index/name display sorting; arbitrary slot-content reordering remains unimplemented |",
+      "followups": [
+        {
+          "date": "2026-10-18",
+          "change": "Historical unimplemented set-content ordering note is superseded by native_components.reorder and the existing transactional set-reorder workflow.",
+          "evidence": [
+            "native_components.py",
+            "tests/test_set_reorder.py",
+            "MODELING_AUDIT.md"
+          ],
+          "scope": "Three set-reorder tests pass in source and packaged validation alongside the bulk-link cases; broader W08 closure remains unproven."
+        }
+      ]
     },
     {
       "id": "W09",
@@ -470,6 +491,18 @@
       "Unmodified SDK PROP chevron reference segmentation fault",
       "Studio cap diagnostic count mismatch on flow-through stack preset",
       "Strict original cross-run polygon coarsening equivalence remains unproved"
+    ],
+    "postAuditFixes": [
+      {
+        "issue": "Studio cap diagnostic count mismatch on flow-through stack preset",
+        "status": "Fixed; focused source/browser verification passes. Baseline counts above remain the original immutable-build results.",
+        "evidence": [
+          "tests/test_cap_topology.py",
+          "MODELING_AUDIT.md",
+          ".workspace/evidence/modeling-audit-20261018/cap-fix-main.log",
+          ".workspace/evidence/stack-cap-browser/reopened.png"
+        ]
+      }
     ]
   }
 }
