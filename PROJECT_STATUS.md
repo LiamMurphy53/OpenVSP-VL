@@ -1,8 +1,8 @@
-# Project status — 2026-10-12
+# Project status — reviewed 2026-10-18
 
 The full objective remains: all installed OpenVSP engineering capabilities usable end to end in Studio, with native verification. No completion category is closed. Geometry is the current priority; engineering remains queued. Human/crew workflows are deferred by user request.
 
-This is a status view of the existing capability plan, not a new scope or a replacement for its detailed requirements. The original 25 workflow rows are frozen as W01–W25 in `.workspace/evidence/project-fixed-workflow-inventory.json`. Future findings belong to those rows and the four existing categories.
+This is a status view of the existing capability plan, not a new scope or a replacement for its detailed requirements. The original 25 workflow rows are frozen as W01–W25 in [CAPABILITY_INVENTORY.json](CAPABILITY_INVENTORY.json). Future findings belong to those rows and the four existing categories.
 
 | Existing category | Implementation remaining | Verification remaining |
 | --- | --- | --- |
@@ -231,3 +231,9 @@ Browser checks now verify the promoted controller fields, independent geometry e
 ### 2026-10-18 — assembly insertion and analysis
 
 Added the missing assembly rename control and verified inserted assembly membership/connections through cold recovery, original-engine mesh generation and solver exports. Browser assembly analysis completes with3316nodes/1104elements and matches an independent original-engine mesh exactly. Source and packaged integration checks pass; see MODELING_AUDIT.md for evidence and scope. This does not establish full workflow parity.
+
+### 2026-10-18 — fixed inventory reconciled and versioned
+
+The canonical25-area inventory is now CAPABILITY_INVENTORY.json, preserving every existing W01–W25 identifier and original plan row. The old local evidence copy is historical. Recent insertion/controller/assembly evidence is indexed without declaring broad workflow closure. Historical suite counts are explicitly historical, rather than being presented as current. Zero broad closure claims are proven; this is not zero implementation progress or an implementation percentage.
+
+The older modeling API search falsely suggested missing aliases, one-sided airfoil editing and CST degree operations: current code already implements them, including dynamic API calls. Original native feature drawing and fitting paths also need semantic comparisons rather than counting function spellings. Two section-global-transform API operations lack direct controls, but fresh original SDK probes across four families show their live translation is discarded by native save/reload. Their intended persistence/custom workflow must be established before presenting them as ordinary saved properties. Current audit details and source paths are in the canonical inventory. This removes stale tasks from the planning basis; it does not establish full geometry or engineering parity or support a reliable total-time estimate yet.

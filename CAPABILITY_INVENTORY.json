@@ -1,0 +1,419 @@
+{
+  "date": "2026-10-12",
+  "scope": "Original full installed-engine objective; no old-UI handoff counts",
+  "workflowCount": 25,
+  "workflows": [
+    {
+      "id": "W01",
+      "workflow": "Native geometry and file transactions",
+      "category": "Modeling",
+      "closure": "Unproven",
+      "originalPlanRow": "| Native geometry and file transactions | Native parameters, dependencies, surfaces, hierarchy, undo/redo and stale-edit rejection verified. Guided parent selection, all six separate position/rotation attachment references, normalized/native/distance bases, native activity guards and native attachment frame display/export now verified on wing/fuselage/stack/propeller parents, selected joint/blank cases and a browser mixed-reference sequence (`.workspace/evidence/attachment-verification.md`) | Guided controls and broader attachment coverage for every geometry type, including specialized/auxiliary/multi-surface cases; malformed-file recovery and portable adapter |",
+      "followups": [
+        {
+          "date": "2026-10-15",
+          "change": "Original AcceptGeomScale/ResetGeomScale exposed in both Properties workflows.",
+          "evidence": [
+            "MODELING_AUDIT.md",
+            "tests/test_scale_actions.py",
+            ".workspace/evidence/scale-actions-source-final.log",
+            ".workspace/evidence/scale-actions-browser/scale-actions.png"
+          ],
+          "scope": "Five-family native comparisons, cold parameter/geometry equality, saved lock guards and browser history/reopening. W01 closure remains unproven."
+        },
+        {
+          "date": "2026-10-17",
+          "change": "Self-contained checked polygon snapshots survive ordinary worker edits, saved model reloads, browser Undo/Redo/reload and multiple native polygon identities.",
+          "evidence": [
+            "MODELING_AUDIT.md",
+            "tests/test_ngon_project.py",
+            ".workspace/evidence/ngon-project-browser/verification.json"
+          ],
+          "remaining": "Coarsened levels and specialized native polygon operations remain open; broad closure unproved."
+        },
+        {
+          "date": "2026-10-17",
+          "change": "Modern saved-triangle conversion control invokes original tag setup and SDK conversion; native cold-process crash fixed by native setup.",
+          "evidence": [
+            "tests/test_ngon_conversion.py",
+            "MODELING_AUDIT.md",
+            ".workspace/evidence/ngon-source/conversion-fidelity-gap.json"
+          ],
+          "remaining": "Controlled live-vs-saved source comparison contradicts full conversion parity; richer triangle metadata persistence required. Broad closure unproved."
+        }
+      ]
+    },
+    {
+      "id": "W02",
+      "workflow": "Wings, sections, fuselages, stacks",
+      "category": "Modeling",
+      "closure": "Unproven",
+      "originalPlanRow": "| Wings, sections, fuselages, stacks | All 20 shape choices; section clipboard; skinning/continuity; stack presets; native checks. Guided wing section dimensions now use all 39 native-valid three-driver combinations, actual native parameter IDs, calculated-field protection in Design/studies, and sweep/dihedral/twist reference controls; four driver configurations and browser edits/Undo/Redo/reopen match native parameters and surfaces (`.workspace/evidence/wing-controls-verification.md`). Fuselage/stack sections now have native width/height/area/ratio and circle drivers, protected calculated values, fixed airfoil chord/thickness choices, section position/rotation and dimensional units; all six body combinations and a browser area/position/rotation sequence have exact SDK comparisons and Undo/Redo/reopen evidence (`.workspace/evidence/body-controls-verification.md`) Guided surface-end and profile-edge caps now have geometry-specific native choices, shaping/sweep/sampling controls, unused-value protection in Design/studies, open body-end guidance, complete SDK/browser geometry comparisons and Undo/Redo/reopening evidence (`.workspace/evidence/end-caps-verification.md`). | Body section blending now has shared Properties/Modeling tools guidance for manual/automatic tangents and curvature, continuity, symmetry, before/after equality, native follower/output protection, angle units and section/whole-body reset; full SDK/browser geometry, Undo/Redo/reopening and native study eligibility/preparation checks pass (`.workspace/evidence/skinning-controls-verification.md`). Broader shape/degenerate/mixed cases and saved browser skinning studies; multi-surface clipboard operations; remaining family-specific controls, broader attachment combinations, true narrow checks and portable driver adapter; native Point cap modeling is now verified on both ends across six families and in six exact browser/native transactions, with download/Undo/Redo/cold evidence (`.workspace/evidence/point-caps-verification.md`). Named cap Studies controls now preserve original IDs/native codes, with family-specific options, a three-case browser-created body cap comparison matching complete SDK geometry/results/meshes exactly, CSV/SVG/bundle downloads, numeric legacy rejection/correction and cold recovery (`.workspace/evidence/cap-study-choices-verification.md`). Broader cap browser study families, cap-compatible geometry/legacy cases and actual native cap-success diagnostics remain open.",
+      "followups": [
+        {
+          "date": "2026-10-15",
+          "change": "Actual native per-surface end-cap success diagnostics now appear in Properties.",
+          "evidence": [
+            "MODELING_AUDIT.md",
+            ".workspace/evidence/cap-status-source/native-getter-comparison.json",
+            ".workspace/evidence/cap-status-source/all-default-families.json",
+            ".workspace/evidence/cap-status-source/properties-cap-results.png"
+          ],
+          "scope": "Five reader regressions, six existing cap workflows, 30 direct original-getter comparisons and 25 default component types. W02 closure remains unproven."
+        },
+        {
+          "date": "2026-10-15",
+          "change": "Streamlined overall taper coordinates original native section chords and total-chord scaling while retaining area/spans.",
+          "evidence": [
+            "MODELING_AUDIT.md",
+            "tests/test_wing_taper.py",
+            ".workspace/evidence/wing-taper-verification/"
+          ],
+          "scope": "Selected multisection, symmetry, Pro-driver, zero/reverse, lock/rejection and browser/SDK cases; W02 closure remains unproven."
+        }
+      ]
+    },
+    {
+      "id": "W03",
+      "workflow": "Airfoils and editable curves",
+      "category": "Modeling",
+      "closure": "Unproven",
+      "originalPlanRow": "| Airfoils and editable curves | Native file profiles, CST fits/coefficients, degree changes, curve handles, constraints, native exports | Native editable section activity/locked-coordinate controls and Design inspector locks verified across WING/FUSELAGE/STACK/PROP, with SDK, browser edit/Undo/Redo/reopen and exact sampled-profile comparisons; native guided anchor smoothing and arc-length spacing now match independent SDK operations and browser persistence/Undo/Redo; named incoming/outgoing tangent drivers now use native MoveEditXSecPnt with XYZ coordinates, native activity/limits, smoothing and graphical selection synchronization; four section-owner families, effective open/closed endpoints, seam wrapping, symmetry and independent unsmoothed handles have exact SDK checks, and browser full-geometry/Undo/Redo/reopening/error/lock checks pass (`.workspace/evidence/tangent-controls-verification.md`); finish remaining specialized curve operations and broader family verification |"
+    },
+    {
+      "id": "W04",
+      "workflow": "Propellers and rotors",
+      "category": "Modeling",
+      "closure": "Unproven",
+      "originalPlanRow": "| Propellers and rotors | Nine native radial distributions; station/interpolation editing, thickness reset, approximation; disks/groups/settings; BEM export. Main Design now guides native pitch/feather driver selection, blade arrangement, profile stations and all nine distribution editors, with native evaluated plots/JSON, locked/calculated values and display units; independent BEM samples and complete SDK/browser geometry, Undo/Redo/reopen comparisons pass (`.workspace/evidence/prop-controls-verification.md`) | Native representation choices, rotating-group RPM, generated geometry display and unsteady/pseudo-steady result fidelity verified; all50actuator-disk driver combinations/derived values and automatic/manual hub activity verified with native/browser/Undo/cold evidence (`.workspace/evidence/actuator-disk-verification.md`); saved disk thrust studies now verified with native/browser/cold/legacy recovery evidence (`.workspace/evidence/rotor-study-verification.md`); rotating RPM studies verified with native/browser/CSV/cold evidence (`.workspace/evidence/rotating-rpm-study-verification.md`); linked/independent two-rotor native/browser/Undo/cold workflow verified (`.workspace/evidence/multi-rotor-verification.md`); safe stale-group failure/browser correction verified (`.workspace/evidence/rotor-regeneration-verification.md`); hub extremes/native effective limits and diameter/automatic/Undo/Redo/cold recovery verified (`.workspace/evidence/hub-limit-verification.md`); transferring settings across regenerated groups; guided blade-element setup/results/export and saved diameter studies now verified (`.workspace/evidence/blade-elements-verification.md`); one mixed blade/disk/native-mirrored/mode-preset browser workflow and exact saved native setup are verified (`.workspace/evidence/mixed-rotor-verification.md`); broader imported profiles, convergence and mixed/mode/symmetry coverage remain |"
+    },
+    {
+      "id": "W05",
+      "workflow": "Specialized geometry",
+      "category": "Modeling",
+      "closure": "Unproven",
+      "originalPlanRow": "| Specialized geometry | BOR profile/CST, routing anchors/curves, gear bogies, auxiliary references and Human preview verified. Routing now shows every native physical curve and anchor copy in Design and its inspector, with named symmetry controls, individual visibility and exact-coordinate downloads; transformed ancestor/anchor native checks, six-copy browser/SDK equality, Undo/Redo, invalid recovery and cold persistence pass (`.workspace/evidence/routing-copies-verification.md`) | Guided gear layout, named tire/spacing drivers, calculated-field guards, native wheel preview, compatible auxiliary parents/contacts and referenced-bogie recovery now have native/browser, exact geometry, download/Undo/Redo/cold evidence (`.workspace/evidence/gear-controls-verification.md`). Guided stowed/mechanism retraction, native reference frames/physical surfaces, mechanism guides, saved-joint refresh and missing-reference recovery now have seven focused checks and exact SDK/browser/edit/Undo/Redo/download/cold evidence (`.workspace/evidence/gear-retraction-verification.md`). Finish broader retraction reference/absolute/transformed/mirrored/multiple-bogie combinations, broader tire/suspension combinations; rim and shoulder drivers, ratings/growth dimensions, suspension/steering controls and native nominal/grown/TRA inspection/save are now verified with eight focused checks, 46 related checks, exact SDK/browser geometry, downloads, Undo/Redo and cold persistence (`.workspace/evidence/tire-controls-verification.md`). Finish all-family auxiliary and browser CCE/multi-contact workflows, saved specialist studies/cases; full symmetry display for other specialized geometry, broader routing coordinate-mode/attachment operations, true narrow coverage and portable adapter |",
+      "followups": [
+        {
+          "date": "2026-10-15",
+          "change": "Original custom slider ranges and adjustable presentation are accessible in Properties, including external bindings and owner-correct Lock buttons.",
+          "evidence": [
+            "CUSTOM_CONTROL_AUDIT.md",
+            "tests/test_custom_sliders.py",
+            "tests/test_custom_sliders.mjs",
+            ".workspace/evidence/custom-slider-verification/"
+          ],
+          "scope": "Twenty selected native tests; browser edit/Undo/Redo/reopen and external lock rejection; exact full native parameter and surface comparisons. W05 closure remains unproven."
+        }
+      ]
+    },
+    {
+      "id": "W06",
+      "workflow": "Imported wire geometry",
+      "category": "Modeling",
+      "closure": "Unproven",
+      "originalPlanRow": "| Imported wire geometry | Native surface grids, normals, curves and isolated points in the Design canvas; fifteen grouped native controls for classification/orientation/trimming/strides/all boundary patches; native active flags and scale bookkeeping; independent SDK/vehicle drawing equality, browser import/edit/Undo/Redo/cold reopen/error/empty recovery/canvas curve picking and narrow checks (`.workspace/evidence/wire-geometry-verification.md`) | Broader wire export/analysis/attachment cases, additional native-valid Plot3D edge layouts and large files; portable adapter support |"
+    },
+    {
+      "id": "W07",
+      "workflow": "Surface regions and controls",
+      "category": "Modeling",
+      "closure": "Unproven",
+      "originalPlanRow": "| Surface regions and controls | Control groups/gains; seven geometry region types and structural line arrays exposed; rename/order; native intersection target and computation; surface choice; native polygon boundary overlays, per-region focus and exact-point JSON; all seven families match direct native results, including selected mirrored/capped/transformed/propeller cases; browser edit/undo/reopen/download checks | Native section-curve family/dimension editors now implemented for ordinary and structural regions, with 20-family native tests and browser ellipse checks; native named-source section/region copying and editable-curve conversion implemented, with independent SDK settings/control-point equality and browser Undo/Redo/reopen; native section/airfoil file imports now match independent SDK settings and complete file-coordinate payloads for ordinary/structural regions; browser section-file import/Undo/Redo verified; native region anchor/handle editing and point/interpolation/constraint operations now match independent SDK cases for ordinary/structural regions; browser editing/reopening and exact native drawing downloads verified; native smooth-tangent controls and explicit driver selection now verified for no-symmetry/left-right ordinary/structural curves; native activity/locked-field controls and constrained pointer editing now verified for documented ordinary/structural region cases; finish broader imported-curve/open-endpoint/multi-anchor/drag cases, structural/airfoil browser file-import cases and broader copy/conversion cases; broader intersection/type/attachment coverage and dense curved-edge inspection |",
+      "followups": []
+    },
+    {
+      "id": "W08",
+      "workflow": "Components and sets",
+      "category": "Modeling",
+      "closure": "Unproven",
+      "originalPlanRow": "| Components and sets | Accessible native hierarchy; sibling ordering; individual/combined native set transforms and engine bounds; named-set creation/copy/count controls; settings/mode/preset reference reassignment; save/reopen and undo/redo verified | Broader geometry/attachment and large-set coverage; native slots keep their indices, with index/name display sorting; arbitrary slot-content reordering remains unimplemented |"
+    },
+    {
+      "id": "W09",
+      "workflow": "Links, expressions, presets, modes",
+      "category": "Modeling",
+      "closure": "Unproven",
+      "originalPlanRow": "| Links, expressions, presets, modes | Native expressions/dependencies, limits, multi-setting presets, modes, DES/XDDM and persistence verified | Cross-type dependency coverage and usability |"
+    },
+    {
+      "id": "W10",
+      "workflow": "Global engineering settings",
+      "category": "Engineering",
+      "closure": "Unproven",
+      "originalPlanRow": "| Global engineering settings | Native Vehicle, CFD, intersection, grid density, VSPAERO, wave/parasite settings exposed; guided saved intersection cubic approximation/tolerance, half selection and STEP point merging now have native output parity, persistence/Undo/Redo/cold reopen, invalid browser recovery, analysis summary/editor shortcut and narrow-screen evidence (`.workspace/evidence/intersection-settings-verification.md`) | Human-readable enum choices and workflow-specific guidance throughout |"
+    },
+    {
+      "id": "W11",
+      "workflow": "Native analyses",
+      "category": "Engineering",
+      "closure": "Unproven",
+      "originalPlanRow": "| Native analyses | All 21 registered analyses; guided mass/slice/projection/wave/parasite setups, native choices/limits and selection-dependent controls; mass/inertia and drag tables, CG/centroid/outline previews, native section plots; saved input reuse and JSON/CSV/SVG; six browser-created runs exactly match direct native calls | Broader mode/preset, duct, propulsive-face, atmosphere/friction and geometry combinations; convergence and solver validity review; single-condition Analyze/study shortcuts and explicit deprecated-stage recovery now verified (`.workspace/evidence/single-condition-study-verification.md`); guided Eminton\u2013Lord supplied-area integration now has exact SDK/browser results, saved-input reuse and JSON/CSV/SVG evidence (`.workspace/evidence/eminton-verification.md`); guided component areas/volumes, native trimmed mesh, surface-region/tag tables, raw diagnostics and reference recovery now have exact SDK/browser/report/mesh/Undo/cold evidence (`.workspace/evidence/compgeom-verification.md`); guided degenerate representations and all three native mesh settings now have exact SDK/browser/file/export/reuse/empty-recovery/cold evidence (`.workspace/evidence/degenerate-progress-verification.md`); broader degenerate body/blank/browser/study/true435 checks and guided dependent displays for remaining analyses |",
+      "followups": [
+        {
+          "date": "2026-10-15",
+          "change": "Saved native wave area fits, component/buildup curves and ideal-body references connected to modern result controls and downloads.",
+          "evidence": [
+            "FEATURE_STATUS.md",
+            "tests/test_wave_references.py",
+            "tests/test_wave_area_results.mjs",
+            ".workspace/evidence/wave-reference-verification/"
+          ],
+          "scope": "Exact full captures match separate SDK runs with zero/nonzero inlet; selected browser cone/mode/reference/reopen/download checks. Full W11 closure remains unproven."
+        },
+        {
+          "date": "2026-10-17",
+          "change": "Preserve live native DegenGeomMesh polygon output as official VSPGEOM and all companions; correct false VSP3 polygon persistence claim.",
+          "evidence": [
+            "MODELING_AUDIT.md",
+            "tests/test_degenerate.py",
+            ".workspace/evidence/ngon-gap/polygon-preservation-verified.log",
+            ".workspace/evidence/ngon-gap/packaged-checks.log"
+          ],
+          "remaining": "Editable polygon persistence and browser verification remain open; broad closure unproven."
+        }
+      ]
+    },
+    {
+      "id": "W12",
+      "workflow": "Saved geometry analysis cases",
+      "category": "Engineering",
+      "closure": "Unproven",
+      "originalPlanRow": "| Saved geometry analysis cases | Named case creation/naming/removal; all 20 native type choices; geometry/mode references, native active parameters, visibility directions/cutouts; Analyze selection, shortcuts, native summaries, configuration, reuse and exports. Five calculation types and an actual browser wing projection match native execution; headless case updates call the official manager. See `.workspace/evidence/geometry-cases-verification.md` | Case-specific guidance; native result mesh/line/point drawing inspection is now implemented with basic projection browser evidence (geometry-case-drawing-implementation.md), with all-family native comparison still queued; valid specialist landing-gear/auxiliary/visibility cases for remaining types; broader mode/study/reference coverage, Undo/Redo, cold recovery, responsive and portable support. All 20 types are exposed but full coverage remains unproved. |"
+    },
+    {
+      "id": "W13",
+      "workflow": "VSPAERO pressure, wakes and slices",
+      "category": "Engineering",
+      "closure": "Unproven",
+      "originalPlanRow": "| VSPAERO pressure, wakes and slices | Dated source selection, native previous-result reopening, guided multi-axis slices, per-case plots/tables and source/input reuse now have two native tests and three browser/direct-engine comparisons, including a saved three-case alpha sweep (`.workspace/evidence/saved-solutions-verification.md`). ADB pressure/wake fields, case selection and inspection; native thin/thick slicer comparison; saved-source slicer workflow; all80flight/10preparation inputs grouped with native options/limits/dependencies, active selection alignment and separate saved-study preparation guide; browser saved study604entries/4219samples match independent SDK; short rotor execution matches native outputs but does not prove convergence (`.workspace/evidence/vspaero-guidance-verification.md`) | Unsteady/mixed/thick multi-case coverage; convergence review; full browser coverage |"
+    },
+    {
+      "id": "W14",
+      "workflow": "Native flow planes",
+      "category": "Engineering",
+      "closure": "Unproven",
+      "originalPlanRow": "| Native flow planes | Native file decoding and velocity/pressure display; selected native cases verified | Guided generation and browser verification across field types |"
+    },
+    {
+      "id": "W15",
+      "workflow": "CFD mesh and intersections",
+      "category": "Engineering",
+      "closure": "Unproven",
+      "originalPlanRow": "| CFD mesh and intersections | Native sources/surface choice, settings, run completion, native mesh viewer/exports; all five source families now have native influence drawings, original source IDs and physical symmetry/surface copies, named visibility groups, native coordinate inspection and exact JSON/image exports; complete independent native manager equality on transformed/mirrored wing and nonzero propeller surface, plus browser edit/Undo/Redo/reopen/download verified; guided native sets/modes, relative/absolute and centered/manual domains, component boundaries, positive-Y half mesh, symmetry subdivisions and wakes now have complete native drawings/context, exact SDK/browser comparisons and a saved-mode CFD mesh matching domain bounds (`.workspace/evidence/cfd-domain-verification.md`) | Saved native raw/adapted curve exports, post-mesh problem edges/faces, standalone SurfaceIntersection blank-ID/empty-result handling, and full saved-log message summaries now have independent native/browser evidence (`.workspace/evidence/cfd-results-verification.md`). All 25 native SurfaceIntersection analysis inputs now have grouped setup, native choices/limits, file controls and saved-input reuse. Actual region inclusion, normal/thin sets, mode presets and all native export formats match independent SDK geometry/metadata; six browser runs, cold recovery, failed-filename recovery and responsive setup pass (`.workspace/evidence/intersection-guides-verification.md`). Finish broader source/set/mode and multi-surface browser cases, portable preview adapters, broader global CAD/intersection cases (saved sixteen-field defaults now pass native/browser persistence and two independent CAD-export replays; see `.workspace/evidence/intersection-defaults-verification.md`), independent CAD validity, and native mesh-quality diagnostics |"
+    },
+    {
+      "id": "W16",
+      "workflow": "FEA parts and properties",
+      "category": "Engineering",
+      "closure": "Unproven",
+      "originalPlanRow": "| FEA parts and properties | Native parts, assignments, rib-to-spar references, trim lists/directions, array expansion, polyline spar stations; structural region rename/order and native line-array expansion with constraint-target guards; structural intersection targets/curve choices, native curve/mesh equality, invalid/empty recovery and referenced-component deletion guards; all six fixed-point placement modes, named parent/component references, native offsets and mass units, active-reference deletion guards; independent native mesh comparison, single-structure/assembly point-mass companions, browser persistence/Undo/reopen/download verification | Native part drawing adapter and live viewer implemented on installed macOS arm64 engine; browser point inspection/context/refresh/download/edit/Undo/Redo and six-mode independent fixed-point mesh equality verified; finish independent part surface/CAD verification, assembly displays and portable support; structural region boundaries now use native drawing samples, six families and independent line/rectangle/finite-line corner checks; complete curved/intersection/section-curve boundary verification; structural section-curve anchor/handle editing now matches independent SDK operations, with browser insertion/constraints/reopening and exact native drawings; native smooth-tangent and supported symmetry cases now match independent SDK operations and browser checks; native engine activity flags and locked-field/axis interactions verified; complete broader imported-curve/open-endpoint/multi-anchor/drag cases, structural/airfoil browser file-import cases and broader copy/conversion cases and remaining region references; multi-curve/mirrored intersection coverage; broader structural and mirrored-reference cases |"
+    },
+    {
+      "id": "W17",
+      "workflow": "Structural BCs and laminates",
+      "category": "Engineering",
+      "closure": "Unproven",
+      "originalPlanRow": "| Structural BCs and laminates | Native BC targets and exported constraints; laminate layer references and native material outputs verified | Wider constraint/laminate combinations and browser coverage |"
+    },
+    {
+      "id": "W18",
+      "workflow": "Assemblies",
+      "category": "Engineering",
+      "closure": "Unproven",
+      "originalPlanRow": "| Assemblies | Members, fixed-point connections, native combined mesh and solver decks verified | Broader connection/symmetry cases and guided validation |"
+    },
+    {
+      "id": "W19",
+      "workflow": "File interchange",
+      "category": "Modeling",
+      "closure": "Unproven",
+      "originalPlanRow": "| File interchange | 21 active native exporters and nine import options; companion bundles; multi-structure CAD selection verified | All nine import families now have record preflight and atomic recovery; remaining five families verified against independent native parameters, complete mesh/wire geometry, binary/text variants, selected parents, browser retry/Undo/Redo/cold reopen (`.workspace/evidence/import-records-verification.md`). Broader complex legacy/large-file/edge-layout cases and export-setting guidance remain; portable distribution |"
+    },
+    {
+      "id": "W20",
+      "workflow": "Point clouds",
+      "category": "Modeling",
+      "closure": "Unproven",
+      "originalPlanRow": "| Point clouds | Native creation/import, mesh vertices, hulls, transformed preview and hit/miss-safe native projection verified | Large-cloud performance and additional attachment/projection cases |",
+      "followups": [
+        {
+          "date": "2026-10-15",
+          "change": "Original native cloud transforms and native saved-scale refresh replace temporary geometry probes.",
+          "evidence": [
+            "MODELING_AUDIT.md",
+            "tests/test_cloud_transform.py",
+            "tests/cloud_native_reference.cpp",
+            ".workspace/evidence/cloud-native-transform-delivery-final.log"
+          ],
+          "scope": "Exact original drawing comparisons including10000 points, selected attached transforms and native projection/save equivalence. W20 closure remains unproven."
+        },
+        {
+          "date": "2026-10-15",
+          "change": "All ten original native point selection filters are available in Point clouds, with atomic rollback across decoding failures.",
+          "evidence": [
+            "MODELING_AUDIT.md",
+            "tests/test_cloud_filters.py",
+            ".workspace/evidence/cloud-filters-delivery.log",
+            ".workspace/evidence/cloud-filters-browser/filter-controls.png"
+          ],
+          "scope": "Direct native selection comparisons, transformed/saved/mirrored/empty cases, locked rejection, selected browser filters/history/reopening; broad W20 closure remains unproven."
+        }
+      ]
+    },
+    {
+      "id": "W21",
+      "workflow": "Fitting and measurements",
+      "category": "Engineering",
+      "closure": "Unproven",
+      "originalPlanRow": "| Fitting and measurements | Native U/W/RST evaluation/projection/curvature, clearance/snap, ruler/probes, target/variable fitting, native .fit files and stopping reports verified | Broader free-coordinate optimization, fitting-guidance and browser cases |",
+      "followups": [
+        {
+          "date": "2026-10-17",
+          "change": "Original FitPlane and native point offsets are available for selected clouds.",
+          "evidence": [
+            "MODELING_AUDIT.md",
+            "tests/test_cloud_plane.py",
+            "tests/test_cloud_plane_exports.mjs",
+            ".workspace/evidence/cloud-plane-browser/plane-result.png"
+          ],
+          "scope": "Native planar/noisy/transformed/collinear references, unchanged files, browser result/staleness/short-cloud handling and CSV serialization. Browser download-file capture remains unverified; W21 closure remains unproven."
+        },
+        {
+          "date": "2026-10-17",
+          "change": "Saved plane JSON/CSV HTTP attachments replace temporary blob downloads; actual rendered-link CSV delivery verified.",
+          "evidence": [
+            "MODELING_AUDIT.md",
+            "tests/test_plane_downloads.py",
+            ".workspace/evidence/plane-downloads-browser/delivered.csv",
+            ".workspace/evidence/plane-downloads-browser/delivered.json"
+          ],
+          "scope": "305-point native HTTP equality, immutable original results, invalid-path rejection, extreme-double serialization and actual saved CSV contents. W21 closure remains unproven."
+        }
+      ]
+    },
+    {
+      "id": "W22",
+      "workflow": "Attributes and notes",
+      "category": "Modeling",
+      "closure": "Unproven",
+      "originalPlanRow": "| Attributes and notes | Nine native types; guided vector lists/matrices, empty values, recursive native group copying, searchable paged collections, parent navigation, expanded native owner/parameter discovery, notes and transactional undo/redo verified | Very large metadata sets, broader owner/copy combinations and protected native metadata coverage |"
+    },
+    {
+      "id": "W23",
+      "workflow": "Analytical utility functions",
+      "category": "Engineering",
+      "closure": "Unproven",
+      "originalPlanRow": "| Analytical utility functions | Saved native rectangular-wing lift/drag, VKT profile/Cp, ellipsoid Cp/integrals; input reuse, exact sample plots/CSV and pressure point previews; native equality and sphere reference checked | Audit additional standalone engineering API functions; wider parameter and large-sample coverage |"
+    },
+    {
+      "id": "W24",
+      "workflow": "Studies",
+      "category": "Engineering",
+      "closure": "Unproven",
+      "originalPlanRow": "| Studies | Named frozen-aircraft studies; parameter, numeric/text/native-option, full-vector/coordinate and whole-array/element Cartesian sweeps; ordered native batches; saved result/CSV/SVG comparisons and bundles; per-case native defaults, explicit frozen inputs, replaced-parameter provenance and overlap rejection; failure, cancellation, resume and real server-exit recovery verified | Independent guided stage dependencies for documented intersection/slice/projection cases now pass browser save/reorder/cold/error/layout and native execution replay (`.workspace/evidence/study-dependent-controls-verification.md`); finish broader geometry/FEA/rotor/unsteady study configurations and remaining dependent native options, large-study performance, full browser coverage and portable process recovery |"
+    },
+    {
+      "id": "W25",
+      "workflow": "Verification and delivery",
+      "category": "Reliability/delivery",
+      "closure": "Unproven",
+      "originalPlanRow": "| Verification and delivery | Native integration suite plus targeted browser checks; see FEATURE_STATUS.md | Requirement-by-requirement audit, desktop/narrow checks for all new editors, portable startup and documentation |",
+      "followups": [
+        {
+          "date": "2026-10-17",
+          "change": "Production server handles concurrent editor-module imports without the reproduced connection resets.",
+          "evidence": [
+            "MODELING_AUDIT.md",
+            "tests/test_static_delivery.py",
+            ".workspace/evidence/startup-burst/before.json",
+            ".workspace/evidence/startup-burst/after.json",
+            ".workspace/evidence/startup-burst/ready.png"
+          ],
+          "scope": "48 real simultaneous modules:7/48 baseline versus48/48 corrected; source/package checks and3 cold starts plus3 reloads. W25 closure remains unproven."
+        }
+      ]
+    }
+  ],
+  "completionAudit": "Not achieved; narrow tests cannot close broad workflow rows",
+  "historicalFullSuiteCounts": {
+    "pass": 325,
+    "fail": 1,
+    "crash": 1,
+    "timeout": 0
+  },
+  "historicalSuiteNote": "Copied from the original frozen inventory; not a current full-suite result.",
+  "review": {
+    "date": "2026-10-18",
+    "sourceCommit": "ef5abb301a3da9de9c2e464826d203ae6b599b9c",
+    "workflowCount": 25,
+    "closedWorkflows": 0,
+    "status": "All existing broad workflow closure claims remain unproven. This count is not an implementation percentage.",
+    "scopePolicy": "Keep W01\u2013W25 and originalPlanRow intact. Record findings within these existing rows. Human/crew remains deferred by user instruction.",
+    "recentEvidence": [
+      "c713ba3: imported predefined controls and references preserved",
+      "1dba046: browser controller edit/history/preset recovery",
+      "ef5abb3: assembly rename and inserted assembly native analysis"
+    ],
+    "reconciledStaticClaims": [
+      {
+        "operations": [
+          "SetXSecAlias",
+          "GetXSecAlias",
+          "SetXSecCurveAlias",
+          "GetXSecCurveAlias"
+        ],
+        "finding": "Already implemented in native_worker.py and Design section names in web/app.js; historical empty reference lists are stale."
+      },
+      {
+        "operations": [
+          "SetXSecWidthHeight"
+        ],
+        "finding": "Used by native_design_assist.py."
+      },
+      {
+        "operations": [
+          "SetAirfoilUpperPnts",
+          "SetAirfoilLowerPnts"
+        ],
+        "finding": "Dynamically dispatched by native_file_profiles.py; literal source search misses the calls."
+      },
+      {
+        "operations": [
+          "PromoteCSTUpper",
+          "PromoteCSTLower",
+          "DemoteCSTUpper",
+          "DemoteCSTLower"
+        ],
+        "finding": "Dynamically dispatched by native_tools.py; literal source search misses the calls."
+      },
+      {
+        "operations": [
+          "GetFeatureLinePnts"
+        ],
+        "finding": "Studio has an original native drawing path in native_preview.geometry_features; absence of this SDK spelling does not prove a missing feature. Full feature equivalence still requires verification."
+      },
+      {
+        "operations": [
+          "FitAfCST"
+        ],
+        "finding": "Current workflow uses FitCSTAirfoil. Both native implementations were inspected; absence of the older SDK spelling alone does not establish a missing fitting workflow."
+      },
+      {
+        "operations": [
+          "SetXSecHeight"
+        ],
+        "finding": "Height is exposed through original parameter editing. An absent convenience API call does not establish missing dimension control."
+      },
+      {
+        "operations": [
+          "SetXSecSurfGlobalXForm",
+          "GetXSecSurfGlobalXForm"
+        ],
+        "finding": "No direct Studio control found. Original SDK probes on STACK/WING/FUSELAGE/PROP retain a translation live but discard it on native save/reload. Persistence and intended custom-script workflow need investigation before adding an ordinary property control.",
+        "evidence": ".workspace/evidence/release-inventory-20261018/section-global-transform-probe.json"
+      }
+    ],
+    "nextAudit": "Map installed native actions to current user workflows, distinguishing direct implementations, dynamic calls, equivalent original-engine paths and genuinely missing workflows. Resolve known failures in their existing rows; do not create tasks solely from absent function spellings."
+  }
+}
