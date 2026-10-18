@@ -63,6 +63,38 @@ native_ngon.prepare_mesh(v,gid);created=v.CreateNGonMeshGeom(gid)
         with self.assertRaisesRegex(ValueError,'corrupt'):self.worker(dict(action='state'))
         self.assertEqual(self.model.read_bytes(),before)
 
+    def test_independent_mesh_sources_keep_their_own_native_tag_context(self):
+        v=self.v;meshes=[];expected={}
+        for kind in ('WING','POD'):
+            source=self.gid if kind=='WING' else v.AddGeom(kind)
+            v.Update()
+            for g in v.FindGeoms():v.SetSetFlag(g,3,g==source)
+            gid=v.ComputeCompGeom(3,False,0);self.assertTrue(native_ngon.capture_mesh(v,gid))
+            meshes.append(gid)
+            # Capture each original live conversion before the next analysis
+            # replaces the engine's process-global scratch tag tables.
+            native_ngon.prepare_mesh(v,gid);polygon=v.CreateNGonMeshGeom(gid)
+            expected[gid]=native_ngon.snapshot(v,polygon);v.DeleteGeom(polygon)
+        native_ngon.write(v,self.model)
+        self.assertEqual(len(ET.parse(self.model).findall('./Vehicle/Geom/StudioTriangleMetadata')),2)
+        script='''import json,sys
+from pathlib import Path
+from vsp_runtime import load
+import native_ngon
+p=Path(sys.argv[1]);ids=sys.argv[2:];v=load();v.ReadVSPFile(str(p));v.Update()
+assert set(native_ngon.restore_file(v,p))==set(ids)
+result={}
+for gid in reversed(ids):
+ native_ngon.prepare_mesh(v,gid);polygon=v.CreateNGonMeshGeom(gid)
+ result[gid]=native_ngon.snapshot(v,polygon)
+(p.parent/'multiple.json').write_text(json.dumps(result))
+'''
+        env=dict(os.environ,PYTHONPATH=str(Path(native_ngon.__file__).parent))
+        result=subprocess.run([sys.executable,'-c',script,str(self.model),*meshes],cwd=self.path,env=env,capture_output=True,text=True,timeout=30)
+        self.assertEqual(result.returncode,0,result.stdout+result.stderr)
+        actual=json.loads((self.path/'multiple.json').read_text())
+        for gid in meshes:self.assertEqual(self.canonical(actual[gid]),self.canonical(expected[gid]))
+
     def test_analysis_artifact_survives_property_edit_reopen_and_conversion(self):
         v=self.v;before=self.model.read_bytes()
         result,path=self.worker(dict(action='analysis',name='CompGeom',inputs=[]))
