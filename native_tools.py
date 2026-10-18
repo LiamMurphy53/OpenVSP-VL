@@ -301,6 +301,9 @@ def mutate(v,r):
             if names[member-1]!=r['expectedName']:raise ValueError('Surface membership changed. Reload before editing.')
             (v.AddSelectedToCSGroup if add else v.RemoveSelectedFromCSGroup)([member],index)
     elif op=='control-groups-auto': v.AutoGroupVSPAEROControlSurfaces()
+    elif op=='link-bulk':
+        import native_bulk_links
+        native_bulk_links.apply(v,r)
     elif op=='link-add':
         ids={p for g in v.FindGeoms() for p in v.GetGeomParmIDs(g)}|parameter_ids(v)
         a=one(r['source'],ids);b=one(r['target'],ids)

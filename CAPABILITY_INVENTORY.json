@@ -143,7 +143,20 @@
       "workflow": "Links, expressions, presets, modes",
       "category": "Modeling",
       "closure": "Unproven",
-      "originalPlanRow": "| Links, expressions, presets, modes | Native expressions/dependencies, limits, multi-setting presets, modes, DES/XDDM and persistence verified | Cross-type dependency coverage and usability |"
+      "originalPlanRow": "| Links, expressions, presets, modes | Native expressions/dependencies, limits, multi-setting presets, modes, DES/XDDM and persistence verified | Cross-type dependency coverage and usability |",
+      "followups": [
+        {
+          "date": "2026-10-18",
+          "change": "Original matching-group/component bulk links exposed, preserving native offsets and checking saved dependencies and value locks.",
+          "evidence": [
+            "native_bulk_links.py",
+            "tests/test_bulk_links.py",
+            "MODELING_AUDIT.md",
+            ".workspace/evidence/bulk-link-browser/verification.json"
+          ],
+          "scope": "Four group/component POD/WING native-reference configurations and browser group/component/history/propagation/filter checks; W09 closure remains unproven."
+        }
+      ]
     },
     {
       "id": "W10",
@@ -440,5 +453,23 @@
       }
     ],
     "nextAudit": "Map installed native actions to current user workflows, distinguishing direct implementations, dynamic calls, equivalent original-engine paths and genuinely missing workflows. Resolve known failures in their existing rows; do not create tasks solely from absent function spellings."
+  },
+  "currentModelingAudit": {
+    "date": "2026-10-18",
+    "sourceCommit": "4407e4e39e8134f1e6ec1f3ed7a71b62f1473151",
+    "scope": "53 selected modeling/native modules; not the complete application suite.",
+    "reported": 306,
+    "passed": 303,
+    "failures": 1,
+    "errors": 1,
+    "expectedFailures": 1,
+    "skipped": 0,
+    "javascriptTestFilesPassed": 6,
+    "evidence": ".workspace/evidence/modeling-audit-20261018/final.json",
+    "issues": [
+      "Unmodified SDK PROP chevron reference segmentation fault",
+      "Studio cap diagnostic count mismatch on flow-through stack preset",
+      "Strict original cross-run polygon coarsening equivalence remains unproved"
+    ]
   }
 }

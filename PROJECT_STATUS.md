@@ -245,3 +245,9 @@ The original example scripts and native serializer clarify the two section-globa
 ### 2026-10-18 — history readiness and transformed custom browser checks
 
 Design Undo/Redo previously remained clickable while the native transaction was running; a second click could be silently ignored by the busy guard. Both controls now disable during the transaction and re-enable using the returned model's actual history availability, including after a render. Browser two-edit/two-Undo/two-Redo/reload checks pass with exact original-engine surface equality and unchanged reference geometry. JavaScript syntax and package source hashes are checked. See CUSTOM_CONTROL_AUDIT.md for evidence; overall workflow completion remains unproved.
+
+### 2026-10-18 — current baseline and bulk native linking
+
+The unchanged4407e4e build audit completed53selected modules:303passed checks,1failed chevron SDK reference,1stack cap-diagnostic error and1expected coarsening failure (306reported; no skips). Six JavaScript test files pass. See MODELING_AUDIT.md and .workspace/evidence/modeling-audit-20261018/final.json. These measured results replace relying on the historical inventory counts for current modeling status; they do not cover every application test or close broad workflows.
+
+Original matching-group/component link actions are now exposed in Links & presets with native offset behavior, retained source/target choices, searchable saved links and a collapsed large-result list. Native and browser evidence covers creation, propagation, history, reopening and relationship/lock constraints. The reproducible stack-preset diagnostic error is being fixed separately. The native SDK chevron crash and cross-run coarsening discrepancy remain unresolved.
