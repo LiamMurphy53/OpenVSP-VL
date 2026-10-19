@@ -302,6 +302,9 @@ def mutate(v,r):
             if names[member-1]!=r['expectedName']:raise ValueError('Surface membership changed. Reload before editing.')
             (v.AddSelectedToCSGroup if add else v.RemoveSelectedFromCSGroup)([member],index)
     elif op=='control-groups-auto': v.AutoGroupVSPAEROControlSurfaces()
+    elif op=='link-endpoints':
+        import native_link_options
+        native_link_options.rewire(v,r)
     elif op=='link-options':
         import native_link_options
         native_link_options.apply(v,r)

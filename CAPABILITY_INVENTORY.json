@@ -250,6 +250,17 @@
             ".workspace/evidence/link-options-browser/verification.json"
           ],
           "scope": "Seven native configurations, exact target geometry, cold flags, value locks and browser source/edit/history/reload; W09 closure remains unproved."
+        },
+        {
+          "date": "2026-10-19",
+          "change": "Saved native link source and target editing preserves identity and settings, with original-manager reevaluation and dependency guards.",
+          "evidence": [
+            "native_link_options.py",
+            "tests/test_link_endpoints.py",
+            "MODELING_AUDIT.md",
+            ".workspace/evidence/link-endpoints-browser/editor.png"
+          ],
+          "scope": "Four endpoint configurations, exact native target geometry/settings, cold geometry, future propagation, rejection guards and browser Undo/Redo/reload. W09 remains unproven."
         }
       ]
     },
