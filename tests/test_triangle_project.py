@@ -114,3 +114,35 @@ for gid in reversed(ids):
         actual=json.loads(node.findtext('StudioPolygonSnapshot'))
         self.assertEqual(self.canonical(actual),self.canonical(expected))
         self.assertEqual(self.model.read_bytes(),before)
+
+    def test_two_analysis_sources_convert_after_interleaved_saved_edits(self):
+        """Each saved source must restore its own process-global native tags."""
+        v=self.v;meshes=[];expected={}
+        for kind in ('WING','POD'):
+            source=self.gid if kind=='WING' else v.AddGeom(kind)
+            v.Update()
+            for g in v.FindGeoms():v.SetSetFlag(g,3,g==source)
+            gid=v.ComputeCompGeom(3,False,0)
+            self.assertTrue(native_ngon.capture_mesh(v,gid));meshes.append(gid)
+            # Independent original live conversion before another analysis
+            # replaces the native singleton's tag tables.
+            polygon=v.CreateNGonMeshGeom(gid)
+            expected[gid]=self.canonical(native_ngon.snapshot(v,polygon))
+            v.DeleteGeom(polygon)
+        native_ngon.write(v,self.model);before=self.model.read_bytes()
+        path=self.model;created=[]
+        for i,gid in enumerate(reversed(meshes)):
+            # Unrelated edits and fresh jobs must preserve both source archives.
+            pid=v.FindParm(self.gid,'X_Rel_Location','XForm')
+            _,path=self.worker(dict(action='mutate',operation='parameter',id=pid,value=7.25+i),path)
+            result,path=self.worker(dict(action='mutate',operation='mesh-to-polygon',geom=gid),path)
+            created.append((gid,result['changed']))
+            reopened,_=self.worker(dict(action='state'),path)
+            self.assertIn(result['changed'],[c['id'] for c in reopened['components']])
+            tree=ET.parse(path)
+            for source,polygon in created:
+                node=next(g for g in tree.findall('./Vehicle/Geom') if g.findtext('ParmContainer/ID')==polygon)
+                actual=json.loads(node.findtext('StudioPolygonSnapshot'))
+                self.assertEqual(self.canonical(actual),expected[source])
+            self.assertEqual(len(tree.findall('./Vehicle/Geom/StudioTriangleMetadata')),2)
+        self.assertEqual(self.model.read_bytes(),before)

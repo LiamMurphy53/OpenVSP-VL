@@ -40,6 +40,15 @@
             ".workspace/evidence/ngon-source/conversion-fidelity-gap.json"
           ],
           "remaining": "Controlled live-vs-saved source comparison contradicts full conversion parity; richer triangle metadata persistence required. Broad closure unproved."
+        },
+        {
+          "date": "2026-10-19",
+          "change": "Fresh end-to-end verification of two independently generated triangle sources after interleaved saved edits and reverse-order conversions. Original live native complete graphs match each converted and reopened archive.",
+          "evidence": [
+            "tests/test_triangle_project.py",
+            "MODELING_AUDIT.md"
+          ],
+          "remaining": "Earlier raw saved-conversion discrepancy is historical for covered canonical metadata fixtures. Legacy unarchived meshes, other generators and broader closure remain unproved."
         }
       ]
     },
