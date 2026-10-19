@@ -178,8 +178,10 @@ def read_flow_plane(path):
             if len(row)!=8:
                 raise ValueError('Invalid native flow plane node.')
             nid = int(row[0]); values = list(map(float,row[1:]))
-            if nid in lookup or not all(math.isfinite(x) for x in values):
-                raise ValueError('Invalid native flow plane node.')
+            if nid in lookup or not all(math.isfinite(x) for x in values[:3]):
+                raise ValueError('Invalid native flow plane node coordinates or duplicate identifier.')
+            if not all(math.isfinite(x) for x in values[3:]):
+                raise ValueError(f'The native solver wrote nonfinite velocity or pressure at node {nid} in {path.name}. This flow plane has no usable result at that node; inspect the saved solver log and flight setup.')
             lookup[nid]=len(nodes);ids.append(nid);nodes.append(values[:3]);velocities.append(values[3:6]);pressure.append(values[6])
         elements=[]
         for _ in range(cells):
