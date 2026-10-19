@@ -177,6 +177,16 @@
             "MODELING_AUDIT.md"
           ],
           "scope": "Three set-reorder tests pass in source and packaged validation alongside the bulk-link cases; broader W08 closure remains unproven."
+        },
+        {
+          "date": "2026-10-19",
+          "change": "Selected polygon VSPGEOM action in Components & sets, with complete native companion ZIP download.",
+          "evidence": [
+            "tests/test_polygon_export.py",
+            "MODELING_AUDIT.md",
+            ".workspace/evidence/polygon-export-browser/export.png"
+          ],
+          "scope": "Exact original component-writer file bytes for transformed three-level source at active levels0and2, source preservation, rejected identities, service packaging and successful browser invocation. Broad closure remains unproved."
         }
       ]
     },

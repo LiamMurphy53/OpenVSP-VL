@@ -135,7 +135,15 @@ def import_geometry(v,r):
 def export(v,r):
     kind=r.get('kind')
     folder=Path.cwd()/'output';folder.mkdir(exist_ok=True)
-    if kind=='advanced-link-code':
+    if kind=='polygon-mesh':
+        g=one(r.get('geom'),v.FindGeoms())
+        if v.GetGeomTypeName(g).upper() not in ('NGONMESH','NGON_MESH'):raise ValueError('Choose a polygon mesh for native VSPGEOM export.')
+        import native_ngon
+        if not native_ngon.snapshot(v,g)['faces']:raise ValueError('Choose a polygon mesh with geometry.')
+        from native_degenerate import export_polygon
+        path=folder/'polygon.vspgeom'
+        export_polygon(v,[g],str(path.relative_to(Path.cwd())))
+    elif kind=='advanced-link-code':
         names=list(v.GetAdvLinkNames());index=r.get('index')
         if type(index)!=int or not 0<=index<len(names):raise ValueError('Choose an existing expression.')
         one(r.get('expectedName'),[names[index]],'This expression changed. Reload before exporting it.')

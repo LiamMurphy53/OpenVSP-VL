@@ -431,7 +431,8 @@ def export_geometry(req):
                 result=folder/file
                 if result.is_symlink() or not result.resolve().is_relative_to(folder.resolve()):raise ValueError('Invalid native export path.')
                 bundle.write(result,result.name)
-        return 'openvsp-'+req['format'].lower()+'.zip',archive.getvalue()
+        label='polygon-vspgeom' if req.get('kind')=='polygon-mesh' else req['format'].lower()
+        return 'openvsp-'+label+'.zip',archive.getvalue()
 
 
 def query(req):
