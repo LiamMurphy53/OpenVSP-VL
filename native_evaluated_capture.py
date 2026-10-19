@@ -1,4 +1,4 @@
-"""Select the original-source recorder only for single-thread roll and pitch solves."""
+"""Select the original-source recorder only for single-thread roll, pitch and yaw solves."""
 from contextlib import contextmanager
 from pathlib import Path
 import os,tempfile
@@ -6,7 +6,7 @@ import os,tempfile
 
 def eligible(v,name,inputs):
     values={e['name']:e['values'][0] for e in inputs if len(e.get('values',[]))==1}
-    return name in ('VSPAEROSweep','VSPAEROSinglePoint') and values.get('NCPU')==1 and values.get('UnsteadyType') in (v.STABILITY_P_ANALYSIS,v.STABILITY_Q_ANALYSIS) and not values.get('StopBeforeRun',0)
+    return name in ('VSPAEROSweep','VSPAEROSinglePoint') and values.get('NCPU')==1 and values.get('UnsteadyType') in (v.STABILITY_P_ANALYSIS,v.STABILITY_Q_ANALYSIS,v.STABILITY_R_ANALYSIS) and not values.get('StopBeforeRun',0)
 
 
 @contextmanager

@@ -782,6 +782,14 @@
             ".workspace/evidence/roll-elevated-packaged-test.log"
           ],
           "unresolved": "Original on-axis roll remains failed: nonfinite native circulation is explicitly rejected by source capture validation."
+        },
+        "yawFollowup": {
+          "scope": "Single-thread R capture: source and packaged elevated-wing all-record/two-plane exact native comparisons pass.",
+          "evidence": [
+            ".workspace/evidence/yaw-captured-test.log",
+            ".workspace/evidence/yaw-packaged-test.log"
+          ],
+          "remaining": "Broader yaw configurations and browser verification remain unproved."
         }
       }
     }
