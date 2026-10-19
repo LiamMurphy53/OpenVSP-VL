@@ -164,7 +164,7 @@ class NativeFlowInterrogate(unittest.TestCase):
             self.assertEqual((child/final['file']).read_bytes(),(direct/'aircraft.case.1.quad.1.dat').read_bytes())
             self.assertEqual(original,{p.name:p.read_bytes() for p in folder.iterdir() if p.is_file()})
         except Exception:
-            evidence=Path(__file__).resolve().parents[1]/'.workspace/evidence/flow-reader-unsteady-native-failure'
+            evidence=Path(__file__).resolve().parents[1]/'.workspace/evidence/flow-reader-pitch-native-failure'
             shutil.copytree(self.path,evidence,dirs_exist_ok=True)
             self.assertEqual(self.model.read_bytes(),baseline)
             raise
