@@ -24,7 +24,8 @@ class CfdGuides(unittest.TestCase):
                 while not (folder/'analysis-setup.json').exists() and process.poll() is None and time.monotonic()<deadline:time.sleep(.01)
                 self.assertTrue((folder/'analysis-setup.json').exists())
                 setup=json.loads((folder/'analysis-setup.json').read_text())
-                self.assertEqual(len(setup['inputs']),28)
+                self.assertEqual({e['name'] for e in setup['inputs']},set(self.v.GetAnalysisInputNames(guide.NAME))|{'UseSavedSizing'})
+                self.assertEqual(next(e['values'] for e in setup['inputs'] if e['name']=='UseSavedSizing'),[0])
                 fields={e['name']:e['values'] for e in setup['inputs']}
                 self.assertEqual(fields['BaseLen'],[.05]);self.assertEqual(fields['MinLen'],[.01])
                 self.assertIsNone(process.poll(),'Native worker must still be live for termination test')
@@ -48,7 +49,10 @@ class CfdGuides(unittest.TestCase):
         getters={v.INT_DATA:v.GetIntAnalysisInput,v.DOUBLE_DATA:v.GetDoubleAnalysisInput,v.STRING_DATA:v.GetStringAnalysisInput}
         raw={k:(v.GetAnalysisInputType(n,k),list(getters[v.GetAnalysisInputType(n,k)](n,k))) for k in v.GetAnalysisInputNames(n)}
         s=analysis_schema(v,n);fields={e['name']:e for e in s['inputs']}
-        self.assertEqual({k:(e['type'],e['values']) for k,e in fields.items()},raw)
+        self.assertEqual({k:(e['type'],e['values']) for k,e in fields.items() if k!='UseSavedSizing'},raw)
+        self.assertEqual(set(fields)-set(raw),{'UseSavedSizing'})
+        self.assertEqual((fields['UseSavedSizing']['type'],fields['UseSavedSizing']['values']),(v.INT_DATA,[0]))
+        self.assertEqual([c['value'] for c in fields['UseSavedSizing']['choices']],[0,1])
         self.assertEqual(set(fields),{k for section in s['guide']['sections'] for k in section['inputs']})
         for k,native in {'BaseLen':'BaseLen','MinLen':'MinLen','MaxGap':'MaxGap','NCircSeg':'NCircSeg','GrowthRatio':'GrowRatio','RelCurveTol':'RelCurveTol'}.items():
             p=guide.parameters(v)[native];self.assertEqual((fields[k]['min'],fields[k]['max']),(v.GetParmLowerLimit(p),v.GetParmUpperLimit(p)))
@@ -102,10 +106,19 @@ class CfdGuides(unittest.TestCase):
         v.ClearVSPModel();v.ReadVSPFile(str(self.model));v.Update();v.SetAnalysisInputDefaults(guide.NAME)
         setters={v.INT_DATA:v.SetIntAnalysisInput,v.DOUBLE_DATA:v.SetDoubleAnalysisInput,v.STRING_DATA:v.SetStringAnalysisInput}
         for e in result['inputs']:
+            if e['name']=='UseSavedSizing':
+                self.assertEqual(e['values'],[0]);continue
             x=e['values']
             if e['name'].endswith('FileName'):x=[str(direct/Path(x[0]).name)]
             setters[e['type']](guide.NAME,e['name'],x,e['index'])
-        for entry in result['nativeSettingOverrides'].values():
+        policy=result['nativeSettingOverrides']['sizingPolicy']
+        self.assertEqual(policy['mode'],'absolute')
+        container=v.FindContainer('CFDGridDensity',0)
+        for controller in ['BaseAbsRel','MinAbsRel','MaxGapAbsRel']:
+            self.assertEqual(policy['savedDensity'][controller],v.ABS)
+            v.SetParmVal(v.FindParm(container,controller,'CFDGridDensity'),v.ABS)
+        for key,entry in result['nativeSettingOverrides'].items():
+            if key=='sizingPolicy':continue
             self.assertEqual(v.GetParmName(entry['parameter']),entry['nativeName'])
             v.SetParmVal(entry['parameter'],entry['value'])
         v.ExecAnalysis(guide.NAME)

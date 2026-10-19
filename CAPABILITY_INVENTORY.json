@@ -730,5 +730,21 @@
         ]
       }
     ]
+  },
+  "fullNativeAudit20261019": {
+    "sourceCommit": "a8a89440d8d80b8e7d5d13ec3bbf02caf23df93c",
+    "testProcesses": 661,
+    "successfulProcesses": 647,
+    "failedProcesses": 14,
+    "crashedProcesses": 0,
+    "timedOutProcesses": 0,
+    "evidence": ".workspace/evidence/full-native-audit-20261019/summary.json",
+    "interpretation": "Successful process counts may include expected failures. Not a full workflow parity claim.",
+    "supplementalPermissionRechecks": {
+      "affectedBaselineFailures": 5,
+      "allPassed": true
+    },
+    "corrections": "Assembly pre/post-computation settings separated; full native schema/reference policy and forced gear selector assertions corrected. Focused verification recorded in MODELING_AUDIT.md.",
+    "unresolved": "Unsteady native solver writes nonfinite flow-plane fields; previous intermittent native failures and strict polygon coarsening equivalence remain open."
   }
 }

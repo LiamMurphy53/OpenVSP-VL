@@ -250,8 +250,8 @@ def run_assembly(v,req):
          members=members,memberSizing=spec['guide']['memberSizing'])
     v.ComputeFeaAssemblyMesh(aid)
     mesh=read_gmsh(Path.cwd()/'assembly.msh',Path.cwd()/'assembly.bdf' if has_masses else None)
-    spec=assembly_schema(v,aid)
-    return dict(version=v.GetVSPVersion(),analysis='FeaAssemblyMesh',engineOperation='ComputeFeaAssemblyMesh',assemblyComputations=1,exportOperation='ExportAssemblyMesh',structure=aid,members=members,memberSizing=spec['guide']['memberSizing'],formats=selected,resultID='',inputs=spec['inputs'],geometryInputs=[],results=[],meshFile='assembly.msh',meshSummary=summary(mesh))
+    generated=assembly_schema(v,aid)
+    return dict(version=v.GetVSPVersion(),analysis='FeaAssemblyMesh',engineOperation='ComputeFeaAssemblyMesh',assemblyComputations=1,exportOperation='ExportAssemblyMesh',structure=aid,members=members,memberSizing=spec['guide']['memberSizing'],generatedMemberSizing=generated['guide']['memberSizing'],formats=selected,resultID='',inputs=spec['inputs'],geometryInputs=[],results=[],meshFile='assembly.msh',meshSummary=summary(mesh))
 
 
 def summary(mesh):

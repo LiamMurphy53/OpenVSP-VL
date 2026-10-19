@@ -28,7 +28,9 @@ class AssemblyMesh(unittest.TestCase):
         for sid,m in zip(self.members,spec['guide']['memberSizing']):
             g=v.GetFeaStructParentGeomID(sid);i=v.GetFeaStructIndex(sid)
             self.assertEqual(m['id'],sid);self.assertEqual(m['name'],v.GetFeaStructName(g,i))
-            self.assertEqual(m['values'],{n:v.GetFeaMeshVal(g,i,getattr(v,e)) for n,e in native_mesh.FEA_INPUTS.items()})
+            expected={n:v.GetParmVal(pid) for n,pid in native_mesh.sizing_parameters(v,sid).items() if n not in native_mesh.FEA_CAD}
+            self.assertEqual(m['values'],expected)
+            self.assertEqual({n:m['values'][n] for n in native_mesh.FEA_INPUTS},{n:v.GetFeaMeshVal(g,i,getattr(v,e)) for n,e in native_mesh.FEA_INPUTS.items()})
         self.assertNotEqual(spec['guide']['memberSizing'][0]['values'],spec['guide']['memberSizing'][1]['values'])
         self.assertEqual({e['name']:e['values'][0] for e in spec['inputs']},spec['guide']['memberSizing'][0]['values'])
 
@@ -48,7 +50,8 @@ class AssemblyMesh(unittest.TestCase):
         req=dict(action='analysis',name='FeaAssemblyMesh',structure=self.aid,formats=list(native_mesh.ASSEMBLY_EXPORTS),inputs=[dict(name=n,values=[x]) for n,x in values.items()])
         source=self.model.read_bytes();result,out=self.worker(req)
         self.assertEqual(out.read_bytes(),source);self.assertEqual(result['assemblyComputations'],1)
-        self.assertEqual([m['values'] for m in result['memberSizing']],[values,values])
+        self.assertEqual([{n:m['values'][n] for n in values} for m in result['memberSizing']],[values,values])
+        self.assertTrue(all(set(m['values'])==set(native_mesh.FEA_PARAMETERS)-set(native_mesh.FEA_CAD) for m in result['memberSizing']))
         setup=json.loads((out.parent/'analysis-setup.json').read_text())
         for key in ['structure','formats','inputs','memberSizing','members']:self.assertEqual(setup[key],result[key])
         for fmt,ext in native_mesh.ASSEMBLY_EXPORTS.items():self.assertGreater((out.parent/('assembly.'+ext)).stat().st_size,0,fmt)
@@ -59,6 +62,8 @@ class AssemblyMesh(unittest.TestCase):
         for p in v.FindContainerParmIDs(self.aid):
             if v.GetParmGroupName(p)=='ExportFEA' and v.GetParmName(p).endswith('_Export'):v.SetParmVal(p,int(v.GetParmName(p) in ['GMSH_Export','CALCULIX_Export']))
         v.SetFeaAssemblyFileName(self.aid,v.FEA_GMSH_FILE_NAME,str(self.path/'direct.msh'));v.SetFeaAssemblyFileName(self.aid,v.FEA_CALCULIX_FILE_NAME,str(self.path/'direct.inp'));v.ComputeFeaAssemblyMesh(self.aid)
+        generated=native_mesh.assembly_schema(v,self.aid)['guide']['memberSizing']
+        self.assertEqual(result['generatedMemberSizing'],generated)
         expected=read_gmsh(self.path/'direct.msh');actual=read_gmsh(out.parent/'assembly.msh')
         for key in ['nodeIDs','nodes','elements','groups']:self.assertEqual(actual[key],expected[key],key)
         self.assertIn('*EQUATION',(out.parent/'assembly.inp').read_text())
@@ -82,6 +87,7 @@ class AssemblyMesh(unittest.TestCase):
         result,out=self.worker(req)
         self.assertEqual([m['values']['BaseLen'] for m in result['memberSizing']],[.7,1.4])
         self.assertEqual(json.loads((out.parent/'analysis-setup.json').read_text())['memberSizing'],result['memberSizing'])
+        v.ClearVSPModel();v.ReadVSPFile(str(self.model));v.Update()
         for record in records:
             s=record['id'];g=v.GetFeaStructParentGeomID(s);i=v.GetFeaStructIndex(s)
             for e in record['inputs']:v.SetFeaMeshVal(g,i,getattr(v,native_mesh.FEA_INPUTS[e['name']]),e['values'][0])
@@ -97,6 +103,31 @@ class AssemblyMesh(unittest.TestCase):
         self.assertEqual(cleaned['stages'][0]['memberInputs'],records)
         self.assertEqual([m['values']['BaseLen'] for m in cleaned['stageSchemas'][0]['guide']['memberSizing']],[.7,1.4])
         self.assertEqual(out.read_bytes(),before);self.assertEqual(self.model.read_bytes(),before)
+
+    def test_saved_run_reload_and_reuse_preserve_submitted_offsets(self):
+        import native_service as service,time,tempfile
+        self.fixture();previous=service.WORK,service.JOBS
+        try:
+            with tempfile.TemporaryDirectory() as folder:
+                service.WORK=Path(folder);service.JOBS={}
+                request=dict(name='FeaAssemblyMesh',structure=self.aid,formats=['GMSH'],inputs=[],memberInputs=[dict(id=sid,inputs=[dict(name='NodeOffset',values=[0.]),dict(name='ElementOffset',values=[0.])]) for sid in self.members])
+                job=service.start_job(request,model_source=self.model,source_revision='assembly-offset-reuse')
+                deadline=time.monotonic()+30
+                while time.monotonic()<deadline:
+                    state=service.job_state(job['id'])
+                    if state.get('finished'):break
+                    time.sleep(.02)
+                self.assertEqual(state['status'],'complete',state)
+                service.JOBS={};cold=service.job_state(job['id'])
+                self.assertEqual(cold['result']['memberSizing'],cold['analysisSetup']['memberSizing'])
+                self.assertEqual([m['values']['NodeOffset'] for m in cold['result']['memberSizing']],[0.,0.])
+                self.assertNotEqual(cold['result']['generatedMemberSizing'],cold['result']['memberSizing'])
+                reused=[dict(id=m['id'],inputs=[dict(name=n,values=[x]) for n,x in m['values'].items()]) for m in cold['result']['memberSizing']]
+                result,out=self.worker(dict(action='analysis',name='FeaAssemblyMesh',structure=self.aid,formats=['GMSH'],inputs=[],memberInputs=reused))
+                self.assertEqual(result['memberSizing'],cold['result']['memberSizing'])
+                original=service.job_folder(job['id'])/'assembly.msh'
+                self.assertEqual((out.parent/'assembly.msh').read_bytes(),original.read_bytes())
+        finally:service.WORK,service.JOBS=previous
 
     def test_invalid_member_sizing_does_not_change_any_native_member(self):
         self.fixture();v=self.v
