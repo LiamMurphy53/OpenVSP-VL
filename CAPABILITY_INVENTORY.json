@@ -246,6 +246,16 @@
             "MODELING_AUDIT.md"
           ],
           "scope": "All four saved fields, duplicate names/rename, worker reopening and source preservation verified. Broad settings/workflow closure remains unproved."
+        },
+        {
+          "date": "2026-10-19",
+          "change": "Saved named geometry selection/reference edits verified through original geometry preparation, solver setup and a completed VSPAERO solve, using independent original saved-default replay.",
+          "evidence": [
+            "tests/test_aero_saved_sets.py",
+            "MODELING_AUDIT.md",
+            ".workspace/evidence/aero-saved-setup-packaged.log"
+          ],
+          "scope": "Exact complete parsed setup, geometry file bytes and all floating-point polar columns for one saved wing-only case; original input files preserved. Broader native analysis closure remains unproved."
         }
       ]
     },
@@ -277,6 +287,16 @@
             ".workspace/evidence/ngon-gap/packaged-checks.log"
           ],
           "remaining": "Editable polygon persistence and browser verification remain open; broad closure unproven."
+        },
+        {
+          "date": "2026-10-19",
+          "change": "Saved named geometry selection/reference edits verified through original geometry preparation, solver setup and a completed VSPAERO solve, using independent original saved-default replay.",
+          "evidence": [
+            "tests/test_aero_saved_sets.py",
+            "MODELING_AUDIT.md",
+            ".workspace/evidence/aero-saved-setup-packaged.log"
+          ],
+          "scope": "Exact complete parsed setup, geometry file bytes and all floating-point polar columns for one saved wing-only case; original input files preserved. Broader native analysis closure remains unproved."
         }
       ]
     },

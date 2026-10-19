@@ -49,3 +49,50 @@ class SavedAeroSets(unittest.TestCase):
         self.assertEqual(self.model.read_bytes(),legacy)
         user=v.AddUserParm(v.PARM_INT_TYPE,'GeomSet','VSPAERO')
         self.assertNotIn('choices',parameter(v,user))
+
+    def test_saved_set_and_reference_edits_feed_original_native_solver_setup(self):
+        import native_solver_setup
+        v=self.v;cid=v.FindContainer('VSPAEROSettings',0)
+        body=v.AddGeom('POD');v.SetParmValUpdate(body,'X_Rel_Location','XForm',100)
+        v.SetSetName(3,'Wing only');v.SetSetFlag(self.gid,3,True);v.SetSetFlag(body,3,False)
+        v.Update();v.WriteVSPFile(str(self.model),v.SET_ALL);before=self.model.read_bytes()
+        path=self.model
+        # Use the same saved-setting mutation route as the modern controls.
+        for name,value in [('GeomSet',-1),('ThinGeomSet',3),('RefFlag',v.MANUAL_REF),('Sref',77),('bref',19),('cref',4),('NoiseUnits',v.NOISE_ENGLISH),('AlphaStart',4),('AlphaEnd',4),('AlphaNpts',1),('MachStart',.1),('MachEnd',.1),('MachNpts',1)]:
+            pid=v.FindParm(cid,name,'VSPAERO')
+            _,path=self.worker(dict(action='mutate',operation='parameter',id=pid,value=value),path)
+        saved=path.read_bytes()
+        request=dict(action='analysis',name='VSPAEROSweep',inputs=[dict(name='StopBeforeRun',values=[1]),dict(name='NCPU',values=[1])])
+        actual,output=self.worker(request,path)
+        self.assertEqual(actual['executionMode'],'setup-only');self.assertFalse(actual['solverExecuted'])
+        flight={e['name']:e['values'] for e in actual['inputs']}
+        geometry={e['name']:e['values'] for e in actual['geometryInputs']}
+        for name,value in [('GeomSet',-1),('ThinGeomSet',3)]:
+            self.assertEqual(flight[name],[value]);self.assertEqual(geometry[name],[value])
+        for name,value in [('RefFlag',v.MANUAL_REF),('Sref',77),('bref',19),('cref',4),('NoiseUnits',v.NOISE_ENGLISH)]:self.assertEqual(flight[name],[value])
+        # Independent official API replay reads saved defaults itself. It does
+        # not copy effective inputs back from Studio's response.
+        direct=self.path/'original-saved-defaults';direct.mkdir()
+        v.ClearVSPModel();v.ReadVSPFile(str(path));v.Update();v.SetVSP3FileName(str(direct/'aircraft.vsp3'))
+        v.SetAnalysisInputDefaults('VSPAEROComputeGeometry')
+        self.assertTrue(v.ExecAnalysis('VSPAEROComputeGeometry'))
+        v.SetAnalysisInputDefaults('VSPAEROSweep')
+        v.SetIntAnalysisInput('VSPAEROSweep','StopBeforeRun',[1]);v.SetIntAnalysisInput('VSPAEROSweep','NCPU',[1])
+        self.assertFalse(v.ExecAnalysis('VSPAEROSweep'))
+        self.assertEqual(actual['solverSetup'],native_solver_setup.read(direct))
+        expected=(direct/'aircraft.vspgeom').read_bytes();self.assertTrue(expected)
+        self.assertEqual((output.parent/'aircraft.vspgeom').read_bytes(),expected)
+        self.assertEqual(path.read_bytes(),saved);self.assertEqual(self.model.read_bytes(),before)
+        # Complete a real one-case solve using the same saved defaults, then
+        # compare every native floating-point polar column, not just setup.
+        v.SetIntAnalysisInput('VSPAEROSweep','StopBeforeRun',[0])
+        self.assertTrue(v.ExecAnalysis('VSPAEROSweep'))
+        rid=v.FindLatestResultsID('VSPAERO_Polar')
+        expected={n:list(v.GetDoubleResults(rid,n)) for n in v.GetAllDataNames(rid) if v.GetResultsType(rid,n)==v.DOUBLE_DATA}
+        self.assertTrue(expected['CLtot']);self.assertTrue(expected['CDtot'])
+        completed,run=self.worker(dict(action='analysis',name='VSPAEROSweep',inputs=[dict(name='StopBeforeRun',values=[0]),dict(name='NCPU',values=[1])]),path)
+        polar=next(r for r in completed['results'] if r['name']=='VSPAERO_Polar')
+        actual={e['name']:e['values'] for e in polar['entries'] if e['type']==v.DOUBLE_DATA}
+        self.assertEqual(actual,expected)
+        self.assertTrue(list(run.parent.glob('*.adb')))
+        self.assertEqual(path.read_bytes(),saved);self.assertEqual(self.model.read_bytes(),before)
