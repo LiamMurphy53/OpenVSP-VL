@@ -29,6 +29,7 @@ export function unitSuffix(dimension){
 }
 export function displayValue(value,dimension){return value*displayFactor(dimension);}
 export function nativeValue(value,dimension){return value/displayFactor(dimension);}
+export function modelLengthUnit(){return settings.base==='model'?'model length':settings.base;}
 export function unitsSummary(){return unitSuffix('length')+' · '+(settings.angle==='deg'?'Degrees':'Radians');}
 export function installDisplayUnits({modal,changed,esc}){
  const button=document.getElementById('workspace-units'),footer=document.getElementById('footer-units');

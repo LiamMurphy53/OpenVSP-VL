@@ -1,0 +1,12 @@
+import assert from 'node:assert/strict';
+import {analysisInputUnit as unit} from '../web/analysis-units.js';
+const aero={name:'VSPAEROSweep',inputs:[]};
+assert.equal(unit(aero,{name:'Sref'},'ft'),'ft²');
+assert.equal(unit(aero,{name:'Vinf'},'m'),'m/s');
+assert.equal(unit(aero,{name:'AlphaStart'},'ft'),'deg');
+assert.equal(unit(aero,{name:'Rho'},'ft'),'consistent mass/ft³');
+assert.equal(unit(aero,{name:'MachStart'}),'dimensionless');
+assert.equal(unit(aero,{name:'Unknown'}),'');
+const drag={name:'ParasiteDrag',inputs:[{name:'VelocityUnit',values:[2],choices:[{value:2,label:'Knots'}]}]};
+assert.equal(unit(drag,{name:'Vinf'},'ft'),'Knots');
+console.log('Analysis labels retain native angle/length/speed conventions and selected airspeed units.');

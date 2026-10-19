@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {sliderWindow,resizeSliderWindow,customSliderMarkup} from '../web/custom-sliders.js';
+import {sliderWindow,resizeSliderWindow,customSliderMarkup,sliderParameter,bindCustomSliders} from '../web/custom-sliders.js';
 const p={id:'native-id',name:'Length',value:5,min:0,max:100,type:0,customSlider:{key:'component:1:native-id',range:10,adjustable:true}};
 assert.deepEqual(sliderWindow(p),{low:0,high:15});
 assert.deepEqual(sliderWindow({...p,value:8},{low:0,high:15}),{low:0,high:15},'Do not recenter on every saved edit');
@@ -14,3 +14,15 @@ assert.match(html,/Narrow Length slider range/);
 assert.match(customSliderMarkup({...p,active:false},'locked',units),/disabled/);
 assert.doesNotMatch(customSliderMarkup({...p,customSlider:{...p.customSlider,key:'plain',adjustable:false}},'plain',units),/data-slider-resize/);
 console.log('Native windows, units, integer limits, range adjustment and disabled controls passed.');
+
+const ordinary={id:'length',name:'Length',value:10,min:0,max:1e12,type:0};
+assert.ok(sliderParameter(ordinary).customSlider);
+assert.equal(sliderParameter({...ordinary,type:2}).customSlider,undefined);
+assert.equal(sliderParameter({...ordinary,choices:[]}).customSlider,undefined);
+let live=[];const input={value:''},slider={dataset:{customSlider:'field'},value:'11',disabled:false};
+const wrapper={dataset:{sliderKey:'native:length'},querySelector:()=>slider,querySelectorAll:()=>[]};
+const host={querySelectorAll:()=>[wrapper],querySelector:()=>input};
+bindCustomSliders(host,[ordinary],{displayValue:x=>x,parameterDimension:()=>null,isBusy:()=>false,liveEdit:(p,el,value,finished)=>live.push({value,finished})});
+slider.oninput();assert.deepEqual(live,[{value:11,finished:false}],'Send native update during input, before release');
+slider.onchange();assert.equal(live[1].finished,true);
+slider.disabled=true;slider.oninput();assert.equal(live.length,2,'Locked controls do not send live edits');
