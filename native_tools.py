@@ -349,7 +349,9 @@ def mutate(v,r):
         setting=v.AddVarPresetSetting(group,'Saved values');v.SaveVarPresetParmVals(group,setting)
     elif op=='preset-apply':
         group=one(r['group'],v.GetVarPresetGroups());setting=one(r['setting'],v.GetVarPresetSettings(group));v.ApplyVarPresetSetting(group,setting)
-    elif op=='preset-delete': v.DeleteVarPresetGroup(one(r['id'],v.GetVarPresetGroups()))
+    elif op=='preset-delete':
+        import native_preset_references
+        group=one(r['id'],v.GetVarPresetGroups());native_preset_references.guard_delete(v,group);v.DeleteVarPresetGroup(group)
     elif op=='polygon-triangulate':
         import native_ngon
         native_ngon.triangulate(v,gid)

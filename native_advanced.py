@@ -264,7 +264,9 @@ def mutate(v,r):
         if op=='preset-setting-add':s=v.AddVarPresetSetting(p,name(r['name']));v.SaveVarPresetParmVals(p,s)
         else:
             s=one(r['setting'],v.GetVarPresetSettings(p))
-            if op=='preset-setting-delete':v.DeleteVarPresetSetting(p,s)
+            if op=='preset-setting-delete':
+                import native_preset_references
+                native_preset_references.guard_delete(v,p,s);v.DeleteVarPresetSetting(p,s)
             elif op=='preset-setting-update':v.SaveVarPresetParmVals(p,s)
             else:v.SetSettingName(s,name(r['name']))
     elif op=='user-limits':

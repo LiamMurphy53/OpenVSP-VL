@@ -272,6 +272,17 @@
             ".workspace/evidence/preset-values-browser/verification.json"
           ],
           "scope": "Stored values/sibling settings, unchanged full geometry, native direct/mode application, cold persistence, invalid requests, locks and packaged browser history/reload/application verified. W09 remains unproven."
+        },
+        {
+          "date": "2026-10-19",
+          "change": "Guard preset/setting deletion when native modes still include the setting, naming affected modes and retaining explicit native reference removal.",
+          "evidence": [
+            "native_preset_references.py",
+            "tests/test_preset_references.py",
+            "MODELING_AUDIT.md",
+            ".workspace/evidence/preset-reference-browser/verification.json"
+          ],
+          "scope": "Original stale-reference probes, group/setting rejection, unused sibling deletion, multiple consumers, detach/delete/native geometry and packaged browser recovery verified. Existing invalid imports and broad W09 closure remain unproven."
         }
       ]
     },
