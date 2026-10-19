@@ -19,6 +19,7 @@ class FlowReaderIntegrity(unittest.TestCase):
                 with self.subTest(unsteady=unsteady,stability=stability):
                     with patch.object(reader,'executable',return_value=(Path('/native/reader'),{})),patch.object(reader.subprocess,'run',return_value=SimpleNamespace(returncode=0)) as run:
                         result=reader.run(native,setup,unsteady,stability)
+                    self.assertNotIn('STUDIO_EVALUATED_STATE_FILE',run.call_args.kwargs['env'])
                     self.assertEqual(run.call_args.args[0],['/native/reader','-interrogate']+([flag] if flag else [])+[str(setup.with_suffix(''))])
                     self.assertEqual(result['inputDatabaseSha256'],hashlib.sha256(payload).hexdigest())
                     self.assertEqual(result['outputDatabaseSha256'],result['inputDatabaseSha256'])
@@ -27,7 +28,7 @@ class FlowReaderIntegrity(unittest.TestCase):
     def test_rewritten_database_is_rejected_even_when_solver_reports_success(self):
         with tempfile.TemporaryDirectory() as directory:
             setup=Path(directory)/'aircraft.vspaero';database=setup.with_suffix('.adb');database.write_bytes(b'original')
-            def solve(arguments):
+            def solve(arguments,**kwargs):
                 database.write_bytes(b'fresh solution');return SimpleNamespace(returncode=0)
             with patch.object(reader,'executable',return_value=(Path('/native/reader'),{})),patch.object(reader.subprocess,'run',side_effect=solve):
                 with self.assertRaisesRegex(ValueError,'changed its input database'):

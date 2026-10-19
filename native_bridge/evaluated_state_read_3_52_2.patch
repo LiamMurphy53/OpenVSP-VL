@@ -1,0 +1,38 @@
+--- original/VSP_Solver.C
++++ reader-repair/VSP_Solver.C
+@@ -31265,6 +31265,35 @@
+ 
+ void VSP_SOLVER::CalculateQuadTreeVelocitySurvey(int Case)
+ {
++    // Optional companion is validated and bound to the ADB by Studio before launch.
++    const char *state_path = getenv("STUDIO_EVALUATED_STATE_FILE");
++    if ( DoSolutionInterrogation_ && state_path && state_path[0] ) {
++        static FILE *state_file = NULL;
++        if (!state_file) {
++            state_file = fopen(state_path,"r");
++            char magic[64];
++            if (!state_file || fscanf(state_file,"%63s",magic)!=1 || strcmp(magic,"STUDIO_EVALUATED_STATE_1")) {
++                fprintf(stderr,"Invalid native evaluated-state companion header.\n"); exit(2);
++            }
++        }
++        char record;
++        int time,level,loops,surfaces;
++        double instant;
++        if (fscanf(state_file," %c %d %d %d %d %la",&record,&time,&level,&loops,&surfaces,&instant)!=6 || record!='R' ||
++            time!=Time_ || instant!=CurrentTime_ || level!=MGLevel_ ||
++            loops!=VSPGeom().Grid(MGLevel_).NumberOfLoops() || surfaces!=VSPGeom().Grid(MGLevel_).NumberOfSurfaceLoops()) {
++            fprintf(stderr,"Native evaluated-state record does not match this solution record.\n"); exit(2);
++        }
++        for(int loop=1;loop<=loops;loop++) {
++            double gamma;
++            if(fscanf(state_file,"%la",&gamma)!=1) { fprintf(stderr,"Truncated native evaluated-state circulation.\n"); exit(2); }
++            VSPGeom().Grid(MGLevel_).LoopList(loop).Gamma() = gamma;
++            if(loop<=surfaces) Gamma_[0][loop] = gamma;
++        }
++        CalculateVelocities(ALL_WAKE_GAMMAS);
++        InterpolateExistingSolution(CurrentNoiseTime_);
++    }
++
+ 
+     int i, j, k, v, cpu, NearBody;
+     double xyz[3], q[5];

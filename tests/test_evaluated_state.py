@@ -45,6 +45,22 @@ class EvaluatedState(unittest.TestCase):
         with self.assertRaises(ValueError):state.seal(self.database,WRITER)
         self.assertEqual(manifest.read_bytes(),before)
 
+    def test_reader_rejects_changed_binding_before_start_and_after_child(self):
+        from types import SimpleNamespace
+        import native_flow_reader as reader
+        state.seal(self.database,WRITER);setup=self.database.with_suffix('.vspaero')
+        original=self.companion.read_bytes();self.companion.write_bytes(original+b'changed')
+        with patch.object(reader,'executable') as executable:
+            with self.assertRaises(ValueError):reader.run(None,setup,False)
+            executable.assert_not_called()
+        self.companion.write_bytes(original)
+        def child(arguments,env):
+            self.assertEqual(env['STUDIO_EVALUATED_STATE_FILE'],str(self.companion.resolve()))
+            self.companion.write_bytes(original+b'changed')
+            return SimpleNamespace(returncode=0)
+        with patch.object(reader,'executable',return_value=(Path('/native/reader'),{})),patch.object(reader.subprocess,'run',side_effect=child):
+            with self.assertRaises(ValueError):reader.run(None,setup,False)
+
     def test_atomic_binding_failure_preserves_previous_manifest(self):
         state.seal(self.database,WRITER);manifest=self.database.with_suffix('.studio-state.json');before=manifest.read_bytes()
         with patch('pathlib.Path.replace',side_effect=OSError('disk error')):
