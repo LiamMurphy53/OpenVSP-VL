@@ -19,8 +19,10 @@ def executable(v,capture=False):
     if capture:patches.append(ROOT/'native_bridge/evaluated_state_3_52_2.patch')
     patch_bytes=b''.join(p.read_bytes() for p in patches)
     sources=sorted(p for p in vendor.iterdir() if p.suffix in ('.C','.H'))
-    flags=['-std=c++17','-O1','-DMYTIME','-Domp_get_max_threads()=1','-Wno-format','-Wno-format-security','-Wno-non-pod-varargs']
-    digest=hashlib.sha256(patch_bytes+json.dumps(flags).encode()+b''.join(p.name.encode()+p.read_bytes() for p in sources)).hexdigest()
+    from native_openmp import runtime
+    omp,omp_metadata=runtime(ROOT)
+    flags=['-std=c++17','-O3','-DNDEBUG','-DMYTIME','-DVSPAERO_OPENMP','-Xpreprocessor','-fopenmp','-Wno-format','-Wno-format-security','-Wno-non-pod-varargs']
+    digest=hashlib.sha256(patch_bytes+json.dumps(omp_metadata,sort_keys=True).encode()+json.dumps(flags).encode()+b''.join(p.name.encode()+p.read_bytes() for p in sources)).hexdigest()
     cache=ROOT/'.runtime/native-flow-reader';cache.mkdir(parents=True,exist_ok=True)
     destination=cache/(digest[:24]+'-vspaero')
     if not destination.exists():
@@ -33,12 +35,16 @@ def executable(v,capture=False):
             cmake=(vendor/'CMakeLists.txt').read_text().split('SET( VSPAERO_CORE_FILES',1)[1].split(')',1)[0]
             files=[s.strip() for s in cmake.splitlines() if s.strip().endswith('.C') and not s.lstrip().startswith('#')]+['vspaero.C']
             output=work/'vspaero'
-            command=['/usr/bin/clang++',*flags,'-iquote',str(src),*[str(src/name) for name in files],'-o',str(output)]
+            command=['/usr/bin/clang++',*flags,'-I'+str(omp/'include'),'-L'+str(omp/'lib'),'-lomp','-Wl,-rpath,@loader_path/../openmp/lib','-iquote',str(src),*[str(src/name) for name in files],'-o',str(output)]
             built=subprocess.run(command,capture_output=True,text=True,timeout=120)
             (cache/(digest[:24]+'.build.log')).write_text(built.stdout+built.stderr)
             if built.returncode:raise ValueError('Could not build the saved airflow reader: '+built.stderr[-3000:])
+            relocated=subprocess.run(['/usr/bin/install_name_tool','-change','@@HOMEBREW_PREFIX@@/opt/libomp/lib/libomp.dylib','@rpath/libomp.dylib',str(output)],capture_output=True,text=True,timeout=30)
+            if relocated.returncode:raise ValueError('Could not relocate the native OpenMP dependency: '+relocated.stderr[-1000:])
+            signed=subprocess.run(['/usr/bin/codesign','--force','--sign','-',str(output)],capture_output=True,text=True,timeout=30)
+            if signed.returncode:raise ValueError('Could not sign the native airflow reader: '+signed.stderr[-1000:])
             output.replace(destination)
-    return destination,dict(engineSourceTag='OpenVSP_3.52.2',readerSourceSha256=digest,readerExecutableSha256=hashlib.sha256(destination.read_bytes()).hexdigest(),readerPatchSha256=hashlib.sha256(patch_bytes).hexdigest(),readerMode='serial',readerRepair='Saved geometry records, active wake positions, native rotor-wake initialization, all-grid circulation, original core widths, time-aligned motion, stored near-body velocities and distinct temporal output records')
+    return destination,dict(engineSourceTag='OpenVSP_3.52.2',readerSourceSha256=digest,readerExecutableSha256=hashlib.sha256(destination.read_bytes()).hexdigest(),readerPatchSha256=hashlib.sha256(patch_bytes).hexdigest(),readerMode='openmp-single-thread',openmpRuntime=omp_metadata,readerRepair='Saved geometry records, active wake positions, native rotor-wake initialization, all-grid circulation, original core widths, time-aligned motion, stored near-body velocities and distinct temporal output records')
 
 
 def run(v,setup,unsteady,stability=0):
@@ -50,7 +56,7 @@ def run(v,setup,unsteady,stability=0):
     if captured:environment['STUDIO_EVALUATED_STATE_FILE']=str(database.with_suffix('.studio-state').resolve())
     with database.open('rb') as stream:
         original=hashlib.file_digest(stream,'sha256').hexdigest()
-    arguments=[str(solver),'-interrogate']
+    arguments=[str(solver),'-omp','1','-interrogate']
     if unsteady:
         flags={v.STABILITY_P_ANALYSIS:'-pstab',v.STABILITY_Q_ANALYSIS:'-qstab',v.STABILITY_R_ANALYSIS:'-rstab'}
         arguments.append(flags.get(stability,'-unsteady'))

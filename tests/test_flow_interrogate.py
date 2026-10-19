@@ -180,9 +180,11 @@ class NativeFlowInterrogate(unittest.TestCase):
             folder=service.job_folder(source['id']);original={p.name:p.read_bytes() for p in folder.iterdir() if p.is_file()}
             import native_evaluated_state
             captured=native_evaluated_state.validate(folder/'aircraft.adb');self.assertIsNotNone(captured)
+            self.assertTrue(all(record.get('edgeLevels') for record in captured['records']))
             records=captured['records'];boundaries=[i+1 for i,r in enumerate(records) if r['time']==0];self.assertEqual(len(boundaries),2)
             entries=[dict(name='XSlicePosVec',values=[]),dict(name='YSlicePosVec',values=[1.,3.]),dict(name='ZSlicePosVec',values=[]),dict(name='QuadTreeBufferLevels',values=[1])]
             result=self.wait_job(service.start_job(dict(name='FlowPlaneSlicer',sourceRun=source['id'],revision=service.REVISION,inputs=entries))['id']);child=service.job_folder(result['id']);planes=result['result']['flowPlanes']
+            self.assertEqual(result['result']['readerProvenance']['readerMode'],'openmp-single-thread')
             self.assertEqual(len(planes),len(records)*2);self.assertEqual(result['result']['readerProvenance']['evaluatedState']['mode'],'captured')
             direct=self.path/'pitch-multiple-direct';direct.mkdir()
             for p in child.iterdir():
@@ -266,7 +268,7 @@ class NativeFlowInterrogate(unittest.TestCase):
         self.assertEqual(provenance['inputDatabaseSha256'],hashlib.sha256(before['aircraft.adb']).hexdigest())
         self.assertEqual(provenance['outputDatabaseSha256'],provenance['inputDatabaseSha256'])
         self.assertEqual(provenance['engineSourceTag'],'OpenVSP_3.52.2')
-        self.assertEqual(provenance['readerMode'],'serial')
+        self.assertEqual(provenance['readerMode'],'openmp-single-thread')
         for key in ('readerSourceSha256','readerExecutableSha256','readerPatchSha256'):
             self.assertRegex(provenance[key],r'^[0-9a-f]{64}$')
         child=service.job_folder(result['id']);self.assertEqual(self.model.read_bytes(),baseline)

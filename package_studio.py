@@ -25,11 +25,18 @@ def build(output):
     engine=ROOT/'.runtime/OpenVSP-3.52.2-MacOS';python=ROOT/'.runtime/python-interpreters/cpython-3.11-macos-aarch64-none';site=ROOT/'.runtime/site'
     for source in (engine,python,site):
         if not source.is_dir():raise ValueError('A bundled runtime source is missing: '+str(source))
+    from native_openmp import runtime as openmp_runtime
+    openmp,openmp_metadata=openmp_runtime(ROOT)
     source=ROOT/'native_bridge/structural_preview.cpp';headers=ROOT/'native_bridge/vendor/openvsp-3.52.2';key=digest(source,headers);library=ROOT/'.runtime/native-preview'/(key+'.dylib')
     if not library.is_file():
         result=subprocess.run([str(python/'bin/python3'),str(ROOT/'studio_launcher.py'),'--check'],cwd=ROOT,capture_output=True,text=True,timeout=120)
         if result.returncode:raise ValueError('Native preflight failed: '+result.stderr[-2000:])
     if not library.is_file():raise ValueError('The matching compiled native adapter is unavailable.')
+    print('Preparing native saved-airflow reader and recorder',flush=True)
+    probe="from vsp_runtime import load;from native_flow_reader import executable;import json;v=load();print(json.dumps([executable(v,capture=c)[0].name for c in (False,True)]))"
+    readers=subprocess.run([str(python/'bin/python3'),'-c',probe],cwd=ROOT,capture_output=True,text=True,timeout=300)
+    if readers.returncode:raise ValueError('Could not prepare bundled airflow tools: '+readers.stderr[-2000:])
+    reader_names=json.loads(readers.stdout.strip().splitlines()[-1])
     output.parent.mkdir(parents=True,exist_ok=True)
     with tempfile.TemporaryDirectory(prefix='studio-package-',dir=output.parent) as temp:
         staged=Path(temp)/output.name;contents=staged/'Contents';studio=contents/'Resources/studio';studio.mkdir(parents=True);macos=contents/'MacOS';macos.mkdir()
@@ -37,6 +44,9 @@ def build(output):
         copy_sources(ROOT,studio)
         runtime=studio/'.runtime';runtime.mkdir();print('Copying original OpenVSP distribution',flush=True);shutil.copytree(engine.resolve(),runtime/engine.name,symlinks=False)
         print('Copying matching Python and dependencies',flush=True);shutil.copytree(python.resolve(),runtime/'python-interpreters/cpython-3.11-macos-aarch64-none',symlinks=False);shutil.copytree(site,runtime/'site',symlinks=False)
+        shutil.copytree(openmp,runtime/'openmp',symlinks=False)
+        (runtime/'native-flow-reader').mkdir()
+        for name in reader_names:shutil.copy2(ROOT/'.runtime/native-flow-reader'/name,runtime/'native-flow-reader'/name)
         (runtime/'native-preview').mkdir();shutil.copy2(library,runtime/'native-preview'/library.name)
         info=plistlib.loads((ROOT/'OpenVSP Studio.app/Contents/Info.plist').read_bytes());info['CFBundleIdentifier']='local.openvsp.modernstudio';(contents/'Info.plist').write_bytes(plistlib.dumps(info))
         launcher=macos/'launch';launcher.write_text('''#!/bin/sh
