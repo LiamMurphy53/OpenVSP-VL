@@ -143,6 +143,33 @@ class NativeFlowInterrogate(unittest.TestCase):
             raise
         self.assertEqual(self.model.read_bytes(),baseline)
 
+    def test_pitch_saved_airflow_restoration_matches_original_final_plane(self):
+        baseline=self.model.read_bytes()
+        inputs=[dict(name=n,values=[x]) for n,x in [('GeomSet',-1),('ThinGeomSet',0),('RefFlag',1),('WingID',self.gid),('AlphaStart',4.),('AlphaNpts',1),('MachStart',.1),('MachNpts',1),('NCPU',1),('NumTimeSteps',4),('TimeStepSize',.02),('NumWakeNodes',8),('WakeNumIter',3),('UnsteadyType',self.v.STABILITY_Q_ANALYSIS)]]
+        try:
+            source=self.wait_job(service.start_job(dict(name='VSPAEROSweep',revision=service.REVISION,inputs=inputs))['id'])
+            folder=service.job_folder(source['id']);original={p.name:p.read_bytes() for p in folder.iterdir() if p.is_file()}
+            entries=[dict(name='XSlicePosVec',values=[]),dict(name='YSlicePosVec',values=[1.]),dict(name='ZSlicePosVec',values=[]),dict(name='QuadTreeBufferLevels',values=[1])]
+            result=self.wait_job(service.start_job(dict(name='FlowPlaneSlicer',sourceRun=source['id'],revision=service.REVISION,inputs=entries))['id'])
+            child=service.job_folder(result['id'])
+            direct=self.path/'pitch-direct';direct.mkdir()
+            for p in child.iterdir():
+                if p.suffix in ('.vspgeom','.vspaero','.vkey','.groups'):shutil.copy2(p,direct/p.name)
+            with (direct/'native.log').open('w') as log:
+                run=subprocess.run([str(distribution()/'vspaero'),'-omp','1','-qstab',str(direct/'aircraft')],cwd=direct,stdout=log,stderr=log,timeout=30)
+            self.assertEqual(run.returncode,0)
+            planes=result['result']['flowPlanes'];self.assertGreater(len(planes),1)
+            self.assertEqual(sorted(p['solutionRecord'] for p in planes),list(range(1,len(planes)+1)))
+            final=max(planes,key=lambda p:p['solutionRecord'])
+            self.assertEqual((child/final['file']).read_bytes(),(direct/'aircraft.case.1.quad.1.dat').read_bytes())
+            self.assertEqual(original,{p.name:p.read_bytes() for p in folder.iterdir() if p.is_file()})
+        except Exception:
+            evidence=Path(__file__).resolve().parents[1]/'.workspace/evidence/flow-reader-unsteady-native-failure'
+            shutil.copytree(self.path,evidence,dirs_exist_ok=True)
+            self.assertEqual(self.model.read_bytes(),baseline)
+            raise
+        self.assertEqual(self.model.read_bytes(),baseline)
+
     def test_saved_airflow_study_preserves_case_sources_and_original_sample_comparisons(self):
         baseline=self.model.read_bytes()
         flight=dict(name='VSPAEROSweep',inputs=[dict(name=n,values=[x]) for n,x in [('GeomSet',-1),('ThinGeomSet',0),('AlphaStart',2.),('AlphaEnd',5.),('AlphaNpts',2),('NCPU',1),('Vinf',37.),('MachStart',.1),('MachEnd',.1)]])
