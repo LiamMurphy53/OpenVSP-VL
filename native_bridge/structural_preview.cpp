@@ -366,6 +366,17 @@ extern "C" const char* studio_user_parm_restore(const char* engine,const char* i
     if(doc && freeDoc)freeDoc(doc);if(library)dlclose(library);return output.c_str();
 }
 
+extern "C" const char* studio_fit_target_refresh(const char* engine){
+    static thread_local std::string output;void* library=nullptr;
+    try{
+        library=dlopen(engine,RTLD_NOW);if(!library)throw std::runtime_error(dlerror());
+        auto manager=symbol<void*>(library,"_ZZN20FitModelMgrSingleton11getInstanceEvE8instance");
+        symbol<void(*)(void*)>(library,"_ZN20FitModelMgrSingleton11BuildPtrVecEv")(manager);
+        output="{\"updated\":true}";
+    }catch(const std::exception& e){output="{\"error\":"+quote(e.what())+"}";}
+    if(library)dlclose(library);return output.c_str();
+}
+
 extern "C" const char* studio_refresh_parameter_links(const char* engine,const char* source){
     static thread_local std::string output;void* library=nullptr;
     try{

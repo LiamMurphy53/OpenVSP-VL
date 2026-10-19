@@ -41,6 +41,16 @@ def save(v):
         else:v.AddAttributeString(coll,VARIABLE_REF,ref)
 
 
+def refresh_target_surfaces(v):
+    """Original manager rebuilds per-surface closure flags after target restore."""
+    import ctypes
+    from native_preview import adapter
+    _,engine,bridge=adapter(v);fn=bridge.studio_fit_target_refresh
+    fn.argtypes=[ctypes.c_char_p];fn.restype=ctypes.c_char_p
+    result=json.loads(fn(engine))
+    if result.get('error'):raise ValueError(result['error'])
+
+
 def restore(v):
     v.ResetFitModel();records=[]
     for g in v.FindGeoms():
@@ -64,6 +74,7 @@ def restore(v):
         if v.GetAttributeName(a)==VARIABLE:
             for p in v.GetAttributeParmID(a):
                 if v.ValidParm(p) and p not in v.GetFitModelVarVec():v.AddFitModelVar(p)
+    if records:refresh_target_surfaces(v)
 
 
 def snapshot(v,parameter):

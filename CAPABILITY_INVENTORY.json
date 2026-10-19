@@ -491,6 +491,18 @@
             ".workspace/evidence/plane-downloads-browser/delivered.json"
           ],
           "scope": "305-point native HTTP equality, immutable original results, invalid-path rejection, extreme-double serialization and actual saved CSV contents. W21 closure remains unproven."
+        },
+        {
+          "date": "2026-10-19",
+          "change": "Verified free/mixed native coordinate fits, Search/Refine, browser optimization/history/reload and exact fit-file round trips. Fixed cold restoration losing per-surface closure flags by invoking original BuildPtrVec.",
+          "evidence": [
+            "tests/test_fit_free.py",
+            "MODELING_AUDIT.md",
+            ".workspace/evidence/free-fit-packaged-final.log",
+            ".workspace/evidence/free-fit-browser/verification.json",
+            ".workspace/evidence/free-fit-browser/optimized-fit.png"
+          ],
+          "scope": "Exact original optimizer outputs/full geometry for three POD fitting modes; exact native .fit export and import; fixed-target surface metadata across POD/WING/BOR. Broader fitting combinations, identifiability/performance and full closure remain unproved."
         }
       ]
     },
