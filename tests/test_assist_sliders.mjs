@@ -1,0 +1,12 @@
+import assert from 'node:assert/strict';
+import {assistSliderParameter,designAssistMarkup} from '../web/design-assist.js';
+import {sliderWindow} from '../web/custom-sliders.js';
+const c={id:'wing',params:[],designAssist:{kind:'wing',aspectRatio:8,taper:.4,taperAvailable:true,sweep:20,dihedral:5,washout:2,washoutAvailable:true,thicknessPercent:12,thicknessAvailable:true,camberPercent:2,camberAvailable:true}};
+const html=designAssistMarkup(c,String,()=> '');
+for(const label of ['Aspect ratio','Overall taper ratio','Quarter-chord sweep','Wing dihedral','Tip washout','Airfoil thickness (%)','Airfoil camber (%)'])assert.ok(html.includes(`aria-label="${label} slider"`),label);
+assert.equal(assistSliderParameter(c,'wing-camber',null,null).mixed,true,'Mixed profiles are explicitly marked');
+assert.match(designAssistMarkup({...c,designAssist:{...c.designAssist,sweep:null}},String,()=> ''),/Mixed values — drag to set across sections/);
+const blades=assistSliderParameter(c,'prop-blades',3,null);assert.equal(blades.type,1);assert.ok(Number.isInteger(sliderWindow(blades).low));
+assert.ok(assistSliderParameter(c,'body-width',2,'length').min>0);
+assert.match(designAssistMarkup({...c,designAssist:{...c.designAssist,camberAvailable:false}},String,()=> ''),/aria-label="Airfoil camber \(%\) slider"[^>]*disabled/);
+console.log('Coordinated wing/body/propeller sliders, mixed values and availability guards passed.');
