@@ -410,6 +410,8 @@ def mutate(v, req):
         native_wave_controls.validate_parameter(v,pid,req.get('value'))
         import native_measurements
         native_measurements.validate_parameter(v,pid)
+        import native_aero_guides
+        native_aero_guides.validate_saved_parameter(v,pid,req.get('value'))
         value=req['value']
         if isinstance(value,bool) or not isinstance(value,(int,float)) or not math.isfinite(value): raise ValueError('Enter a finite number.')
         kind=v.GetParmType(pid)

@@ -39,9 +39,28 @@ def enum_choices(v):
       'NoiseUnits':choices([('NOISE_SI','SI · m, N, kg, s'),('NOISE_ENGLISH','English · ft, lbf, slug, s')])}
 
 
+SET_FIELDS={'GeomSet':'Thick geometry set','ThinGeomSet':'Thin geometry set',
+            'MassSet':'Mass geometry set','MassDegenSet':'Mass degenerate geometry set'}
+
+
+def saved_set_parameter(v,pid):
+    return (v.GetParmGroupName(pid)=='VSPAERO' and v.GetParmName(pid) in SET_FIELDS
+            and v.GetParmContainer(pid)==v.FindContainer('VSPAEROSettings',0))
+
+
+def validate_saved_parameter(v,pid,value):
+    if saved_set_parameter(v,pid) and (type(value) not in (int,float) or value not in range(-1,v.GetNumSets())):
+        raise ValueError('Choose an existing native geometry set, or None.')
+
+
 def annotate_parameter(v,p):
     if p['rawGroup']!='VSPAERO':return
     if v.GetParmContainer(p['id'])!=v.FindContainer('VSPAEROSettings',0):return
+    if p['name'] in SET_FIELDS:
+        p['label']=SET_FIELDS[p['name']]
+        p['choices']=[dict(value=-1,label='None')]+[dict(value=i,label=f'{v.GetSetName(i)} · {i}') for i in range(v.GetNumSets())]
+        if p['value'] not in range(-1,v.GetNumSets()):p['choices'].append(dict(value=p['value'],label='Unavailable native set · '+str(p['value'])))
+        return
     name={'m_PropBladesMode':'PropBladesMode'}.get(p['name'],p['name'])
     options=enum_choices(v).get(name)
     if options:

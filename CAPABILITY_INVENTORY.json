@@ -237,6 +237,15 @@
             "MODELING_AUDIT.md"
           ],
           "scope": "Native codes/labels, valid saved edits and fresh worker reopening verified; broader settings guidance and W10 closure remain open."
+        },
+        {
+          "date": "2026-10-19",
+          "change": "Saved VSPAERO thick/thin and mass/degenerate-mass geometry selections use current named sets plus None, with native indices, stale-slot rejection and legacy repair.",
+          "evidence": [
+            "tests/test_aero_saved_sets.py",
+            "MODELING_AUDIT.md"
+          ],
+          "scope": "All four saved fields, duplicate names/rename, worker reopening and source preservation verified. Broad settings/workflow closure remains unproved."
         }
       ]
     },
