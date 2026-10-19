@@ -143,6 +143,16 @@
             "CUSTOM_CONTROL_AUDIT.md"
           ],
           "scope": "Original compiler surface equality at two configurations, native parameter edits, source deletion and independent cold workers; no W05 closure claim."
+        },
+        {
+          "date": "2026-10-19",
+          "change": "Fixed model-read failure when user/custom parameters share CFDGridDensity names; metadata and follower/study guards now verify the native owner.",
+          "evidence": [
+            "tests/test_cfd_density_ownership.py",
+            "MODELING_AUDIT.md",
+            ".workspace/evidence/cfd-density-ownership-packaged.log"
+          ],
+          "scope": "User open/edit/reopen, imported custom Box complete native surface equality, real native density guard preservation and selected packaged CFD/custom regressions. Broad closure remains unproved."
         }
       ]
     },
@@ -256,6 +266,16 @@
             ".workspace/evidence/aero-saved-setup-packaged.log"
           ],
           "scope": "Exact complete parsed setup, geometry file bytes and all floating-point polar columns for one saved wing-only case; original input files preserved. Broader native analysis closure remains unproved."
+        },
+        {
+          "date": "2026-10-19",
+          "change": "Fixed model-read failure when user/custom parameters share CFDGridDensity names; metadata and follower/study guards now verify the native owner.",
+          "evidence": [
+            "tests/test_cfd_density_ownership.py",
+            "MODELING_AUDIT.md",
+            ".workspace/evidence/cfd-density-ownership-packaged.log"
+          ],
+          "scope": "User open/edit/reopen, imported custom Box complete native surface equality, real native density guard preservation and selected packaged CFD/custom regressions. Broad closure remains unproved."
         }
       ]
     },

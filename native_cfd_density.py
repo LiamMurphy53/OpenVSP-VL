@@ -14,7 +14,7 @@ def refresh(v):
 
 
 def reason(v,pid):
-    if v.GetParmGroupName(pid)!='CFDGridDensity':return ''
+    if v.GetParmGroupName(pid)!='CFDGridDensity' or v.GetParmContainer(pid)!=v.FindContainer('CFDGridDensity',0):return ''
     owner=v.GetParmContainer(pid);name=v.GetParmName(pid)
     for controller,(absolute,relative) in PAIRS.items():
         if name in (absolute,relative):
@@ -24,7 +24,7 @@ def reason(v,pid):
 
 
 def annotate(v,p):
-    if p['rawGroup']!='CFDGridDensity':return
+    if p['rawGroup']!='CFDGridDensity' or v.GetParmContainer(p['id'])!=v.FindContainer('CFDGridDensity',0):return
     if p['name'] in LABELS:p['label']=LABELS[p['name']]
     if p['name'] in PAIRS:p['choices']=[dict(value=v.ABS,label='Absolute · model units'),dict(value=v.REL,label='Relative · fraction')]
     why=reason(v,p['id'])
@@ -44,6 +44,6 @@ def study_metadata(v):
 
 
 def study_priority(v,pid):
-    if v.GetParmGroupName(pid)!='CFDGridDensity':return None
+    if v.GetParmGroupName(pid)!='CFDGridDensity' or v.GetParmContainer(pid)!=v.FindContainer('CFDGridDensity',0):return None
     name=v.GetParmName(pid)
     return -12 if name in PAIRS else 20 if name in ('BaseLen','BaseLenFrac','MaxFar','FarFrac') else 30
