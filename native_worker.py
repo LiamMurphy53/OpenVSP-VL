@@ -46,6 +46,8 @@ def parameter(v, pid):
         if field['name'] in ('CGx','CGy','CGz'):field['dimension']='length'
     import native_parasite_controls
     native_parasite_controls.annotate(v,field)
+    import native_aero_guides
+    native_aero_guides.annotate_parameter(v,field)
     import native_wave_controls
     native_wave_controls.annotate(v,field)
     import native_measurements

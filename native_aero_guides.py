@@ -26,13 +26,10 @@ def organization(inputs):
     return groups
 
 
-def annotate(v,inputs,geometry=False):
-    import re
+def enum_choices(v):
+    """Shared original enum codes for saved settings and analysis inputs."""
     choices=lambda pairs:[dict(value=getattr(v,key),label=label) for key,label in pairs]
-    cid=v.FindContainer('VSPAEROSettings',0)
-    parms={v.GetParmName(p):p for p in v.FindContainerParmIDs(cid)}
-    aliases={'NumWakeNodes':'RootWakeNodes','PropBladesMode':'m_PropBladesMode','FreezeWakeAtIteration':'m_FreezeWakeAtIteration','2DFEMFlag':'Write2DFEMFlag','TecplotFlag':'WriteTecplotFlag','CGGeomSet':'MassSet','CGDegenSet':'MassDegenSet','UseModeFlag':'UseMode','UseCGModeFlag':'CGUseMode','ScurveFlag':'SCurveFlag'}
-    maps={
+    return {
       'RefFlag':choices([('MANUAL_REF','Entered dimensions'),('COMPONENT_REF','Native wing dimensions')]),
       'MassSliceDir':choices([('X_DIR','X · longitudinal'),('Y_DIR','Y · spanwise'),('Z_DIR','Z · vertical')]),
       'PropBladesMode':choices([('VSPAERO_PROP_STATIC','Static blades'),('VSPAERO_PROP_UNSTEADY','Unsteady rotating blades'),('VSPAERO_PROP_PSEUDO_STEADY','Pseudo-steady rotating blades')]),
@@ -40,6 +37,26 @@ def annotate(v,inputs,geometry=False):
       'StallModel':choices([('STALL_OFF','Off'),('STALL_ON','On')]),
       'NoiseCalcType':choices([('NOISE_FLYBY','Flyby'),('NOISE_FOOTPRINT','Footprint'),('NOISE_STEADY','Steady')]),
       'NoiseUnits':choices([('NOISE_SI','SI · m, N, kg, s'),('NOISE_ENGLISH','English · ft, lbf, slug, s')])}
+
+
+def annotate_parameter(v,p):
+    if p['rawGroup']!='VSPAERO':return
+    if v.GetParmContainer(p['id'])!=v.FindContainer('VSPAEROSettings',0):return
+    name={'m_PropBladesMode':'PropBladesMode'}.get(p['name'],p['name'])
+    options=enum_choices(v).get(name)
+    if options:
+        p['choices']=[o for o in options if p['min']<=o['value']<=p['max']]
+        p['label']={'RefFlag':'Reference dimensions source','MassSliceDir':'Mass slicing direction',
+                    'PropBladesMode':'Propeller blade model','UnsteadyType':'Stability analysis',
+                    'StallModel':'Stall model','NoiseCalcType':'Noise calculation','NoiseUnits':'Noise units'}[name]
+
+
+def annotate(v,inputs,geometry=False):
+    import re
+    cid=v.FindContainer('VSPAEROSettings',0)
+    parms={v.GetParmName(p):p for p in v.FindContainerParmIDs(cid)}
+    aliases={'NumWakeNodes':'RootWakeNodes','PropBladesMode':'m_PropBladesMode','FreezeWakeAtIteration':'m_FreezeWakeAtIteration','2DFEMFlag':'Write2DFEMFlag','TecplotFlag':'WriteTecplotFlag','CGGeomSet':'MassSet','CGDegenSet':'MassDegenSet','UseModeFlag':'UseMode','UseCGModeFlag':'CGUseMode','ScurveFlag':'SCurveFlag'}
+    maps=enum_choices(v)
     maps['StopBeforeRun']=[dict(value=0,label='Run solver'),dict(value=1,label='Write native solver files only')]
     modes=[dict(value='',label='Choose a mode…')]+[dict(value=m,label=v.GetModeName(m)) for m in v.GetAllModes()]
     maps['ModeID']=modes;maps['CGModeID']=modes

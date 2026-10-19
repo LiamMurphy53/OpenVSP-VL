@@ -226,7 +226,19 @@
       "workflow": "Global engineering settings",
       "category": "Engineering",
       "closure": "Unproven",
-      "originalPlanRow": "| Global engineering settings | Native Vehicle, CFD, intersection, grid density, VSPAERO, wave/parasite settings exposed; guided saved intersection cubic approximation/tolerance, half selection and STEP point merging now have native output parity, persistence/Undo/Redo/cold reopen, invalid browser recovery, analysis summary/editor shortcut and narrow-screen evidence (`.workspace/evidence/intersection-settings-verification.md`) | Human-readable enum choices and workflow-specific guidance throughout |"
+      "originalPlanRow": "| Global engineering settings | Native Vehicle, CFD, intersection, grid density, VSPAERO, wave/parasite settings exposed; guided saved intersection cubic approximation/tolerance, half selection and STEP point merging now have native output parity, persistence/Undo/Redo/cold reopen, invalid browser recovery, analysis summary/editor shortcut and narrow-screen evidence (`.workspace/evidence/intersection-settings-verification.md`) | Human-readable enum choices and workflow-specific guidance throughout |",
+      "followups": [
+        {
+          "date": "2026-10-19",
+          "change": "Seven saved VSPAERO enum controls now share named native choices with Analyze; owner checks protect same-name user parameters. Engineering search respects hidden field styling.",
+          "evidence": [
+            "tests/test_aero_saved_choices.py",
+            "tests/test_aero_guides.py",
+            "MODELING_AUDIT.md"
+          ],
+          "scope": "Native codes/labels, valid saved edits and fresh worker reopening verified; broader settings guidance and W10 closure remain open."
+        }
+      ]
     },
     {
       "id": "W11",
