@@ -3,6 +3,7 @@ import hashlib,json,math,os,re,tempfile
 from pathlib import Path
 
 MAGIC='STUDIO_EVALUATED_STATE_1'
+CURRENT_MAGIC='STUDIO_EVALUATED_STATE_2'
 MAX_BYTES=150_000_000
 HASH=re.compile(r'[0-9a-f]{64}')
 
@@ -22,7 +23,8 @@ def read(path):
     path=regular(path,MAX_BYTES);records=[];previous=None;previous_instant=None
     try:
         with path.open(encoding='ascii') as stream:
-            if stream.readline().rstrip('\n')!=MAGIC:raise ValueError('Invalid native evaluated-state header.')
+            magic=stream.readline().rstrip('\n')
+            if magic not in (MAGIC,CURRENT_MAGIC):raise ValueError('Invalid native evaluated-state header.')
             for line in stream:
                 fields=line.split()
                 if len(fields)!=6 or fields[0]!='R':raise ValueError('Invalid native evaluated-state record.')
@@ -38,7 +40,27 @@ def read(path):
                     number=float.fromhex(value)
                     if not math.isfinite(number):raise ValueError('Native evaluated circulation is nonfinite.')
                     gamma.append(number)
-                records.append(dict(time=time,level=level,loops=count,surfaces=surfaces,currentTime=instant,gamma=gamma));previous=time;previous_instant=instant
+                edge_levels=[]
+                if magic==CURRENT_MAGIC:
+                    header=stream.readline().split()
+                    if len(header)!=2 or header[0]!='E' or not 1<=int(header[1])<=101-level:raise ValueError('Invalid native evaluated-state edge levels.')
+                    total_edges=0
+                    for offset in range(int(header[1])):
+                        entry=stream.readline().split()
+                        if len(entry)!=3 or entry[0]!='L' or int(entry[1])!=level+offset or not 0<int(entry[2])<=1_000_000:raise ValueError('Invalid native evaluated-state edge dimensions.')
+                        edge_count=int(entry[2]);total_edges+=edge_count
+                        if total_edges>2_000_000:raise ValueError('Too many native evaluated-state edges.')
+                        edges=[]
+                        for _ in range(edge_count):
+                            value=stream.readline().strip()
+                            if not re.fullmatch(r'[+-]?0x[0-9a-fA-F]+(?:\.[0-9a-fA-F]*)?p[+-]?\d+',value):raise ValueError('Native evaluated edge circulation is truncated, nonfinite, or malformed.')
+                            number=float.fromhex(value)
+                            if not math.isfinite(number):raise ValueError('Native evaluated edge circulation is nonfinite.')
+                            edges.append(number)
+                        edge_levels.append(dict(level=level+offset,gamma=edges))
+                record=dict(time=time,level=level,loops=count,surfaces=surfaces,currentTime=instant,gamma=gamma)
+                if magic==CURRENT_MAGIC:record['edgeLevels']=edge_levels
+                records.append(record);previous=time;previous_instant=instant
                 if len(records)>10000:raise ValueError('Too many native evaluated-state records.')
     except (UnicodeError,OverflowError) as error:raise ValueError('Invalid native evaluated-state encoding or number.') from error
     if not records:raise ValueError('Native evaluated-state companion is empty.')

@@ -1,6 +1,6 @@
 --- original/VSP_Solver.C
 +++ reader-repair/VSP_Solver.C
-@@ -31265,6 +31265,35 @@
+@@ -31265,6 +31265,54 @@
  
  void VSP_SOLVER::CalculateQuadTreeVelocitySurvey(int Case)
  {
@@ -8,12 +8,14 @@
 +    const char *state_path = getenv("STUDIO_EVALUATED_STATE_FILE");
 +    if ( DoSolutionInterrogation_ && state_path && state_path[0] ) {
 +        static FILE *state_file = NULL;
++        static int state_version = 0;
 +        if (!state_file) {
 +            state_file = fopen(state_path,"r");
 +            char magic[64];
-+            if (!state_file || fscanf(state_file,"%63s",magic)!=1 || strcmp(magic,"STUDIO_EVALUATED_STATE_1")) {
++            if (!state_file || fscanf(state_file,"%63s",magic)!=1 || (strcmp(magic,"STUDIO_EVALUATED_STATE_1") && strcmp(magic,"STUDIO_EVALUATED_STATE_2"))) {
 +                fprintf(stderr,"Invalid native evaluated-state companion header.\n"); exit(2);
 +            }
++            state_version = !strcmp(magic,"STUDIO_EVALUATED_STATE_2") ? 2 : 1;
 +        }
 +        char record;
 +        int time,level,loops,surfaces;
@@ -31,6 +33,23 @@
 +        }
 +        CalculateVelocities(ALL_WAKE_GAMMAS);
 +        InterpolateExistingSolution(CurrentNoiseTime_);
++        if(state_version==2) {
++            char marker; int levels;
++            if(fscanf(state_file," %c %d",&marker,&levels)!=2 || marker!='E' || levels!=NumberOfMGLevels_-MGLevel_+1) {
++                fprintf(stderr,"Native evaluated-state grid levels do not match.\n"); exit(2);
++            }
++            for(int level=MGLevel_;level<=NumberOfMGLevels_;level++) {
++                int stored_level,edges;
++                if(fscanf(state_file," %c %d %d",&marker,&stored_level,&edges)!=3 || marker!='L' || stored_level!=level || edges!=VSPGeom().Grid(level).NumberOfEdges()) {
++                    fprintf(stderr,"Native evaluated-state edge dimensions do not match.\n"); exit(2);
++                }
++                for(int edge=1;edge<=edges;edge++) {
++                    double gamma;
++                    if(fscanf(state_file,"%la",&gamma)!=1) { fprintf(stderr,"Truncated native evaluated edge circulation.\n"); exit(2); }
++                    VSPGeom().Grid(level).EdgeList(edge).Gamma()=gamma;
++                }
++            }
++        }
 +    }
 +
  

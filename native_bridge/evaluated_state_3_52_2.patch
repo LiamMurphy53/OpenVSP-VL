@@ -8,13 +8,13 @@
 +        char state_name[4096]; snprintf(state_name,sizeof(state_name),"%s.studio-state",FileName_);
 +        FILE *state_file=fopen(state_name,"w");
 +        if (!state_file) { fprintf(stderr,"Could not create native evaluated-state companion.\n"); exit(1); }
-+        fprintf(state_file,"STUDIO_EVALUATED_STATE_1\n"); fclose(state_file);
++        fprintf(state_file,"STUDIO_EVALUATED_STATE_2\n"); fclose(state_file);
 +    }
 +
     
      char DumChar[MAX_CHAR_SIZE];
      int i, number_of_nodes, number_of_tris, number_of_loops, number_of_edges;
-@@ -32441,6 +32448,16 @@
+@@ -32441,6 +32448,22 @@
  
  void VSP_SOLVER::WriteOutAerothermalDatabaseSolution(void)
  {
@@ -25,6 +25,12 @@
 +        fprintf(state_file,"R %d %d %d %d %a\n",Time_,MGLevel_,VSPGeom().Grid(MGLevel_).NumberOfLoops(),VSPGeom().Grid(MGLevel_).NumberOfSurfaceLoops(),CurrentTime_);
 +        for(int loop=1;loop<=VSPGeom().Grid(MGLevel_).NumberOfLoops();loop++)
 +            fprintf(state_file,"%a\n",VSPGeom().Grid(MGLevel_).LoopList(loop).Gamma());
++        fprintf(state_file,"E %d\n",NumberOfMGLevels_-MGLevel_+1);
++        for(int level=MGLevel_;level<=NumberOfMGLevels_;level++) {
++            fprintf(state_file,"L %d %d\n",level,VSPGeom().Grid(level).NumberOfEdges());
++            for(int edge=1;edge<=VSPGeom().Grid(level).NumberOfEdges();edge++)
++                fprintf(state_file,"%a\n",VSPGeom().Grid(level).EdgeList(edge).Gamma());
++        }
 +        if(fclose(state_file)) { fprintf(stderr,"Could not finish native evaluated-state companion.\n"); exit(1); }
 +    }
 +

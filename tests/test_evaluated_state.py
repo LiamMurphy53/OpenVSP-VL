@@ -19,6 +19,18 @@ class EvaluatedState(unittest.TestCase):
         self.assertEqual(before,{p.name:p.read_bytes() for p in [self.database,self.cases,self.companion]})
         self.companion.unlink();self.database.with_suffix('.studio-state.json').unlink();self.assertIsNone(state.validate(self.database))
 
+    def test_version_two_edges_are_lossless_and_malformed_records_reject(self):
+        first='E 2\nL 1 2\n-0x0p+0\n0x1.0000000000001p-20\nL 2 1\n0x1p+3\n'
+        second='E 1\nL 1 1\n-0x1p+2\n'
+        text=self.text.replace(state.MAGIC,state.CURRENT_MAGIC).replace('R 1',first+'R 1')+second
+        self.companion.write_text(text);state.seal(self.database,WRITER);loaded=state.validate(self.database)['records']
+        self.assertEqual(loaded[0]['edgeLevels'][0]['gamma'][1].hex(),'0x1.0000000000001p-20')
+        self.assertEqual(math.copysign(1,loaded[0]['edgeLevels'][0]['gamma'][0]),-1)
+        self.assertEqual(loaded[1]['edgeLevels'],[dict(level=1,gamma=[-4.])])
+        for bad in [text[:-9],text.replace('E 2','E 0'),text.replace('L 2 1','L 3 1'),text.replace('L 1 2','L 1 1000001'),text.replace('0x1p+3','inf'),text.replace('E 1','E 102')]:
+            self.companion.write_text(bad)
+            with self.subTest(text=bad),self.assertRaises(ValueError):state.read(self.companion)
+
     def test_changed_missing_symlink_and_wrong_provenance_reject(self):
         state.seal(self.database,WRITER)
         for p in [self.database,self.cases,self.companion]:

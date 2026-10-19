@@ -17,11 +17,20 @@ class NativeEvaluatedState(unittest.TestCase):
         result,path=self.worker(dict(action='analysis',name='VSPAEROSweep',inputs=[dict(name=n,values=[x]) for n,x in values.items()]))
         self.assertEqual(result['evaluatedStateCapture']['mode'],'captured')
         database=path.with_suffix('.adb');companion=path.with_suffix('.studio-state');original=companion.read_text();before=hashlib.sha256(database.read_bytes()).hexdigest();writer=state.validate(database)['binding']['writer']
-        for kind in ['grid','surfaces','time']:
+        for kind in ['grid','surfaces','time','edges']:
             with self.subTest(kind=kind):
                 rows=original.splitlines()
                 if kind in ('grid','surfaces'):
                     fields=rows[1].split();index=2 if kind=='grid' else 4;fields[index]=str(int(fields[index])+1 if kind=='grid' else int(fields[index])-1);rows[1]=' '.join(fields)
+                    if kind=='grid':
+                        # Keep the companion structurally valid while disagreeing with the native grid.
+                        for i,line in enumerate(rows[2:],2):
+                            if line.startswith('L '):
+                                parts=line.split();parts[1]=str(int(parts[1])+1);rows[i]=' '.join(parts)
+                            elif line.startswith('R '):
+                                parts=line.split();parts[2]=str(int(parts[2])+1);rows[i]=' '.join(parts)
+                elif kind=='edges':
+                    i=next(i for i,line in enumerate(rows) if line.startswith('L '));parts=rows[i].split();count=int(parts[2]);parts[2]=str(count-1);rows[i]=' '.join(parts);del rows[i+count]
                 else:
                     for i,line in enumerate(rows):
                         if line.startswith('R '):
