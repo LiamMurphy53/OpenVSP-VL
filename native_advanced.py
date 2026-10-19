@@ -249,6 +249,16 @@ def mutate(v,r):
         elif op=='mode-preset-remove':v.RemoveGroupSetting(m,one(r['index'],range(len(v.ModeGetAllGroups(m)))))
         else:
             p=one(r['group'],v.GetVarPresetGroups());s=one(r['setting'],v.GetVarPresetSettings(p));v.ModeAddGroupSetting(m,p,s)
+    elif op=='preset-setting-values':
+        group=one(r['group'],v.GetVarPresetGroups());setting=one(r['setting'],v.GetVarPresetSettings(group))
+        entries=r['entries'];allowed=set(v.GetVarPresetParmIDs(group));seen=set();changes=[]
+        if not isinstance(entries,list) or not entries:raise ValueError('Choose saved parameter values to edit.')
+        for entry in entries:
+            if not isinstance(entry,dict):raise ValueError('Choose a saved parameter and numeric value.')
+            parameter=one(entry.get('parameter'),allowed)
+            if parameter in seen:raise ValueError('Each saved parameter may appear only once.')
+            seen.add(parameter);changes.append((parameter,finite(entry.get('value'))))
+        for parameter,value in changes:v.SetVarPresetParmVal(group,setting,parameter,value)
     elif op in ('preset-setting-add','preset-setting-delete','preset-setting-update','preset-setting-rename'):
         p=one(r['group'],v.GetVarPresetGroups())
         if op=='preset-setting-add':s=v.AddVarPresetSetting(p,name(r['name']));v.SaveVarPresetParmVals(p,s)

@@ -261,6 +261,17 @@
             ".workspace/evidence/link-endpoints-browser/editor.png"
           ],
           "scope": "Four endpoint configurations, exact native target geometry/settings, cold geometry, future propagation, rejection guards and browser Undo/Redo/reload. W09 remains unproven."
+        },
+        {
+          "date": "2026-10-19",
+          "change": "Edit native saved preset values without first changing the aircraft; explicit application retains mode and property-lock behavior.",
+          "evidence": [
+            "tests/test_preset_values.py",
+            "web/configuration-tools.js",
+            "MODELING_AUDIT.md",
+            ".workspace/evidence/preset-values-browser/verification.json"
+          ],
+          "scope": "Stored values/sibling settings, unchanged full geometry, native direct/mode application, cold persistence, invalid requests, locks and packaged browser history/reload/application verified. W09 remains unproven."
         }
       ]
     },
