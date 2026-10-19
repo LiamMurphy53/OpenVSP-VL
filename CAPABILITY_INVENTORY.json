@@ -789,7 +789,8 @@
             ".workspace/evidence/yaw-captured-test.log",
             ".workspace/evidence/yaw-packaged-test.log"
           ],
-          "remaining": "Broader yaw configurations and browser verification remain unproved."
+          "remaining": "Broader yaw configurations, other motion browser sequences, deployment-host compatibility and full workflow closure remain unproved.",
+          "browserEvidence": ".workspace/evidence/stability-browser-v2/verification.json"
         }
       }
     }
