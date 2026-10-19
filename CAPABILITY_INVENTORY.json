@@ -176,6 +176,17 @@
             ".workspace/evidence/bulk-link-browser/verification.json"
           ],
           "scope": "Four group/component POD/WING native-reference configurations and browser group/component/history/propagation/filter checks; W09 closure remains unproven."
+        },
+        {
+          "date": "2026-10-18",
+          "change": "Original scale, offset, lower-limit and upper-limit link switches exposed with immediate original-manager reevaluation.",
+          "evidence": [
+            "native_link_options.py",
+            "tests/test_link_options.py",
+            "MODELING_AUDIT.md",
+            ".workspace/evidence/link-options-browser/verification.json"
+          ],
+          "scope": "Seven native configurations, exact target geometry, cold flags, value locks and browser source/edit/history/reload; W09 closure remains unproved."
         }
       ]
     },

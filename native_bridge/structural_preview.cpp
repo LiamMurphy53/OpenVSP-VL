@@ -366,6 +366,18 @@ extern "C" const char* studio_user_parm_restore(const char* engine,const char* i
     if(doc && freeDoc)freeDoc(doc);if(library)dlclose(library);return output.c_str();
 }
 
+extern "C" const char* studio_refresh_parameter_links(const char* engine,const char* source){
+    static thread_local std::string output;void* library=nullptr;
+    try{
+        if(!source || !*source)throw std::runtime_error("Missing native link source.");
+        library=dlopen(engine,RTLD_NOW);if(!library)throw std::runtime_error(dlerror());
+        auto manager=symbol<void*>(library,"_ZZN16LinkMgrSingleton11getInstanceEvE8instance");
+        symbol<void(*)(void*,const std::string&,bool)>(library,"_ZN16LinkMgrSingleton11ParmChangedERKNSt3__112basic_stringIcNS0_11char_traitsIcEENS0_9allocatorIcEEEEb")(manager,std::string(source),true);
+        output="{\"updated\":true}";
+    }catch(const std::exception& e){output="{\"error\":"+quote(e.what())+"}";}
+    if(library)dlclose(library);return output.c_str();
+}
+
 extern "C" const char* studio_mesh_polygon_options(const char* engine,const char* geom,const char* scaleGuard,int levels,bool cull,double fraction,bool wakes){
     static thread_local std::string output;void* library=nullptr;
     try{

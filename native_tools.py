@@ -91,7 +91,8 @@ def snapshot(v, parameter):
     links=[]
     for i in range(v.GetNumParmLinks()):
         lid=v.GetParmLinkID(i)
-        links.append(dict(id=lid,source=v.GetParmLinkAParm(lid),target=v.GetParmLinkBParm(lid),params=parms(lid)))
+        import native_link_options
+        links.append(dict(flags=native_link_options.flags(v,lid),id=lid,source=v.GetParmLinkAParm(lid),target=v.GetParmLinkBParm(lid),params=parms(lid)))
     presets=[]
     for gid in v.GetVarPresetGroups():
         presets.append(dict(id=gid,name=v.GetGroupName(gid),parameters=list(v.GetVarPresetParmIDs(gid)),settings=[dict(id=s,name=v.GetSettingName(s),values=list(v.GetVarPresetParmVals(s))) for s in v.GetVarPresetSettings(gid)]))
@@ -301,6 +302,9 @@ def mutate(v,r):
             if names[member-1]!=r['expectedName']:raise ValueError('Surface membership changed. Reload before editing.')
             (v.AddSelectedToCSGroup if add else v.RemoveSelectedFromCSGroup)([member],index)
     elif op=='control-groups-auto': v.AutoGroupVSPAEROControlSurfaces()
+    elif op=='link-options':
+        import native_link_options
+        native_link_options.apply(v,r)
     elif op=='link-bulk':
         import native_bulk_links
         native_bulk_links.apply(v,r)

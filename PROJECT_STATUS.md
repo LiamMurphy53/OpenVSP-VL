@@ -255,3 +255,7 @@ Original matching-group/component link actions are now exposed in Links & preset
 ### 2026-10-18 — flow-through stack failure fixed
 
 The baseline stack-preset error is now fixed. Studio preserves the original cap-success arrays when their lengths differ from the final surface count, and displays native result entries without guessing a surface mapping. Original/native geometry, false/true cap flags, edits, cold recovery and the complete SpecializedNative regression module pass; browser cap editing/Undo/reload also pass. The original failure evidence is retained. The53-module baseline was not rerun wholesale after this narrow fix; focused source and packaged checks are recorded separately. The SDK chevron crash and strict coarsening discrepancy remain open.
+
+### 2026-10-18 — complete native link switch controls
+
+Links & presets now exposes original scale/offset bypass switches and minimum/maximum activation, including stored bounds. Changes immediately evaluate through the original link manager while preserving the source dimension. Seven native configurations, cold recovery, locks and malformed requests are checked; all22selected packaged validation methods pass. Browser limit changes, source edits, Undo/Redo/reload and exact original target geometry pass. See MODELING_AUDIT.md. The broader SDK chevron and strict coarsening issues remain open; full workflow parity is not claimed.
