@@ -747,14 +747,15 @@
     "corrections": "Assembly pre/post-computation settings separated; full native schema/reference policy and forced gear selector assertions corrected. Focused verification recorded in MODELING_AUDIT.md.",
     "unresolved": "Unsteady native solver writes nonfinite flow-plane fields; previous intermittent native failures and strict polygon coarsening equivalence remain open.",
     "pitchRestorationFollowup": {
-      "commitPending": true,
       "scope": "Automatic serial Q-motion capture and validated restoration; single wing condition source and packaged service regressions now exact against official final plane.",
       "evidence": [
         "tests/test_flow_interrogate.py",
         "tests/test_evaluated_capture.py",
         "MODELING_AUDIT.md"
       ],
-      "remaining": "Broader configurations, other motions/parallel paths and browser verification remain open."
+      "remaining": "Broader configurations and other motions/parallel paths remain open; source/packaged browser source capture, 129-record restoration and reload are verified.",
+      "implementationCommit": "86520e4",
+      "browserEvidence": ".workspace/evidence/pitch-capture-browser/verification.json"
     }
   }
 }
