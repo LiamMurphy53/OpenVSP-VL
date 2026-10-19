@@ -198,7 +198,7 @@ def start_job(req, *, model_source=None, source_revision=None, study_context=Non
         model=folder/'aircraft.vsp3'
         if source_job:
             for file in job_folder(source).iterdir():
-                if file.is_file() and not file.is_symlink() and not file.name.startswith('.') and file.suffix!='.json' and file.name!='engine.log' and not (req['name']=='FlowPlaneSlicer' and re.fullmatch(r'.+\.case\.-?\d+\.quad\.\d+\.dat',file.name)):
+                if file.is_file() and not file.is_symlink() and not file.name.startswith('.') and (file.suffix!='.json' or file.name.endswith('.studio-state.json')) and file.name!='engine.log' and not (req['name']=='FlowPlaneSlicer' and re.fullmatch(r'.+\.case\.-?\d+\.quad\.\d+\.dat',file.name)):
                     shutil.copy2(file,folder/file.name)
         else:shutil.copy2(model_source or MODEL,model)
         job=dict(id=jid,name=req['name'],status='running',started=time.time(),revision=source_revision or REVISION)

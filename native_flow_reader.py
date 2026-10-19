@@ -9,13 +9,15 @@ from pathlib import Path
 from vsp_runtime import ROOT
 
 
-def executable(v):
+def executable(v,capture=False):
     if platform.system()!='Darwin' or platform.machine()!='arm64' or v.GetVSPVersion()!='OpenVSP 3.52.2':
         raise ValueError('Saved airflow restoration currently requires macOS arm64 OpenVSP 3.52.2.')
     vendor=ROOT/'native_bridge/vendor/vspaero-3.52.2'
     patch=ROOT/'native_bridge/flow_reader_3_52_2.patch'
     state_patch=ROOT/'native_bridge/evaluated_state_read_3_52_2.patch'
-    patch_bytes=patch.read_bytes()+state_patch.read_bytes()
+    patches=[patch,state_patch]
+    if capture:patches.append(ROOT/'native_bridge/evaluated_state_3_52_2.patch')
+    patch_bytes=b''.join(p.read_bytes() for p in patches)
     sources=sorted(p for p in vendor.iterdir() if p.suffix in ('.C','.H'))
     flags=['-std=c++17','-O1','-DMYTIME','-Domp_get_max_threads()=1','-Wno-format','-Wno-format-security','-Wno-non-pod-varargs']
     digest=hashlib.sha256(patch_bytes+json.dumps(flags).encode()+b''.join(p.name.encode()+p.read_bytes() for p in sources)).hexdigest()
@@ -25,7 +27,7 @@ def executable(v):
         with tempfile.TemporaryDirectory(dir=cache) as directory:
             work=Path(directory);src=work/'reader-repair';src.mkdir()
             for p in sources:shutil.copy2(p,src/p.name)
-            for source_patch in [patch,state_patch]:
+            for source_patch in patches:
                 applied=subprocess.run(['/usr/bin/patch','-p1','-i',str(source_patch)],cwd=src,capture_output=True,text=True,timeout=30)
                 if applied.returncode:raise ValueError('Could not apply the saved-reader compatibility repair: '+applied.stdout[-2000:]+applied.stderr[-2000:])
             cmake=(vendor/'CMakeLists.txt').read_text().split('SET( VSPAERO_CORE_FILES',1)[1].split(')',1)[0]

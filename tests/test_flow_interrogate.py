@@ -148,9 +148,11 @@ class NativeFlowInterrogate(unittest.TestCase):
         inputs=[dict(name=n,values=[x]) for n,x in [('GeomSet',-1),('ThinGeomSet',0),('RefFlag',1),('WingID',self.gid),('AlphaStart',4.),('AlphaNpts',1),('MachStart',.1),('MachNpts',1),('NCPU',1),('NumTimeSteps',4),('TimeStepSize',.02),('NumWakeNodes',8),('WakeNumIter',3),('UnsteadyType',self.v.STABILITY_Q_ANALYSIS)]]
         try:
             source=self.wait_job(service.start_job(dict(name='VSPAEROSweep',revision=service.REVISION,inputs=inputs))['id'])
+            self.assertEqual(source['result']['evaluatedStateCapture']['mode'],'captured')
             folder=service.job_folder(source['id']);original={p.name:p.read_bytes() for p in folder.iterdir() if p.is_file()}
             entries=[dict(name='XSlicePosVec',values=[]),dict(name='YSlicePosVec',values=[1.]),dict(name='ZSlicePosVec',values=[]),dict(name='QuadTreeBufferLevels',values=[1])]
             result=self.wait_job(service.start_job(dict(name='FlowPlaneSlicer',sourceRun=source['id'],revision=service.REVISION,inputs=entries))['id'])
+            self.assertEqual(result['result']['readerProvenance']['evaluatedState']['mode'],'captured')
             child=service.job_folder(result['id'])
             direct=self.path/'pitch-direct';direct.mkdir()
             for p in child.iterdir():

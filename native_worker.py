@@ -584,8 +584,11 @@ def execute_analysis(v,req):
     if name=='CfdMeshAnalysis':details['nativeSettingOverrides']=cfd_settings
     save(v,name,effective_inputs,**details)
     before_analysis_geoms=set(v.FindGeoms()) if name in ('CompGeom','DegenGeomMesh') else set()
-    result=v.ExecAnalysis(name)
+    import native_evaluated_capture
+    with native_evaluated_capture.solver(v,name,effective_inputs) as writer:
+        result=v.ExecAnalysis(name)
     errors(v)
+    evaluated_capture=native_evaluated_capture.seal_outputs(writer) if writer and result else None
     if name in ('CompGeom','DegenGeomMesh'):
         mesh_candidates=set(v.FindGeoms())-before_analysis_geoms
         if result:mesh_candidates.update(v.GetStringResults(result,'Mesh_GeomID'))
@@ -619,6 +622,7 @@ def execute_analysis(v,req):
     if name in ('VSPAEROSweep','VSPAEROSinglePoint'):
         import native_solver_setup
         data['solverSetup']=native_solver_setup.read(Path.cwd())
+        if evaluated_capture:data['evaluatedStateCapture']=evaluated_capture
     return native_guides.save_preview(v,data,name)
 
 def run(req, model):
