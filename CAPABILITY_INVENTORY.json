@@ -96,7 +96,19 @@
       "workflow": "Airfoils and editable curves",
       "category": "Modeling",
       "closure": "Unproven",
-      "originalPlanRow": "| Airfoils and editable curves | Native file profiles, CST fits/coefficients, degree changes, curve handles, constraints, native exports | Native editable section activity/locked-coordinate controls and Design inspector locks verified across WING/FUSELAGE/STACK/PROP, with SDK, browser edit/Undo/Redo/reopen and exact sampled-profile comparisons; native guided anchor smoothing and arc-length spacing now match independent SDK operations and browser persistence/Undo/Redo; named incoming/outgoing tangent drivers now use native MoveEditXSecPnt with XYZ coordinates, native activity/limits, smoothing and graphical selection synchronization; four section-owner families, effective open/closed endpoints, seam wrapping, symmetry and independent unsmoothed handles have exact SDK checks, and browser full-geometry/Undo/Redo/reopening/error/lock checks pass (`.workspace/evidence/tangent-controls-verification.md`); finish remaining specialized curve operations and broader family verification |"
+      "originalPlanRow": "| Airfoils and editable curves | Native file profiles, CST fits/coefficients, degree changes, curve handles, constraints, native exports | Native editable section activity/locked-coordinate controls and Design inspector locks verified across WING/FUSELAGE/STACK/PROP, with SDK, browser edit/Undo/Redo/reopen and exact sampled-profile comparisons; native guided anchor smoothing and arc-length spacing now match independent SDK operations and browser persistence/Undo/Redo; named incoming/outgoing tangent drivers now use native MoveEditXSecPnt with XYZ coordinates, native activity/limits, smoothing and graphical selection synchronization; four section-owner families, effective open/closed endpoints, seam wrapping, symmetry and independent unsmoothed handles have exact SDK checks, and browser full-geometry/Undo/Redo/reopening/error/lock checks pass (`.workspace/evidence/tangent-controls-verification.md`); finish remaining specialized curve operations and broader family verification |",
+      "followups": [
+        {
+          "date": "2026-10-19",
+          "change": "Added Profile type / Apply profile directly to Modeling tools Section profile, using the current selected native section and existing shape guards.",
+          "evidence": [
+            "MODELING_AUDIT.md",
+            ".workspace/evidence/section-profile-menu-browser/verification.json",
+            ".workspace/evidence/section-profile-menu-browser/profile-selector.png"
+          ],
+          "scope": "Browser selected-tip change, original root profile preservation, exact original native full geometry, Undo/Redo and reload. Broader closure remains unproved."
+        }
+      ]
     },
     {
       "id": "W04",
