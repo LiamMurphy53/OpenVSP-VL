@@ -1,4 +1,4 @@
-# Project status — reviewed 2026-10-18
+# Project status — reviewed 2026-10-19
 
 The full objective remains: all installed OpenVSP engineering capabilities usable end to end in Studio, with native verification. No completion category is closed. Geometry is the current priority; engineering remains queued. Human/crew workflows are deferred by user request.
 
@@ -259,3 +259,7 @@ The baseline stack-preset error is now fixed. Studio preserves the original cap-
 ### 2026-10-18 — complete native link switch controls
 
 Links & presets now exposes original scale/offset bypass switches and minimum/maximum activation, including stored bounds. Changes immediately evaluate through the original link manager while preserving the source dimension. Seven native configurations, cold recovery, locks and malformed requests are checked; all22selected packaged validation methods pass. Browser limit changes, source edits, Undo/Redo/reload and exact original target geometry pass. See MODELING_AUDIT.md. The broader SDK chevron and strict coarsening issues remain open; full workflow parity is not claimed.
+
+### 2026-10-19 — propeller failure narrowed, not fixed
+
+Repeated original-SDK runs locate the retained rounded-chevron failure before point sampling: during file loading, or during native Update when chevrons are restored after staged loading. Disabling Python garbage collection, disabling the nano allocator, retaining returned vectors and staged loading all failed in observed runs. Successful runs return identical geometry; debugger runs did not reproduce the failure. The native cause remains unproved. See MODELING_AUDIT.md for counts and provenance limits. No production workaround or broad completion claim follows from this investigation.
