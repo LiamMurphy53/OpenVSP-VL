@@ -3,8 +3,14 @@ PAIRS={'BaseAbsRel':('BaseLen','BaseLenFrac'),'MinAbsRel':('MinLen','MinFrac'),'
 LABELS={'BaseAbsRel':'Maximum edge length basis','BaseLen':'Maximum edge length (native units)','BaseLenFrac':'Maximum edge length fraction','MinAbsRel':'Minimum edge length basis','MinLen':'Minimum edge length (native units)','MinFrac':'Minimum edge length fraction','MaxGapAbsRel':'Surface gap basis','MaxGap':'Surface gap (native units)','MaxGapFrac':'Surface gap fraction','GrowRatio':'Mesh growth ratio','RigorLimit':'Rigorous growth limiting','NCircSeg':'Circle segmentation target'}
 
 
+def owns(v,pid):
+    # GridDensity is a nested native container; the public structure parameter
+    # list includes its fields even though GetParmContainer is not the struct.
+    return any(pid in v.FindContainerParmIDs(s) for s in v.GetFeaStructIDVec())
+
+
 def reason(v,pid):
-    if v.GetParmGroupName(pid)!='FEAGridDensity':return ''
+    if v.GetParmGroupName(pid)!='FEAGridDensity' or not owns(v,pid):return ''
     name=v.GetParmName(pid);owner=v.GetParmContainer(pid)
     for controller,(absolute,relative) in PAIRS.items():
         if name in (absolute,relative):
@@ -14,7 +20,7 @@ def reason(v,pid):
 
 
 def annotate(v,p):
-    if p['rawGroup']!='FEAGridDensity':return
+    if p['rawGroup']!='FEAGridDensity' or not owns(v,p['id']):return
     if p['name'] in LABELS:p['label']=LABELS[p['name']]
     if p['name'] in PAIRS:p['choices']=[dict(value=v.ABS,label='Absolute · native length'),dict(value=v.REL,label='Relative · fraction')]
     why=reason(v,p['id'])
@@ -45,6 +51,6 @@ def study_metadata(v):
 
 
 def study_priority(v,pid):
-    if v.GetParmGroupName(pid)!='FEAGridDensity':return None
+    if v.GetParmGroupName(pid)!='FEAGridDensity' or not owns(v,pid):return None
     name=v.GetParmName(pid)
     return -12 if name in PAIRS else 20 if name in ('BaseLen','BaseLenFrac') else 30

@@ -29,7 +29,9 @@ class NativeMeshExports(unittest.TestCase):
                 self.assertTrue((folder/'analysis-setup.json').exists())
                 setup=json.loads((folder/'analysis-setup.json').read_text())
                 self.assertEqual(setup['structure'],self.sid)
-                self.assertEqual({e['name']:e['values'][0] for e in setup['inputs']},values)
+                effective={e['name']:e['values'][0] for e in setup['inputs']}
+                self.assertEqual(set(effective),set(native_mesh.FEA_PARAMETERS))
+                self.assertEqual({n:effective[n] for n in values},values)
                 self.assertEqual(set(setup['formats']),{'GMSH','CALCULIX','NASTRAN','MASS'})
                 self.assertIsNone(process.poll(),'Native worker must still be live for termination test')
                 os.killpg(process.pid,signal.SIGTERM)
@@ -50,14 +52,15 @@ class NativeMeshExports(unittest.TestCase):
 
     def test_guided_sizing_uses_original_parameter_limits_and_native_types(self):
         self.fixture();v=self.v;spec=native_mesh.fea_schema(v,self.sid)
-        self.assertEqual(set(e['name'] for e in spec['inputs']),set(native_mesh.FEA_INPUTS))
-        self.assertEqual(set(n for s in spec['guide']['sections'] for n in s['inputs']),set(native_mesh.FEA_INPUTS))
+        self.assertEqual(set(e['name'] for e in spec['inputs']),set(native_mesh.FEA_PARAMETERS))
+        self.assertEqual(set(n for s in spec['guide']['sections'] for n in s['inputs']),set(native_mesh.FEA_PARAMETERS))
         for e in spec['inputs']:
             p=e['nativeParameter']
             self.assertIn(p,v.FindContainerParmIDs(self.sid))
             self.assertEqual((v.GetParmName(p),v.GetParmGroupName(p)),native_mesh.FEA_PARAMETERS[e['name']])
             self.assertEqual((e['min'],e['max']),(v.GetParmLowerLimit(p),v.GetParmUpperLimit(p)))
-            self.assertEqual(e['values'],[v.GetFeaMeshVal(self.gid,v.GetFeaStructIndex(self.sid),getattr(v,native_mesh.FEA_INPUTS[e['name']]))])
+            expected=v.GetFeaMeshVal(self.gid,v.GetFeaStructIndex(self.sid),getattr(v,native_mesh.FEA_INPUTS[e['name']])) if e['name'] in native_mesh.FEA_INPUTS else v.GetParmVal(p)
+            self.assertEqual(e['values'],[expected])
         circle=next(e for e in spec['inputs'] if e['name']=='NCircSeg')
         self.assertEqual(circle['type'],v.DOUBLE_DATA)
         for n in ['HalfMeshFlag','RigorLimit']:
@@ -82,7 +85,9 @@ class NativeMeshExports(unittest.TestCase):
         self.assertEqual({n:v.GetFeaMeshVal(gid,index,getattr(v,enum)) for n,enum in native_mesh.FEA_INPUTS.items()},values)
         v.WriteVSPFile(str(self.model),v.SET_ALL)
         result,path=self.worker(dict(action='analysis',name='FeaMeshAnalysis',structure=sid,formats=['GMSH'],inputs=[]))
-        self.assertEqual({e['name']:e['values'][0] for e in result['inputs']},values)
+        effective={e['name']:e['values'][0] for e in result['inputs']}
+        self.assertEqual(set(effective),set(native_mesh.FEA_PARAMETERS))
+        self.assertEqual({n:effective[n] for n in values},values)
         setup=json.loads((path.parent/'analysis-setup.json').read_text())
         self.assertEqual(setup['inputs'],result['inputs']);self.assertEqual(setup['structure'],sid);self.assertEqual(setup['formats'],result['formats'])
         mesh=read_gmsh(path.parent/'structure.msh')

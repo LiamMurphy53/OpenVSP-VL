@@ -51,6 +51,9 @@ FEA_PAIRS={'BaseAbsRel':('BaseLen','BaseLenFrac'),'MinAbsRel':('MinLen','MinFrac
 def annotate(field,v=None):
     setting=FEA_SETTINGS.get(field['name'])
     if not setting or field['rawGroup']!=setting[1]:return
+    if v is not None:
+        import native_fea_sizing
+        if not native_fea_sizing.owns(v,field['id']):return
     field['label']=setting[2]
     if field['name'] in FEA_SETTING_CHOICES:field['choices']=[dict(value=i,label=l) for i,l in enumerate(FEA_SETTING_CHOICES[field['name']])]
     if v is not None:

@@ -276,6 +276,17 @@
             ".workspace/evidence/cfd-density-ownership-packaged.log"
           ],
           "scope": "User open/edit/reopen, imported custom Box complete native surface equality, real native density guard preservation and selected packaged CFD/custom regressions. Broad closure remains unproved."
+        },
+        {
+          "date": "2026-10-19",
+          "change": "Fixed structural-sizing namespace model-read errors and unrelated mesh/CAD labels using the original public structure parameter registry, including nested containers. Updated stale structural schema tests to verify all33native settings.",
+          "evidence": [
+            "tests/test_fea_density_ownership.py",
+            "tests/test_mesh_exports.py",
+            "MODELING_AUDIT.md",
+            ".workspace/evidence/fea-density-ownership-packaged-verified.log"
+          ],
+          "scope": "User edit/reopen and unchanged geometry, real sizing follower guards, nested native choices, selected packaged exports/recovery/bindings. Existing native CAD diagnostics and broader closure remain open."
         }
       ]
     },
@@ -353,7 +364,20 @@
       "workflow": "FEA parts and properties",
       "category": "Engineering",
       "closure": "Unproven",
-      "originalPlanRow": "| FEA parts and properties | Native parts, assignments, rib-to-spar references, trim lists/directions, array expansion, polyline spar stations; structural region rename/order and native line-array expansion with constraint-target guards; structural intersection targets/curve choices, native curve/mesh equality, invalid/empty recovery and referenced-component deletion guards; all six fixed-point placement modes, named parent/component references, native offsets and mass units, active-reference deletion guards; independent native mesh comparison, single-structure/assembly point-mass companions, browser persistence/Undo/reopen/download verification | Native part drawing adapter and live viewer implemented on installed macOS arm64 engine; browser point inspection/context/refresh/download/edit/Undo/Redo and six-mode independent fixed-point mesh equality verified; finish independent part surface/CAD verification, assembly displays and portable support; structural region boundaries now use native drawing samples, six families and independent line/rectangle/finite-line corner checks; complete curved/intersection/section-curve boundary verification; structural section-curve anchor/handle editing now matches independent SDK operations, with browser insertion/constraints/reopening and exact native drawings; native smooth-tangent and supported symmetry cases now match independent SDK operations and browser checks; native engine activity flags and locked-field/axis interactions verified; complete broader imported-curve/open-endpoint/multi-anchor/drag cases, structural/airfoil browser file-import cases and broader copy/conversion cases and remaining region references; multi-curve/mirrored intersection coverage; broader structural and mirrored-reference cases |"
+      "originalPlanRow": "| FEA parts and properties | Native parts, assignments, rib-to-spar references, trim lists/directions, array expansion, polyline spar stations; structural region rename/order and native line-array expansion with constraint-target guards; structural intersection targets/curve choices, native curve/mesh equality, invalid/empty recovery and referenced-component deletion guards; all six fixed-point placement modes, named parent/component references, native offsets and mass units, active-reference deletion guards; independent native mesh comparison, single-structure/assembly point-mass companions, browser persistence/Undo/reopen/download verification | Native part drawing adapter and live viewer implemented on installed macOS arm64 engine; browser point inspection/context/refresh/download/edit/Undo/Redo and six-mode independent fixed-point mesh equality verified; finish independent part surface/CAD verification, assembly displays and portable support; structural region boundaries now use native drawing samples, six families and independent line/rectangle/finite-line corner checks; complete curved/intersection/section-curve boundary verification; structural section-curve anchor/handle editing now matches independent SDK operations, with browser insertion/constraints/reopening and exact native drawings; native smooth-tangent and supported symmetry cases now match independent SDK operations and browser checks; native engine activity flags and locked-field/axis interactions verified; complete broader imported-curve/open-endpoint/multi-anchor/drag cases, structural/airfoil browser file-import cases and broader copy/conversion cases and remaining region references; multi-curve/mirrored intersection coverage; broader structural and mirrored-reference cases |",
+      "followups": [
+        {
+          "date": "2026-10-19",
+          "change": "Fixed structural-sizing namespace model-read errors and unrelated mesh/CAD labels using the original public structure parameter registry, including nested containers. Updated stale structural schema tests to verify all33native settings.",
+          "evidence": [
+            "tests/test_fea_density_ownership.py",
+            "tests/test_mesh_exports.py",
+            "MODELING_AUDIT.md",
+            ".workspace/evidence/fea-density-ownership-packaged-verified.log"
+          ],
+          "scope": "User edit/reopen and unchanged geometry, real sizing follower guards, nested native choices, selected packaged exports/recovery/bindings. Existing native CAD diagnostics and broader closure remain open."
+        }
+      ]
     },
     {
       "id": "W17",
