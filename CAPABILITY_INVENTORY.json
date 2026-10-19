@@ -283,6 +283,16 @@
             ".workspace/evidence/preset-reference-browser/verification.json"
           ],
           "scope": "Original stale-reference probes, group/setting rejection, unused sibling deletion, multiple consumers, detach/delete/native geometry and packaged browser recovery verified. Existing invalid imports and broad W09 closure remain unproven."
+        },
+        {
+          "date": "2026-10-19",
+          "change": "Add/remove saved preset parameters while preserving existing settings and mode bindings through original membership APIs.",
+          "evidence": [
+            "tests/test_preset_membership.py",
+            "MODELING_AUDIT.md",
+            ".workspace/evidence/preset-membership-browser/verification.json"
+          ],
+          "scope": "Two-setting native vectors, empty groups, mode application geometry, invalid requests and packaged browser add/remove/history/reload verified. W09 remains unproven."
         }
       ]
     },

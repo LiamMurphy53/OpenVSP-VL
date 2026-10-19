@@ -249,6 +249,18 @@ def mutate(v,r):
         elif op=='mode-preset-remove':v.RemoveGroupSetting(m,one(r['index'],range(len(v.ModeGetAllGroups(m)))))
         else:
             p=one(r['group'],v.GetVarPresetGroups());s=one(r['setting'],v.GetVarPresetSettings(p));v.ModeAddGroupSetting(m,p,s)
+    elif op=='preset-parameter':
+        from native_tools import parameter_ids
+        group=one(r['group'],v.GetVarPresetGroups());member=r['member']
+        if type(member)!=bool:raise ValueError('Choose add or remove for this preset parameter.')
+        current=list(v.GetVarPresetParmIDs(group))
+        if member:
+            allowed={p for g in v.FindGeoms() for p in v.GetGeomParmIDs(g)}|parameter_ids(v)
+            parameter=one(r['parameter'],allowed)
+            if parameter not in current:v.AddVarPresetParm(group,parameter)
+        else:
+            parameter=one(r['parameter'],current)
+            v.DeleteVarPresetParm(group,parameter)
     elif op=='preset-setting-values':
         group=one(r['group'],v.GetVarPresetGroups());setting=one(r['setting'],v.GetVarPresetSettings(group))
         entries=r['entries'];allowed=set(v.GetVarPresetParmIDs(group));seen=set();changes=[]
