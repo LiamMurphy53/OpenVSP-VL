@@ -18,7 +18,7 @@ def refs(v):return native_references.references(v).get(v.FindContainer('WaveDrag
 
 
 def reason(v,pid):
-    if v.GetParmGroupName(pid)!='WaveDrag':return ''
+    if v.GetParmGroupName(pid)!='WaveDrag' or v.GetParmContainer(pid)!=v.FindContainer('WaveDragSettings',0):return ''
     n=v.GetParmName(pid);p=ids(v)
     if n=='SelSetIndex' and v.GetParmVal(p['UseMode']):return 'The saved mode supplies wave-drag geometry selection.'
     if n=='Sref' and v.GetParmVal(p['RefFlag'])==v.COMPONENT_REF:return 'Calculated by the original wave-drag manager from its saved reference wing.'
@@ -26,7 +26,7 @@ def reason(v,pid):
 
 
 def annotate(v,p):
-    if p['rawGroup']!='WaveDrag':return
+    if p['rawGroup']!='WaveDrag' or v.GetParmContainer(p['id'])!=v.FindContainer('WaveDragSettings',0):return
     if p['name'] in LABELS:p['label']=LABELS[p['name']]
     if p['name']=='RefFlag':p['choices']=[dict(value=v.MANUAL_REF,label='Entered reference area'),dict(value=v.COMPONENT_REF,label='Native wing area')]
     elif p['name']=='UseMode':p['choices']=[dict(value=0,label='Geometry set'),dict(value=1,label='Native mode')]
@@ -36,7 +36,7 @@ def annotate(v,p):
 
 
 def validate_parameter(v,pid,value=None):
-    if v.GetParmGroupName(pid)!='WaveDrag':return
+    if v.GetParmGroupName(pid)!='WaveDrag' or v.GetParmContainer(pid)!=v.FindContainer('WaveDragSettings',0):return
     refresh(v);why=reason(v,pid)
     if why:raise ValueError(why)
     n=v.GetParmName(pid)
@@ -93,5 +93,5 @@ def study_metadata(v):
 
 
 def study_priority(v,pid):
-    if v.GetParmGroupName(pid)!='WaveDrag':return None
+    if v.GetParmGroupName(pid)!='WaveDrag' or v.GetParmContainer(pid)!=v.FindContainer('WaveDragSettings',0):return None
     return -10 if v.GetParmName(pid) in ('RefFlag','UseMode') else 40

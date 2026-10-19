@@ -57,7 +57,7 @@ def options(v,name):
 
 
 def reason(v,pid):
-    if v.GetParmGroupName(pid)!='ParasiteDrag':return ''
+    if v.GetParmGroupName(pid)!='ParasiteDrag' or v.GetParmContainer(pid)!=v.FindContainer('ParasiteDragSettings',0):return ''
     n=v.GetParmName(pid)
     if n in ('ExcresVal','ExcresType'):return 'Edit the named saved allowance using the drag-allowance editor.'
     if n=='Set' and v.GetParmVal(ids(v)['UseModeMassFlag']):return 'The saved native mode supplies geometry selection.'
@@ -68,7 +68,7 @@ def reason(v,pid):
 
 
 def annotate(v,p):
-    if p['rawGroup']!='ParasiteDrag':return
+    if p['rawGroup']!='ParasiteDrag' or v.GetParmContainer(p['id'])!=v.FindContainer('ParasiteDragSettings',0):return
     if p['name'] in LABELS:p['label']=LABELS[p['name']]
     choices=options(v,p['name'])
     if choices:p['choices']=[c for c in choices if p['min']<=c['value']<=p['max']]
@@ -77,7 +77,7 @@ def annotate(v,p):
 
 
 def validate_parameter(v,pid,value=None):
-    if v.GetParmGroupName(pid)!='ParasiteDrag':return
+    if v.GetParmGroupName(pid)!='ParasiteDrag' or v.GetParmContainer(pid)!=v.FindContainer('ParasiteDragSettings',0):return
     refresh(v);why=reason(v,pid)
     if why:raise ValueError(why)
     n=v.GetParmName(pid)
@@ -90,7 +90,7 @@ def validate_parameter(v,pid,value=None):
 
 
 def set_parameter(v,pid,value):
-    if v.GetParmGroupName(pid)!='ParasiteDrag' or v.GetParmName(pid) not in UNIT_METHODS:return False
+    if v.GetParmGroupName(pid)!='ParasiteDrag' or v.GetParmContainer(pid)!=v.FindContainer('ParasiteDragSettings',0) or v.GetParmName(pid) not in UNIT_METHODS:return False
     if isinstance(value,bool) or int(value)!=value:raise ValueError('Choose a native unit.')
     refresh(v);native_unit(v,UNIT_METHODS[v.GetParmName(pid)],value)
     refresh(v);return True
@@ -137,7 +137,7 @@ def study_metadata(v):
 
 
 def study_priority(v,pid):
-    if v.GetParmGroupName(pid)!='ParasiteDrag':return None
+    if v.GetParmGroupName(pid)!='ParasiteDrag' or v.GetParmContainer(pid)!=v.FindContainer('ParasiteDragSettings',0):return None
     return -20 if v.GetParmName(pid) in UNIT_METHODS or v.GetParmName(pid)=='LengthUnit' else -10 if v.GetParmName(pid) in ('FreestreamType','RefFlag','UseModeMassFlag','TurbCfEqnType') else 40
 
 

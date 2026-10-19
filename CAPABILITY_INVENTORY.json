@@ -153,6 +153,16 @@
             ".workspace/evidence/cfd-density-ownership-packaged.log"
           ],
           "scope": "User open/edit/reopen, imported custom Box complete native surface equality, real native density guard preservation and selected packaged CFD/custom regressions. Broad closure remains unproved."
+        },
+        {
+          "date": "2026-10-19",
+          "change": "Fixed unrelated user/custom unit edits being routed into global parasite-drag unit conversion. Drag reference guards and general export annotations/priorities now verify original manager ownership.",
+          "evidence": [
+            "tests/test_global_setting_ownership.py",
+            "MODELING_AUDIT.md",
+            ".workspace/evidence/global-setting-ownership-packaged.log"
+          ],
+          "scope": "Eight user-name collisions preserve all global values/geometry; imported custom Box uses the colliding name with exact original geometry and unchanged global units; selected real controls/wave arrays/bindings pass. Broad closure remains unproved."
         }
       ]
     },
@@ -287,6 +297,16 @@
             ".workspace/evidence/fea-density-ownership-packaged-verified.log"
           ],
           "scope": "User edit/reopen and unchanged geometry, real sizing follower guards, nested native choices, selected packaged exports/recovery/bindings. Existing native CAD diagnostics and broader closure remain open."
+        },
+        {
+          "date": "2026-10-19",
+          "change": "Fixed unrelated user/custom unit edits being routed into global parasite-drag unit conversion. Drag reference guards and general export annotations/priorities now verify original manager ownership.",
+          "evidence": [
+            "tests/test_global_setting_ownership.py",
+            "MODELING_AUDIT.md",
+            ".workspace/evidence/global-setting-ownership-packaged.log"
+          ],
+          "scope": "Eight user-name collisions preserve all global values/geometry; imported custom Box uses the colliding name with exact original geometry and unchanged global units; selected real controls/wave arrays/bindings pass. Broad closure remains unproved."
         }
       ]
     },
@@ -398,7 +418,19 @@
       "workflow": "File interchange",
       "category": "Modeling",
       "closure": "Unproven",
-      "originalPlanRow": "| File interchange | 21 active native exporters and nine import options; companion bundles; multi-structure CAD selection verified | All nine import families now have record preflight and atomic recovery; remaining five families verified against independent native parameters, complete mesh/wire geometry, binary/text variants, selected parents, browser retry/Undo/Redo/cold reopen (`.workspace/evidence/import-records-verification.md`). Broader complex legacy/large-file/edge-layout cases and export-setting guidance remain; portable distribution |"
+      "originalPlanRow": "| File interchange | 21 active native exporters and nine import options; companion bundles; multi-structure CAD selection verified | All nine import families now have record preflight and atomic recovery; remaining five families verified against independent native parameters, complete mesh/wire geometry, binary/text variants, selected parents, browser retry/Undo/Redo/cold reopen (`.workspace/evidence/import-records-verification.md`). Broader complex legacy/large-file/edge-layout cases and export-setting guidance remain; portable distribution |",
+      "followups": [
+        {
+          "date": "2026-10-19",
+          "change": "Fixed unrelated user/custom unit edits being routed into global parasite-drag unit conversion. Drag reference guards and general export annotations/priorities now verify original manager ownership.",
+          "evidence": [
+            "tests/test_global_setting_ownership.py",
+            "MODELING_AUDIT.md",
+            ".workspace/evidence/global-setting-ownership-packaged.log"
+          ],
+          "scope": "Eight user-name collisions preserve all global values/geometry; imported custom Box uses the colliding name with exact original geometry and unchanged global units; selected real controls/wave arrays/bindings pass. Broad closure remains unproved."
+        }
+      ]
     },
     {
       "id": "W20",

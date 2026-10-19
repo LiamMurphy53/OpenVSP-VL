@@ -14,7 +14,7 @@ LABELS={'LenUnit':'File length units','Tolerance':'Point tolerance','SplitSurfs'
 
 def annotate(v,p):
     group=p['rawGroup'];name=p['name']
-    if group not in GROUPS:return
+    if group not in GROUPS or v.GetParmContainer(p['id'])!=v.GetVehicleID():return
     base=name.removeprefix('Structure')
     if base in LABELS:p['label']=LABELS[base]
     if group=='SVGSettings' and name=='LenUnit':p['label']='Scale-bar units (coordinates unchanged)'
@@ -80,7 +80,7 @@ def study_metadata(v):
 
 
 def reason(v,pid):
-    if v.GetParmGroupName(pid) not in GROUPS:return ''
+    if v.GetParmGroupName(pid) not in GROUPS or v.GetParmContainer(pid)!=v.GetVehicleID():return ''
     data=study_metadata(v).get(pid)
     if data and any(v.GetParmVal(c['parameter']) not in c['values'] for c in data['conditions']):return 'Unused with the saved export conversion, drawing dimensions, layout or view selection.'
     return ''
@@ -93,7 +93,7 @@ def validate_parameter(v,pid):
 
 def study_priority(v,pid):
     group=v.GetParmGroupName(pid);name=v.GetParmName(pid)
-    if group not in GROUPS:return None
+    if group not in GROUPS or v.GetParmContainer(pid)!=v.GetVehicleID():return None
     if name in ('DimFlag','ToCubic','StructureToCubic'):return -15
     if name=='ViewType':return -14
     if name.endswith('View'):return -13
