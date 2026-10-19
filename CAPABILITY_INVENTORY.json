@@ -755,7 +755,27 @@
       ],
       "remaining": "Broader configurations and other motions/parallel paths remain open; source/packaged browser source capture, 129-record restoration and reload are verified.",
       "implementationCommit": "86520e4",
-      "browserEvidence": ".workspace/evidence/pitch-capture-browser/verification.json"
+      "browserEvidence": ".workspace/evidence/pitch-capture-browser/verification.json",
+      "edgeStateOpenmpFollowup": {
+        "implementationCommits": [
+          "a6127a0",
+          "882608a"
+        ],
+        "scope": "Version-two all-record evaluated edge circulation; OpenMP single-thread reader/recorder and bundled pinned runtime. Ordinary two-condition/two-plane source and packaged app native regressions match all four official final files exactly.",
+        "sourceTestSeconds": 93.288,
+        "packagedTestSeconds": 78.262,
+        "evidence": [
+          ".workspace/evidence/pitch-v2-openmp-app-test.log",
+          ".workspace/evidence/pitch-v2-openmp-packaged-test.log",
+          ".workspace/evidence/openmp-reader-steady-regression.log"
+        ],
+        "remaining": "Browser repetition for this integration, broader motion/rotor and deployment compatibility, original roll zero-area failure and full post-change workflow audit remain unproved.",
+        "rotorRegressionEvidence": [
+          ".workspace/evidence/openmp-rotor-regressions.log",
+          ".workspace/evidence/openmp-different-speed-rotors.log",
+          ".workspace/evidence/openmp-packaged-rotor-regression.log"
+        ]
+      }
     }
   }
 }

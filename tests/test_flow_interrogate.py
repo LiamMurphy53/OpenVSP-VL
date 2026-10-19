@@ -59,6 +59,8 @@ class NativeFlowInterrogate(unittest.TestCase):
                 self.assertEqual(sorted(float(g['Omega']) for g in written),sorted(speed*2*3.141592653589793/60 for speed in rotor_speeds))
             entries=[dict(name='XSlicePosVec',values=[1.25]),dict(name='YSlicePosVec',values=[1.]),dict(name='ZSlicePosVec',values=[]),dict(name='QuadTreeBufferLevels',values=[0])]
             result=self.wait_job(service.start_job(dict(name='FlowPlaneSlicer',sourceRun=source['id'],revision=service.REVISION,inputs=entries))['id'])
+            self.assertEqual(result['result']['readerProvenance']['readerMode'],'openmp-single-thread')
+            self.assertEqual(result['result']['readerProvenance']['evaluatedState']['mode'],'legacy')
             from aero_io import case_list,read_flow_plane
             records=case_list(folder/'aircraft.adb');self.assertEqual(len(records),expected_records)
             self.assertEqual(len(result['result']['flowPlanes']),2*len(records))
