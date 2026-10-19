@@ -145,6 +145,32 @@ class NativeFlowInterrogate(unittest.TestCase):
             raise
         self.assertEqual(self.model.read_bytes(),baseline)
 
+    def test_elevated_wing_roll_saved_airflow_matches_original(self):
+        v=self.v;v.SetParmValUpdate(self.gid,'Z_Rel_Location','XForm',1.)
+        v.Update();v.WriteVSPFile(str(self.model),v.SET_ALL);baseline=self.model.read_bytes()
+        values=dict(GeomSet=-1,ThinGeomSet=0,RefFlag=1,WingID=self.gid,AlphaStart=4.,AlphaNpts=1,MachStart=.1,MachNpts=1,NCPU=1,NumTimeSteps=4,TimeStepSize=.02,NumWakeNodes=8,WakeNumIter=3,UnsteadyType=v.STABILITY_P_ANALYSIS)
+        try:
+            source=self.wait_job(service.start_job(dict(name='VSPAEROSweep',revision=service.REVISION,inputs=[dict(name=n,values=[x]) for n,x in values.items()]))['id'])
+            self.assertEqual(source['result']['evaluatedStateCapture']['mode'],'captured')
+            folder=service.job_folder(source['id']);original={p.name:p.read_bytes() for p in folder.iterdir() if p.is_file()}
+            self.assertNotIn('nan',(folder/'aircraft.history').read_text().lower())
+            entries=[dict(name='XSlicePosVec',values=[]),dict(name='YSlicePosVec',values=[1.,3.]),dict(name='ZSlicePosVec',values=[]),dict(name='QuadTreeBufferLevels',values=[1])]
+            result=self.wait_job(service.start_job(dict(name='FlowPlaneSlicer',sourceRun=source['id'],revision=service.REVISION,inputs=entries))['id']);child=service.job_folder(result['id'])
+            self.assertEqual(result['result']['readerProvenance']['evaluatedState']['mode'],'captured')
+            direct=self.path/'roll-elevated-direct';direct.mkdir()
+            for path in child.iterdir():
+                if path.suffix in ('.vspgeom','.vspaero','.vkey','.groups'):shutil.copy2(path,direct/path.name)
+            with (direct/'native.log').open('w') as log:run=subprocess.run([str(distribution()/'vspaero'),'-omp','1','-pstab',str(direct/'aircraft')],cwd=direct,stdout=log,stderr=log,timeout=60)
+            self.assertEqual(run.returncode,0)
+            from aero_io import read_flow_plane,case_list
+            records=case_list(folder/'aircraft.adb');planes=result['result']['flowPlanes'];self.assertEqual(len(planes),2*len(records))
+            for plane in planes:read_flow_plane(child/plane['file'])
+            for quad in [1,2]:self.assertEqual((child/f'aircraft.case.{len(records)}.quad.{quad}.dat').read_bytes(),(direct/f'aircraft.case.1.quad.{quad}.dat').read_bytes())
+            self.assertEqual(original,{p.name:p.read_bytes() for p in folder.iterdir() if p.is_file()});self.assertEqual(self.model.read_bytes(),baseline)
+        finally:
+            evidence=Path(__file__).resolve().parents[1]/'.workspace/evidence/roll-elevated-native'
+            shutil.copytree(self.path,evidence,dirs_exist_ok=True)
+
     def test_pitch_saved_airflow_restoration_matches_original_final_plane(self):
         baseline=self.model.read_bytes()
         inputs=[dict(name=n,values=[x]) for n,x in [('GeomSet',-1),('ThinGeomSet',0),('RefFlag',1),('WingID',self.gid),('AlphaStart',4.),('AlphaNpts',1),('MachStart',.1),('MachNpts',1),('NCPU',1),('NumTimeSteps',4),('TimeStepSize',.02),('NumWakeNodes',8),('WakeNumIter',3),('UnsteadyType',self.v.STABILITY_Q_ANALYSIS)]]

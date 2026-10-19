@@ -774,7 +774,15 @@
           ".workspace/evidence/openmp-rotor-regressions.log",
           ".workspace/evidence/openmp-different-speed-rotors.log",
           ".workspace/evidence/openmp-packaged-rotor-regression.log"
-        ]
+        ],
+        "finiteRollFollowup": {
+          "scope": "Single-thread P capture, elevated-wing finite fixture; source and packaged tests match both official final planes byte-for-byte and preserve source/model.",
+          "evidence": [
+            ".workspace/evidence/roll-elevated-captured-test.log",
+            ".workspace/evidence/roll-elevated-packaged-test.log"
+          ],
+          "unresolved": "Original on-axis roll remains failed: nonfinite native circulation is explicitly rejected by source capture validation."
+        }
       }
     }
   }
