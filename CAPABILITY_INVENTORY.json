@@ -609,6 +609,15 @@
             ".workspace/evidence/custom-transform-browser/verification.json"
           ],
           "scope": "Real two-edit/two-Undo/two-Redo/reload workflow and complete native surface equality; no W25 closure claim."
+        },
+        {
+          "date": "2026-10-20",
+          "change": "Relocated package startup and captured yaw restoration verified with bundled native engine, OpenMP and unchanged cached tools.",
+          "evidence": [
+            ".workspace/evidence/relocated-studio-20261020/verification.json",
+            "MODELING_AUDIT.md"
+          ],
+          "scope": "Current host filesystem relocation; all258planes and both exact final native comparisons. Broader deployment/workflow closure remains unproven."
         }
       ]
     }
