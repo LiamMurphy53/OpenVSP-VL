@@ -1,6 +1,6 @@
 Current status: see [PROJECT_STATUS.md](PROJECT_STATUS.md) for the four existing completion categories and the fixed 25-workflow inventory. Full scope remains open; historical passing cases are not broad closure evidence.
 
-Current priority — 2026-10-12: finish geometric modeling. Engineering implementation is deferred while remaining OpenVSP geometry controls, creation/editing workflows, and native geometry/save equivalence are completed. Human/crew tools remain hidden by user request. Full thread objective remains unchanged; modeling completion requires evidence, not access to raw parameters alone.
+Historical priority — 2026-10-12: finish geometric modeling. At that point engineering implementation was deferred while geometry controls and native geometry/save equivalence were addressed. Current modeling and engineering implementation/verification are both active; PROJECT_STATUS.md and the fixed inventory describe the current state. Human/crew tools remain hidden by user request. Full thread objective remains unchanged; modeling completion requires evidence, not access to raw parameters alone.
 
 # Modern OpenVSP capability completion
 

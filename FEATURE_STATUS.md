@@ -1,5 +1,7 @@
 # OpenVSP Studio feature coverage
 
+Current status and open requirements: [PROJECT_STATUS.md](PROJECT_STATUS.md). Entries below are dated implementation evidence; they do not individually prove full workflow closure. The fixed scope remains W01–W25.
+
 Original wave slicing-plane snapshots — 2026-10-12: completed WaveDrag runs now retain original plane triangles/boundaries for every native cone at saved SlicingLoc, with result Mach alignment and restoration of saved drawing settings. Saved result viewing offers a cone selector, original aircraft context and native-point downloads; PlaneFlag controls automatic opening. Native opacity is retained for new drawings. Basic exact original three-cone/parameter/file checks pass; arbitrary post-run positions, ideal-body display and broad result/recovery coverage remain queued. Evidence: `.workspace/evidence/wave-drawings-implementation.md`.
 
 Guided saved wave-drag setup — 2026-10-12: Engineering settings now groups native geometry/reference and supersonic slicing defaults, with saved wing/mode/propulsive-face selections. Original WaveDragSingleton Update refreshes wing area; direct/study guards and dependencies protect calculated values. Active references and selected face regions are guarded during deletion. Basic fresh-worker/native-analysis-default/atomic rejection checks pass; complete result, native plane/ideal-body display, study and recovery coverage remains queued. Evidence: `.workspace/evidence/wave-settings-implementation.md`.

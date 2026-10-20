@@ -1,6 +1,6 @@
-# Project status — reviewed 2026-10-19
+# Project status — reviewed 2026-10-20
 
-The full objective remains: all installed OpenVSP engineering capabilities usable end to end in Studio, with native verification. No completion category is closed. Geometry is the current priority; engineering remains queued. Human/crew workflows are deferred by user request.
+The full objective remains: all installed OpenVSP engineering capabilities usable end to end in Studio, with native verification. No completion category is closed. Modeling and engineering workflows are implemented in parts and remain under active native and browser verification. Human/crew workflows are deferred by user request.
 
 This is a status view of the existing capability plan, not a new scope or a replacement for its detailed requirements. The original 25 workflow rows are frozen as W01–W25 in [CAPABILITY_INVENTORY.json](CAPABILITY_INVENTORY.json). Future findings belong to those rows and the four existing categories.
 
@@ -15,7 +15,7 @@ Latest modeling evidence includes secondary custom-surface copying, generated re
 
 Custom components can import single scripts or ZIPs with nested helpers, use native named choices, dynamic bindings and parameter-backed/event-only actions. Packaged file-profile references retain companions inside the native aircraft and reload them in fresh jobs; selected script-computed profile switching also passes. Selected original-engine geometry, save/reopen, rejection and browser Undo checks pass. This does not prove all custom script behavior.
 
-The retained full-suite run discovered 327 tests and completed with two unresolved failures/crashes. It predates recent changes and is not a current full-suite pass. Its exact counts are retained in the fixed inventory; targeted subsequent checks do not replace it.
+The older 327-test run is historical. The 2026-10-19 isolated audit ran 661 test processes: 647 successful, 14 failed, no crashes or timeouts; successful processes may include expected failures. Subsequent fixes and scoped checks are recorded separately. A new 682-case isolated native audit is running against source commit `4eb7e97`; its authoritative progress is `.workspace/evidence/full-native-audit-20261020/summary.json`. It is not a completed suite or a parity claim. All eight current JavaScript test files passed; evidence is `.workspace/evidence/ui-module-audit-20261020/summary.json`.
 
 There is no defensible finish date or percentage yet. The earlier “weeks” answer was a rough planning guess, not an estimate based on measured remaining work. Timing requires reviewing the remaining implementation in W01–W25 and separating it from verification and engine failure investigation. Keep the same checklist while doing that review.
 
@@ -263,3 +263,10 @@ Links & presets now exposes original scale/offset bypass switches and minimum/ma
 ### 2026-10-19 — propeller failure narrowed, not fixed
 
 Repeated original-SDK runs locate the retained rounded-chevron failure before point sampling: during file loading, or during native Update when chevrons are restored after staged loading. Disabling Python garbage collection, disabling the nano allocator, retaining returned vectors and staged loading all failed in observed runs. Successful runs return identical geometry; debugger runs did not reproduce the failure. The native cause remains unproved. See MODELING_AUDIT.md for counts and provenance limits. No production workaround or broad completion claim follows from this investigation.
+
+
+### 2026-10-20 — current integrated work and verification
+
+Source and packaged native tests now restore the tested pitch sweep and finite roll/yaw cases exactly against independent official final airflow files. The packaged yaw browser sequence includes source capture, 258 restored planes, exact node CSV download and reopening after reload. Original on-axis roll produces a native zero-area wake triangle and remains unresolved; invalid circulation is rejected rather than presented as completed output. OpenMP runtime integration and versioned evaluated-state companions are documented in MODELING_AUDIT.md.
+
+Native and coordinated streamlined property sliders now update geometry during input, retain numeric entry and range controls, and group continuous edits into one undo step. Focused native, module and browser checks are recorded in MODELING_AUDIT.md. Analysis labels cover verified physical dimensions and atmosphere conventions; legacy hover-ramp inputs are marked inactive after native/source verification. None of these scoped checks closes a broad workflow row. All W01–W25 closure states remain Unproven.
