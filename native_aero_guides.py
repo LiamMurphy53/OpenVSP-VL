@@ -92,7 +92,7 @@ def annotate(v,inputs,geometry=False):
     for key in ('Sref','bref','cref'):when(key,'RefFlag',[v.MANUAL_REF])
     for key in ('MACFlag','ScurveFlag'):when(key,'RefFlag',[v.COMPONENT_REF])
     for key in ('Vref','Machref'):when(key,'ManualVrefFlag',[1])
-    when('FarDist','FarDistToggle',[1]);when('GroundEffect','GroundEffectToggle',[1]);when('HoverRamp','HoverRampFlag',[1])
+    when('FarDist','FarDistToggle',[1]);when('GroundEffect','GroundEffectToggle',[1])
     for key in ('NoiseCalcType','NoiseUnits'):when(key,'NoiseCalcFlag',[1])
     rotating=[v.VSPAERO_PROP_UNSTEADY,v.VSPAERO_PROP_PSEUDO_STEADY]
     rules['AutoTimeNumRevs']=dict(all=[dict(input='PropBladesMode',values=rotating),dict(input='AutoTimeStepFlag',values=[1])])
@@ -114,6 +114,10 @@ def annotate(v,inputs,geometry=False):
             e['nativeChoiceValues']=[c['value'] for c in maps[key]]
             e['choices']=list(maps[key])
             if len(e['values'])==1 and e['values'][0] not in [c['value'] for c in e['choices']]:e['choices'].append(dict(value=e['values'][0],label='Current native value · '+str(e['values'][0])))
+        if key in ('HoverRampFlag','HoverRamp'):
+            e['editable']=False
+            e['label']='Legacy hover ramp switch' if key=='HoverRampFlag' else 'Legacy hover ramp value'
+            e['description']='Registered legacy input. OpenVSP 3.52.2 preserves this value but does not write it to the VSPAERO solver or use it in its calculations.'
         if key=='SingleGeomID':e['description']='Adds this component’s native degenerate surfaces alongside the selected sets. To prepare only this component, choose None for both geometry sets.'
         if key=='UnsteadyType':e['description']+=' Static-blade unsteady roll, pitch and yaw use the installed solver’s 128-step motion preset and 32 wake nodes; rotating-blade time controls do not change that preset.'
         if key=='AutoTimeStepFlag':e['description']+=' For unsteady rotating blades, automatic timing uses the fastest rotor for the time step. Actual saved times appear in the completed result; the setup retains OpenVSP’s negative automatic values.'

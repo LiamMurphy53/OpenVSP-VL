@@ -14,6 +14,19 @@ class AeroGuides(unittest.TestCase):
     tearDown=test_native.NativeIntegration.tearDown
     worker=test_native.NativeIntegration.worker
 
+    def test_legacy_hover_ramp_does_not_change_native_solver_or_aerodynamics(self):
+        baseline=self.model.read_bytes();runs=[]
+        for enabled,value in [(0,0.),(1,500.)]:
+            settings=dict(GeomSet=-1,ThinGeomSet=0,NCPU=1,AlphaNpts=1,MachNpts=1,NumWakeNodes=8,WakeNumIter=3,HoverRampFlag=enabled,HoverRamp=value)
+            data,path=self.worker(dict(action='analysis',name='VSPAEROSweep',inputs=[dict(name=k,values=[x]) for k,x in settings.items()]))
+            fields={e['name']:e['value'] for e in data['solverSetup']['fields']}
+            aero={e['name']:e['values'] for r in data['results'] if r['name']=='VSPAERO_History' for e in r['entries'] if e['name'] in ['CL','CDtot','CS','CMx','CMy','CMz']}
+            self.assertTrue(aero);runs.append((fields,aero));self.assertEqual(self.model.read_bytes(),baseline)
+        self.assertEqual(runs[0],runs[1])
+        spec=native_worker.analysis_schema(self.v,'VSPAEROSweep');fields={e['name']:e for e in spec['inputs']}
+        for name in ['HoverRampFlag','HoverRamp']:
+            self.assertFalse(fields[name]['editable']);self.assertIn('does not write',fields[name]['description'])
+
     def test_time_controls_match_original_written_solver_settings(self):
         v=self.v
         prop=v.AddGeom('PROP');v.SetParmValUpdate(prop,'Y_Rel_Location','XForm',8)
