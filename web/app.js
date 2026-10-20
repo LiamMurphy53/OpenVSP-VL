@@ -42,13 +42,14 @@ function toast(text){$('#toast').textContent=text;$('#toast').classList.add('sho
 function modal(title,html){$('#modal-title').textContent=title;$('#modal-body').innerHTML=html;$('#modal').showModal();}
 $('#close-modal').onclick=()=>$('#modal').close();
 async function api(path,body){const response=await fetch(path,body===undefined?{}:{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});const data=await response.json();const jobResponse=(path.startsWith('/api/job?')||path==='/api/run'||path==='/api/cancel'||path.startsWith('/api/study-batch?')||['/api/study-start','/api/study-resume','/api/study-cancel'].includes(path))&&typeof data.status==='string';if(!response.ok||(data.error&&!jobResponse))throw Error(data.error||'The engine request failed.');return data;}
-function lockModelingControls(on){
+function lockModelingControls(on,activeControl=null){
  for(const id of ['inspector','component-list','tools-page'])$('#'+id)?.querySelectorAll('button,input,select,textarea').forEach(el=>{
+  if(on&&el===activeControl)return;
   if(on){if(el.dataset.nativeBusyDisabled===undefined)el.dataset.nativeBusyDisabled=String(el.disabled);el.disabled=true;}
   else if(el.dataset.nativeBusyDisabled!==undefined){el.disabled=el.dataset.nativeBusyDisabled==='true';delete el.dataset.nativeBusyDisabled;}
  });
 }
-function setBusy(on){busy=on;document.body.classList.toggle('is-busy',on);$('#saved').textContent=on?'Updating in OpenVSP…':'Saved as native .vsp3';for(const id of ['inspector','component-list','add','open','save','undo','redo','run','native','sync-native','tools-page'])$('#'+id)?.classList.toggle('busy',on);lockModelingControls(on);$('#undo').disabled=on||!model?.canUndo;$('#redo').disabled=on||!model?.canRedo;}
+function setBusy(on,activeControl=null){busy=on;document.body.classList.toggle('is-busy',on);$('#saved').textContent=on?'Updating in OpenVSP…':'Saved as native .vsp3';for(const id of ['inspector','component-list','add','open','save','undo','redo','run','native','sync-native','tools-page'])$('#'+id)?.classList.toggle('busy',on);lockModelingControls(on,activeControl);$('#undo').disabled=on||!model?.canUndo;$('#redo').disabled=on||!model?.canRedo;}
 async function transact(path,body={}){if(busy)return;setBusy(true);try{model=await api(path,{...body,revision:model.revision});if(model.changed)selected=model.changed;if(!model.components.some(c=>c.id===selected))selected=model.components[0]?.id;prepareMesh();render();return true;}catch(e){toast(e.message);render();return false;}finally{setBusy(false);if(page==='analysis'&&schema?.guide&&schemaRevision!==model.revision){const name=schema.name,draft=inputDraft(schema,'analysis');await loadSchema();if(schema?.name===name)restoreInputDraft(draft,'analysis');}}}
 // Keep the active range element mounted during native updates. Only the latest
 // pending value is sent, and each request uses the last accepted revision.
@@ -61,7 +62,7 @@ function liveRequestEdit(key,slider,request,finished){
  if(!liveProperty){
   if(busy)return;
   liveProperty={id:key,gesture:crypto.randomUUID().replaceAll('-',''),slider,pending:null,finished:false,running:false};
-  setBusy(true);$('#inspector').classList.remove('busy');slider.disabled=false;
+  setBusy(true,slider);$('#inspector').classList.remove('busy');
  }
  const edit=liveProperty;if(edit.id!==key||edit.slider!==slider)return;
  edit.pending=request;edit.finished=finished;
