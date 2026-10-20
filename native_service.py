@@ -24,6 +24,7 @@ REVISION = uuid.uuid4().hex
 NATIVE_PROCESS = None
 RUN_RESERVATION = None
 SESSION_WARNING = None
+LAST_EDIT_GROUP = None
 
 
 def acquire_run_lock(path):
@@ -119,9 +120,10 @@ def check_revision(value):
     if value != REVISION: raise ValueError('The model changed in another window. Reload the workspace before editing.')
 
 
-def commit(candidate):
-    global REVISION
-    if MODEL.exists():
+def commit(candidate,history_group=None):
+    global REVISION,LAST_EDIT_GROUP
+    grouped=history_group is not None and LAST_EDIT_GROUP==(history_group,REVISION)
+    if MODEL.exists() and not grouped:
         path=WORK/'history'/f'{uuid.uuid4().hex}.vsp3'; path.parent.mkdir(exist_ok=True)
         shutil.copy2(MODEL,path); HISTORY.append(path)
         # Keep old history files on disk; only cap the visible undo chain.
@@ -129,16 +131,24 @@ def commit(candidate):
     FUTURE.clear()
     os.replace(candidate,MODEL)
     REVISION=uuid.uuid4().hex
+    LAST_EDIT_GROUP=(history_group,REVISION) if history_group is not None else None
     save_session()
 
 
 def mutation(req):
     with LOCK:
         check_revision(req.get('revision'))
+        history_group=None
+        if req.get('editGesture') is not None:
+            token=req['editGesture']
+            if not isinstance(token,str) or not re.fullmatch(r'[0-9a-f]{32}',token) or req.get('operation') not in ('parameter','design-assist'):
+                raise ValueError('Invalid live modeling edit gesture.')
+            target={k:v for k,v in req.items() if k not in ('value','revision','editGesture')}
+            history_group=(token,json.dumps(target,sort_keys=True))
         folder=WORK/'transactions'/uuid.uuid4().hex; folder.mkdir(parents=True)
         candidate=folder/'aircraft.vsp3'; shutil.copy2(MODEL,candidate)
         data=invoke(dict(req,action='mutate'),candidate,folder)
-        commit(candidate)
+        commit(candidate,history_group)
         return state_meta(data)
 
 

@@ -60,7 +60,7 @@ function livePropertyEdit(p,slider,value,finished){
 function liveRequestEdit(key,slider,request,finished){
  if(!liveProperty){
   if(busy)return;
-  liveProperty={id:key,slider,pending:null,finished:false,running:false};
+  liveProperty={id:key,gesture:crypto.randomUUID().replaceAll('-',''),slider,pending:null,finished:false,running:false};
   setBusy(true);$('#inspector').classList.remove('busy');slider.disabled=false;
  }
  const edit=liveProperty;if(edit.id!==key||edit.slider!==slider)return;
@@ -73,7 +73,7 @@ function liveRequestEdit(key,slider,request,finished){
     const next=edit.pending;edit.pending=null;
     const current=component()?.params.find(x=>x.id===edit.id);
     if(next.operation==='parameter'&&current?.value===next.value)continue;
-    model=await api('/api/mutate',{...next,revision:model.revision});
+    model=await api('/api/mutate',{...next,editGesture:edit.gesture,revision:model.revision});
     prepareMesh();metrics();draw();
    }
   }catch(error){edit.finished=true;edit.pending=null;toast(error.message);}
