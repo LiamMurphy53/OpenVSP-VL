@@ -664,3 +664,7 @@ Isolated browser verification: ArrowRight changes native span18→18.18; after t
 ### Additional Modeling tools sliders — 2026-10-20
 
 Added adjustable range sliders beside eligible native numeric parameters in the shared Modeling tools editor, covering section profiles, skinning, control regions and other editors using that parameter renderer. Exact entry, native limits, integer steps and disabled/read-only states remain available. These tool sliders preview the number during dragging and submit the existing native parameter transaction on release; they do not yet redraw geometry continuously. Checked JavaScript syntax and all eight UI module test files, including release-only submission. No browser or new native-engine verification performed for this increment.
+
+### Broad native audit interpretation — 2026-10-20, interim
+
+The still-running audit reached 464 of 682 isolated test processes: 462 successful exits and two failed exits. One successful exit is an explicit unittest expected failure (`test_strict_cross_run_coarsened_graph_equivalence_remains_unproved`); successful process counts must not be presented as assertion-level passes. The two ordinary failures remain propeller chevron worker termination without a response and the original on-axis rolling-wing nonfinite circulation. No completion claim follows from these interim counts. The Python/test baseline hashes still match commit `4eb7e977db783095bc2fa53fce96e3ec27f100cf`. Snapshot evidence: `.workspace/evidence/full-native-audit-20261020/interpretation-snapshot.json`.
