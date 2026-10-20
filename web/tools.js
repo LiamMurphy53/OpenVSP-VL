@@ -1,3 +1,4 @@
+import {preserveInspectorView} from './inspector-view.js?v=20261020-focus';
 import {customSliderMarkup,bindCustomSliders} from './custom-sliders.js?v=20261020-tools';
 import {visibleRenderer} from './visible-renderer.js?v=20261015';
 import {renderFlowPlanes,disposeFlowPlanePreview} from './flow-plane-tools.js?v=20261015';
@@ -49,12 +50,13 @@ function card(title,body,extra=''){return `<section class="tool-card ${extra}"><
 const toolRendering=visibleRenderer(renderVisibleTools);
 export function renderTools(){toolRendering.request();}
 export function setToolsVisible(value){toolRendering.setVisible(value);}
-function renderVisibleTools(){disposeFlowPlanePreview();disposeStructuralPreview();disposeCfdPreview();disposeCfdDomain();if(!app||!model()?.tools)return;toolSliderParameters=[];const c=geom();$('#tools-page').innerHTML=`<div class="tools-heading"><div><h1>Modeling tools</h1></div><div class="tools-context">${select('Working component','tool-component',model().components.map(c=>[c.id,c.name]),c?.id)}<div class="tool-actions">${button('tool-undo','↶ Undo')}${button('tool-redo','↷ Redo')}</div></div></div><nav class="tool-tabs" aria-label="Modeling tools">${tabs.map(([id,label])=>`<button data-tool-tab="${id}" class="${id===active?'active':''}">${label}</button>`).join('')}</nav><div id="tool-content" class="tool-grid"></div>`;
+function renderVisibleTools(){disposeFlowPlanePreview();disposeStructuralPreview();disposeCfdPreview();disposeCfdDomain();if(!app||!model()?.tools)return;toolSliderParameters=[];const c=geom(),restoreView=preserveInspectorView($('#tools-page'),JSON.stringify([active,c?.id]));$('#tools-page').innerHTML=`<div class="tools-heading"><div><h1>Modeling tools</h1></div><div class="tools-context">${select('Working component','tool-component',model().components.map(c=>[c.id,c.name]),c?.id)}<div class="tool-actions">${button('tool-undo','↶ Undo')}${button('tool-redo','↷ Redo')}</div></div></div><nav class="tool-tabs" aria-label="Modeling tools">${tabs.map(([id,label])=>`<button data-tool-tab="${id}" class="${id===active?'active':''}">${label}</button>`).join('')}</nav><div id="tool-content" class="tool-grid"></div>`;
  $('#tool-component').onchange=e=>{sectionChoice=0;app.select(e.target.value);};$('#tool-undo').disabled=!model().canUndo;$('#tool-redo').disabled=!model().canRedo;bind('tool-undo',()=>app.transact('/api/undo'));bind('tool-redo',()=>app.transact('/api/redo'));
  document.querySelectorAll('[data-tool-tab]').forEach(b=>b.onclick=()=>{active=b.dataset.toolTab;renderTools();});
  if(!renderAdvanced({active,app,model:model(),geom:c,data:data(),render:renderTools,helpers:{toast:app.toast,E,nice,field,select,button,card,paramDetails,params,mutate,bind,val,num,plotSVG,paramOptions,paramLabel,options}}))({airfoils,controls,components,relationships,mesh,structures,geometrychecks,flowplanes})[active]();
  document.querySelectorAll('[data-tool-param]').forEach(el=>{const original=Number(el.value),commit=()=>{if(!el.value.trim()||!Number.isFinite(Number(el.value))){app.toast('Enter a finite number.');renderTools();return;}if(Number(el.value)===original)return;mutate({operation:'parameter',id:el.dataset.toolParam,value:Number(el.value)});};el.onchange=commit;el.onblur=commit;el.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();el.blur();}};});
- bindCustomSliders($('#tool-content'),toolSliderParameters,{displayValue:x=>x,parameterDimension:()=>null,isBusy:()=>false});
+ bindCustomSliders($('#tool-content'),toolSliderParameters,{displayValue:x=>x,parameterDimension:()=>null,isBusy:()=>app.isBusy?.()||false,liveEdit:app.liveEdit?(p,slider,value,finished)=>app.liveEdit(p.id,slider,{operation:'parameter',id:p.id,value},finished):undefined});
+ restoreView();
 }
 function geometrychecks(){renderGeometryCases({app,model:model(),data:data(),render:renderTools,helpers:editorHelpers()});}
 function airfoils(){

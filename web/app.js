@@ -27,7 +27,7 @@ import {wireEditor,bindWireEditor} from './wire-editor.js?v=20261010-123';
 import {installRegionOverlays,refreshRegionOverlays,drawRegionOverlays,focusRegionBoundary} from './region-overlay.js?v=20261010-123';
 import {setupGuide,bindSetupGuide,guidedResults,bindGuidedResults,hasGuide,refreshGuideFields,bindGuideFields,bindAeroGeometryCopy} from './analysis-guides.js?v=20261010-123';
 import {installRunWorkspace,refreshHistory,renderRunWorkspace,clearRunWorkspace} from './run-workspace.js?v=20261010-123';
-import {installTools,renderTools,setToolsVisible,renderPlots,plotSVG,openEngineeringSettings,openGeometryCases,openFlowPlanes,openParameterLinks} from './tools.js?v=20261020-sliders';
+import {installTools,renderTools,setToolsVisible,renderPlots,plotSVG,openEngineeringSettings,openGeometryCases,openFlowPlanes,openParameterLinks} from './tools.js?v=20261020-live-sliders';
 import {installStudies,showStudies} from './studies.js?v=20261010-123';
 const $=s=>document.querySelector(s), esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const wingSelections=new Map(),attachmentFrames=new Set(),propCurveChoices=new Map();
@@ -62,7 +62,7 @@ function liveRequestEdit(key,slider,request,finished){
  if(!liveProperty){
   if(busy)return;
   liveProperty={id:key,gesture:crypto.randomUUID().replaceAll('-',''),slider,pending:null,finished:false,running:false};
-  setBusy(true,slider);$('#inspector').classList.remove('busy');
+  setBusy(true,slider);$('#inspector').classList.remove('busy');if(slider.closest('#tools-page'))$('#tools-page').classList.remove('busy');
  }
  const edit=liveProperty;if(edit.id!==key||edit.slider!==slider)return;
  edit.pending=request;edit.finished=finished;
@@ -287,7 +287,7 @@ $('#cancel').onclick=async()=>{if(currentJob)try{await api('/api/cancel',{id:cur
 installRunWorkspace({api,esc,analysisLabel,reuseReferenceInputs,reuseRunInputs,open:openRun,start:startAnalysis,toast});
 function showRegionBoundary(id){const region=model.tools.controls.find(r=>r.id===id);if(!region)return;selected=region.geom;render();focusRegionBoundary(id);$('[data-page="design"]').click();}
 installRegionOverlays({model:()=>model,api,esc,draw});
-installTools({prepareGeometryCase:async id=>{$('[data-page="analysis"]').click();$('#analysis-select').value='GeometryAnalysis';await loadSchema();const field=document.getElementById('analysis-CaseID-0');if(field)field.value=id;},api,model:()=>model,selected:()=>selected,select:id=>{selected=id;sectionIndex=0;render();},transact,toast,esc,showRegionBoundary});
+installTools({liveEdit:liveRequestEdit,isBusy:()=>busy,prepareGeometryCase:async id=>{$('[data-page="analysis"]').click();$('#analysis-select').value='GeometryAnalysis';await loadSchema();const field=document.getElementById('analysis-CaseID-0');if(field)field.value=id;},api,model:()=>model,selected:()=>selected,select:id=>{selected=id;sectionIndex=0;render();},transact,toast,esc,showRegionBoundary});
 installStudies({api,esc,toast,analysisLabel,model:()=>model,inputMarkup,editedInputs,canRun:()=>!busy&&!currentJob,
  captureAnalysis:()=>{if(!schema)throw Error('Choose and configure an analysis first.');return{name:schema.name,inputs:editedInputs(schema,'analysis',schema.name==='FeaAssemblyMesh'),...assemblySizingRequest(schema),geometryInputs:editedInputs(geometrySchema,'geometry'),structure:['FeaMeshAnalysis','FeaAssemblyMesh'].includes(schema.name)?$('#analysis-structure').value:undefined,formats:['FeaMeshAnalysis','FeaAssemblyMesh'].includes(schema.name)?[...document.querySelectorAll('[data-fea-export]:checked')].map(e=>e.dataset.feaExport):undefined};},
  openRun:async id=>{$('[data-page="analysis"]').click();await openRun(id);},refreshHistory});

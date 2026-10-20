@@ -34,3 +34,9 @@ bindCustomSliders(host,[ordinary],{displayValue:x=>x,parameterDimension:()=>null
 slider.disabled=false;slider.value='12.5';slider.oninput();
 assert.equal(input.value,'12.5');assert.equal(releases,0);
 slider.onchange();assert.equal(releases,1);
+
+// Tool parameters use native units and IDs, including parameters outside the selected geometry.
+const toolEvents=[];
+bindCustomSliders(host,[ordinary],{displayValue:x=>x,parameterDimension:()=>null,isBusy:()=>false,liveEdit:(p,el,value,finished)=>toolEvents.push({operation:'parameter',id:p.id,value,finished})});
+slider.value='13.75';slider.oninput();slider.onchange();
+assert.deepEqual(toolEvents,[{operation:'parameter',id:'length',value:13.75,finished:false},{operation:'parameter',id:'length',value:13.75,finished:true}]);
