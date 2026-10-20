@@ -1,4 +1,4 @@
-import {analysisInputUnit} from './analysis-units.js?v=20261019';
+import {analysisInputUnit} from './analysis-units.js?v=20261020';
 import {scaleActionsMarkup,bindScaleActions} from './scale-controls.js?v=20261015-scale';
 import {customSliderMarkup,bindCustomSliders} from './custom-sliders.js?v=20261019-live';
 import {propertyLocksMarkup,bindPropertyLocks} from './property-locks.js?v=20261014-1';

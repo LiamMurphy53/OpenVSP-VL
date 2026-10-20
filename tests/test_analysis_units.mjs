@@ -10,3 +10,12 @@ assert.equal(unit(aero,{name:'Unknown'}),'');
 const drag={name:'ParasiteDrag',inputs:[{name:'VelocityUnit',values:[2],choices:[{value:2,label:'Knots'}]}]};
 assert.equal(unit(drag,{name:'Vinf'},'ft'),'Knots');
 console.log('Analysis labels retain native angle/length/speed conventions and selected airspeed units.');
+
+const atmosphere=(altitude)=>({name:'ParasiteDrag',inputs:[{name:'AltLengthUnit',values:[altitude]},{name:'LengthUnit',values:[0],choices:[{value:0,label:'mm'}]}]});
+assert.equal(unit(atmosphere(0),{name:'Density'},'ft'),'slug/ft³');
+assert.equal(unit(atmosphere(1),{name:'Density'},'ft'),'kg/m³','Atmosphere system is independent of geometry mm/display ft');
+assert.equal(unit(atmosphere(0),{name:'DynaVisc'}),'slug/(ft·s)');
+assert.equal(unit(atmosphere(1),{name:'KineVisc'}),'m²/s');
+assert.equal(unit(aero,{name:'GroundEffect'},'ft'),'ft');
+assert.equal(unit(aero,{name:'CLMax2D'}),'dimensionless');
+assert.equal(unit({name:'SurfaceIntersection',inputs:[{name:'CADLenUnit',values:[2]}]},{name:'STEPTol'},'ft'),'m');
