@@ -26,3 +26,11 @@ bindCustomSliders(host,[ordinary],{displayValue:x=>x,parameterDimension:()=>null
 slider.oninput();assert.deepEqual(live,[{value:11,finished:false}],'Send native update during input, before release');
 slider.onchange();assert.equal(live[1].finished,true);
 slider.disabled=true;slider.oninput();assert.equal(live.length,2,'Locked controls do not send live edits');
+
+// Modeling-tool sliders retain exact entry and commit through its native handler on release.
+let releases=0;
+input.onchange=()=>{releases++;};
+bindCustomSliders(host,[ordinary],{displayValue:x=>x,parameterDimension:()=>null,isBusy:()=>false});
+slider.disabled=false;slider.value='12.5';slider.oninput();
+assert.equal(input.value,'12.5');assert.equal(releases,0);
+slider.onchange();assert.equal(releases,1);
