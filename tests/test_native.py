@@ -9,7 +9,9 @@ import sys
 import tempfile
 import unittest
 
-ROOT=Path(__file__).resolve().parents[1]
+# A packaged verification may preload its own runtime. Keep all later native
+# imports on that runtime instead of silently adding the development checkout.
+ROOT=sys.modules['vsp_runtime'].ROOT if 'vsp_runtime' in sys.modules else Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT))
 from vsp_runtime import load,interpreter
 

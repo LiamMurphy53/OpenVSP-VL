@@ -10,7 +10,7 @@ def digest(source,headers):
 
 def copy_sources(root,studio):
     """Keep the delivered workflow source and linked status documents together."""
-    documents=('README.md','FEATURE_STATUS.md','CAPABILITY_PLAN.md','PROJECT_STATUS.md','CUSTOM_CONTROL_AUDIT.md','MODELING_AUDIT.md','CAPABILITY_INVENTORY.json')
+    documents=('README.md','FEATURE_STATUS.md','CAPABILITY_PLAN.md','PROJECT_STATUS.md','CUSTOM_CONTROL_AUDIT.md','MODELING_AUDIT.md','ENGINEERING_UTILITY_AUDIT.md','CAPABILITY_INVENTORY.json')
     for name in documents:
         if not (root/name).is_file():raise ValueError('A required project document is missing: '+name)
     for path in root.glob('*.py'):shutil.copy2(path,studio/path.name)

@@ -1105,6 +1105,17 @@
             ".workspace/evidence/assembly-remesh-isolation-20261021/packaged.log"
           ],
           "scope": "Three runs, distinct worker PIDs, exact mesh/deck regeneration and first/third equality. No production change required; broader closure remains Unproven."
+        },
+        {
+          "date": "2026-10-21",
+          "change": "Relocated standalone actual aerodynamic/assembly workers and browser analysis verified with strict production-module isolation; fixed shared test harness source-path leakage and missing builder audit document.",
+          "evidence": [
+            "tests/test_native.py",
+            "tests/test_package_sources.py",
+            ".workspace/evidence/relocated-delivery-20261021/native-verification.json",
+            ".workspace/evidence/relocated-delivery-20261021/browser-verification.json"
+          ],
+          "scope": "Three isolated relocated integration tests,27 loaded production modules, moved launcher/browser21-field original comparison and exactCSV. Earlier contaminated run retained; full delivery closure remains Unproven."
         }
       ]
     }
