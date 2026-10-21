@@ -69,13 +69,21 @@ def save_study(req):
         folder.mkdir(parents=True,exist_ok=True)
         validation=folder/'validation'/uuid.uuid4().hex;validation.mkdir(parents=True)
         if req.get('id') and req.get('definitionVersion')!=definition(sid)['version']:raise ValueError('This study was edited in another window. Reopen its latest definition.')
+        source_plan=definition(sid) if req.get('id') else None
+        current_state=service.state()
+        current_ids=[s['identity'] for s in current_state['tools']['sets']]
+        selector_ids={r['id'] for r in current_state['tools']['setConfig']['references'] if 'group' not in r}
         saved_baseline=bool(req.get('id') and req.get('baseline')=='saved')
-        previous=definition(sid) if saved_baseline else None
+        previous=source_plan if saved_baseline else None
+        if source_plan and not saved_baseline and req.get('setIdentities')!=current_ids:
+            from native_study_sets import rebind
+            _,_,set_matches=rebind(source_plan.get('setIdentities'),current_ids,req.get('stages',[]),req.get('axes',[]),selector_ids)
+            if any(m['changed'] for m in set_matches):raise ValueError('Geometry sets moved. Review the current aircraft before replacing this study baseline.')
         candidate=validation/'aircraft.vsp3';shutil.copy2(folder/'aircraft.vsp3' if saved_baseline else service.MODEL,candidate)
         data=service.invoke(dict(action='study-validate',stages=req.get('stages'),axes=req.get('axes')),candidate,validation)
         plan=dict(id=sid,name=title,description=notes,version=uuid.uuid4().hex,updated=time.time(),
                         sourceRevision=previous['sourceRevision'] if previous else service.REVISION,sourceHash=digest(candidate),engineVersion=data['version'],
-                        axes=data['axes'],stages=data['stages'],stageSchemas=data['stageSchemas'],caseCount=data['caseCount'],continueOnError=bool(req.get('continueOnError',True)))
+                        setIdentities=previous.get('setIdentities') if previous else current_ids,axes=data['axes'],stages=data['stages'],stageSchemas=data['stageSchemas'],caseCount=data['caseCount'],continueOnError=bool(req.get('continueOnError',True)))
         # Older executions keep their own definition and baseline aircraft.
         os.replace(candidate,folder/'aircraft.vsp3');write_json(folder/'definition.json',plan)
         return plan
@@ -88,6 +96,8 @@ def rebind_current_aircraft(req):
         sid=identifier(req.get('id'));plan=definition(sid)
         if req.get('definitionVersion')!=plan['version']:raise ValueError('This study was edited in another window. Reopen its latest definition.')
         old=study_schema(sid);current=study_schema()
+        current_state=service.state();current_ids=[s['identity'] for s in current_state['tools']['sets']]
+        selector_ids={r['id'] for r in current_state['tools']['setConfig']['references'] if 'group' not in r}
         original={p['id']:p for p in old['parameters']};available={p['id']:p for p in current['parameters']}
         axes=copy.deepcopy(req.get('axes',plan['axes']))
         if not isinstance(axes,list) or len(axes)>10:raise ValueError('Use up to ten study dimensions.')
@@ -104,9 +114,11 @@ def rebind_current_aircraft(req):
             if source and source.get('rotorBinding') and target.get('editable') is False:raise ValueError(target['label']+': '+target['readOnlyReason']+' Choose an editable current driver.')
             matches.append(dict(axis=i,oldId=a['id'],id=target['id'],oldLabel=source['label'] if source else a.get('label',a['id']),label=target['label'],changed=a['id']!=target['id']))
             a['id']=target['id']
+        from native_study_sets import rebind
+        stages,axes,set_matches=rebind(req.get('setIdentities',plan.get('setIdentities')),current_ids,req.get('stages',plan['stages']),axes,selector_ids)
         folder=service.WORK/'study-schemas'/uuid.uuid4().hex
-        data=service.invoke(dict(action='study-validate',axes=axes,stages=req.get('stages',plan['stages'])),service.MODEL,folder)
-        return dict(axes=data['axes'],stages=data['stages'],stageSchemas=data['stageSchemas'],schema=current,matches=matches,revision=service.REVISION,sourceHash=digest(service.MODEL))
+        data=service.invoke(dict(action='study-validate',axes=axes,stages=stages),service.MODEL,folder)
+        return dict(axes=data['axes'],stages=data['stages'],stageSchemas=data['stageSchemas'],schema=current,matches=matches,setMatches=set_matches,setIdentities=current_ids,revision=service.REVISION,sourceHash=digest(service.MODEL))
 
 
 def definition(sid):return read_json(study_folder(sid)/'definition.json')

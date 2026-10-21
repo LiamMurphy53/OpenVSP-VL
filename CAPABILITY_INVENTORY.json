@@ -802,7 +802,23 @@
       "workflow": "Studies",
       "category": "Engineering",
       "closure": "Unproven",
-      "originalPlanRow": "| Studies | Named frozen-aircraft studies; parameter, numeric/text/native-option, full-vector/coordinate and whole-array/element Cartesian sweeps; ordered native batches; saved result/CSV/SVG comparisons and bundles; per-case native defaults, explicit frozen inputs, replaced-parameter provenance and overlap rejection; failure, cancellation, resume and real server-exit recovery verified | Independent guided stage dependencies for documented intersection/slice/projection cases now pass browser save/reorder/cold/error/layout and native execution replay (`.workspace/evidence/study-dependent-controls-verification.md`); finish broader geometry/FEA/rotor/unsteady study configurations and remaining dependent native options, large-study performance, full browser coverage and portable process recovery |"
+      "originalPlanRow": "| Studies | Named frozen-aircraft studies; parameter, numeric/text/native-option, full-vector/coordinate and whole-array/element Cartesian sweeps; ordered native batches; saved result/CSV/SVG comparisons and bundles; per-case native defaults, explicit frozen inputs, replaced-parameter provenance and overlap rejection; failure, cancellation, resume and real server-exit recovery verified | Independent guided stage dependencies for documented intersection/slice/projection cases now pass browser save/reorder/cold/error/layout and native execution replay (`.workspace/evidence/study-dependent-controls-verification.md`); finish broader geometry/FEA/rotor/unsteady study configurations and remaining dependent native options, large-study performance, full browser coverage and portable process recovery |",
+      "followups": [
+        {
+          "date": "2026-10-21",
+          "change": "Current-aircraft study review now matches explicit stage set inputs, geometry-preparation inputs, set sweeps and native set-selector parameter sweeps. Studies store workspace set identities with their frozen baseline. Moved sets require review before replacing that baseline; switching back restores the pre-review draft.",
+          "evidence": [
+            "native_study_sets.py",
+            "tests/test_study_sets.py",
+            ".workspace/evidence/study-set-rebase-20261021/native.log",
+            ".workspace/evidence/study-set-rebase-20261021/packaged.log",
+            ".workspace/evidence/study-set-rebase-20261021/studies-regression.log",
+            ".workspace/evidence/study-set-rebase-20261021/browser-verification.json",
+            ".workspace/evidence/study-set-rebase-20261021/reviewed-selections.png"
+          ],
+          "scope": "Five focused source/package tests, 16 source study regressions, 15 JS modules and a two-case browser study passed; all 28 stable CompGeom fields per browser case equal original API results. Legacy/untracked or removed/replaced sets require a new explicit current-aircraft study; broader study and portable-recovery coverage remains unproven."
+        }
+      ]
     },
     {
       "id": "W25",
