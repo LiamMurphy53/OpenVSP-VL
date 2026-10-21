@@ -582,6 +582,17 @@
             ".workspace/evidence/structural-unit-controls-20261021/browser-verification.json"
           ],
           "scope": "Seven model-unit choices and unchanged geometry, native/package ownership checks and one desktop edit/group/history workflow. Fresh-process boundary references pass strictly; one prior warm-process MPa coordinate mismatch remains unexplained. Broad closure remains unproven."
+        },
+        {
+          "date": "2026-10-21",
+          "change": "Active structural part/region constraints reject missing or foreign targets before mesh sizing/execution; disabled custom masks remain available and modern picker recovery is verified.",
+          "evidence": [
+            "tests/test_boundary_targets.py",
+            "MODELING_AUDIT.md",
+            ".workspace/evidence/boundary-targets-20261021/missing-original-report.json",
+            ".workspace/evidence/boundary-targets-20261021/browser-verification.json"
+          ],
+          "scope": "One original unassigned-input mis-selection, active/disabled/native ownership checks, late assembly-member validation and one desktop failed-run/repair/native-deck workflow. Broader constraint and browser families and broad workflow closure remain unproven."
         }
       ]
     },
@@ -615,6 +626,17 @@
             ".workspace/evidence/boundary-results-20261021/browser-verification.json"
           ],
           "scope": "Native presets/custom/empty root-strip and two-member assembly execution; selected exact native decks, packaged checks and one desktop saved-result reload. Wider constraint combinations and broad workflow closure remain unproven."
+        },
+        {
+          "date": "2026-10-21",
+          "change": "Active structural part/region constraints reject missing or foreign targets before mesh sizing/execution; disabled custom masks remain available and modern picker recovery is verified.",
+          "evidence": [
+            "tests/test_boundary_targets.py",
+            "MODELING_AUDIT.md",
+            ".workspace/evidence/boundary-targets-20261021/missing-original-report.json",
+            ".workspace/evidence/boundary-targets-20261021/browser-verification.json"
+          ],
+          "scope": "One original unassigned-input mis-selection, active/disabled/native ownership checks, late assembly-member validation and one desktop failed-run/repair/native-deck workflow. Broader constraint and browser families and broad workflow closure remain unproven."
         }
       ]
     },

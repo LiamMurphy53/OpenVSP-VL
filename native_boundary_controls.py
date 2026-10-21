@@ -49,3 +49,28 @@ def study_priority(v,pid):
 def coordinate_unit(v):
     system=v.GetParmVal(v.FindParm(v.GetVehicleID(),'StructUnit','FeaStructure'))
     return {v.SI_UNIT:'m',v.CGS_UNIT:'cm',v.MPA_UNIT:'mm',v.BFT_UNIT:'ft',v.BIN_UNIT:'in'}.get(system,'structural solver length units')
+
+
+def validate_targets(v,structures):
+    """Reject unassigned/foreign saved targets before native tag-index lookup."""
+    scoped=[]
+    for sid in structures:
+        for bid in v.GetFeaBCIDVec(sid):
+            if v.GetParmVal(v.FindParm(bid,'ConMode','FeaBC'))==v.FEA_BCM_USER and v.GetParmVal(v.FindParm(bid,'Constraints','FeaBC'))==0:continue
+            typ=v.GetParmVal(v.FindParm(bid,'Type','FeaBC'))
+            if typ in (v.FEA_BC_PART,v.FEA_BC_SUBSURF):scoped.append((sid,bid,typ))
+    if not scoped:return
+    # Original serialization regenerates output names. Validation must retain
+    # all structural output destinations, including other structures and assemblies.
+    outputs={(s,i):v.GetFeaMeshFileName(v.GetFeaStructParentGeomID(s),v.GetFeaStructIndex(s),i) for s in v.GetFeaStructIDVec() for i in range(v.FEA_NUM_FILE_NAMES)}
+    assembly_outputs={(a,i):v.GetFeaAssemblyFileName(a,i) for a in v.GetFeaAssemblyIDVec() for i in range(v.FEA_NUM_FILE_NAMES)}
+    from native_references import references
+    try:refs=references(v)
+    finally:
+        for (s,i),name in outputs.items():v.SetFeaMeshFileName(v.GetFeaStructParentGeomID(s),v.GetFeaStructIndex(s),i,name)
+        for (a,i),name in assembly_outputs.items():v.SetFeaAssemblyFileName(a,i,name)
+    for sid,bid,typ in scoped:
+        part=typ==v.FEA_BC_PART;key='PartID' if part else 'SubSurfID'
+        available=v.GetFeaPartIDVec(sid) if part else v.GetFeaSubSurfIDVec(sid)
+        if refs.get(bid,{}).get(key,'') not in available:
+            raise ValueError('Boundary "'+v.GetContainerName(bid)+'" needs an available '+('structural part' if part else 'structural region')+' in this structure. Choose its target in Modeling tools → Constraints & laminates before meshing.')

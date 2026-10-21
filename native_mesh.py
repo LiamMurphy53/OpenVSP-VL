@@ -155,6 +155,8 @@ def fea_schema(v,sid=None):
 def run_fea(v,req):
     from native_boundary_results import report as boundary_report
     sid,gid,index=structure(v,req.get('structure'))
+    from native_boundary_controls import validate_targets
+    validate_targets(v,[sid])
     sizing(v,gid,index,req.get('inputs',[]))
     spec=fea_schema(v,sid)
     selected=formats(req)
@@ -237,6 +239,8 @@ def run_assembly(v,req):
     for sid in members:
         _,gid,index=structure(v,sid)
         sizing(v,gid,index,inputs[sid],apply=False)
+    from native_boundary_controls import validate_targets
+    validate_targets(v,members)
     from native_connection_controls import validate_assembly
     validate_assembly(v,aid)
     for sid in members:
