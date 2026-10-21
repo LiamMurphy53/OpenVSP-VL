@@ -5,13 +5,27 @@ INPUT_NAMES={'SRF_Export':'SRFFileFlag','CURV_Export':'CURVFileFlag','PLOT3D_Exp
 LABELS={'IntersectSubSurfs':'Include surface regions','RelCurveTol':'Relative curve tolerance','ExportRawFlag':'Curve export samples','SRF_Export':'Export surface data','CURV_Export':'Export intersection curves','PLOT3D_Export':'Export Plot3D surfaces','IGES_Export':'Export IGES CAD','STEP_Export':'Export STEP CAD','CADLenUnit':'CAD length unit','CADLabelDelim':'CAD label separator','CADLabelID':'Include component ID','CADLabelName':'Include component name','CADLabelSurfNo':'Include surface number','CADLabelSplitNo':'Include split number','STEPRepresentation':'STEP representation','STEPTol':'STEP tolerance'}
 
 
+def enum_choices(v):
+    from native_mesh import cad_choices
+    return {**cad_choices(v), 'ExportRawFlag':[dict(value=0,label='Adapted curves'),dict(value=1,label='Raw intersection points')]}
+
+
+def annotate(v,p):
+    if p['name'] not in FIELDS or v.GetParmContainer(p['id'])!=native_managers.manager(v,'SurfaceIntersectSettings'):return
+    p['label']=LABELS[p['name']]
+    p['studyLabel']='Surface intersections / Saved defaults / '+p['label']
+    p['studyNote']='Saved defaults apply only when a study step does not explicitly override that input.'
+    choices=enum_choices(v).get(p['name'])
+    if choices:p['choices']=choices
+    elif p['type']==v.PARM_BOOL_TYPE:p['choices']=[dict(value=0,label='Off'),dict(value=1,label='On')]
+
+
 def configuration(v,parameter=None):
     if parameter is None:
         from native_worker import parameter
     cid=native_managers.manager(v,'SurfaceIntersectSettings')
     ids={v.GetParmName(p):p for p in v.FindContainerParmIDs(cid)}
-    choices=lambda pairs:[dict(value=getattr(v,key),label=label) for key,label in pairs]
-    enums=dict(CADLenUnit=choices([('LEN_MM','mm'),('LEN_CM','cm'),('LEN_M','m'),('LEN_IN','in'),('LEN_FT','ft'),('LEN_YD','yd')]),CADLabelDelim=choices([('DELIM_COMMA','Comma'),('DELIM_USCORE','Underscore'),('DELIM_SPACE','Space'),('DELIM_NONE','No separator')]),STEPRepresentation=choices([('STEP_SHELL','Shell'),('STEP_BREP','BREP solid')]),ExportRawFlag=[dict(value=0,label='Adapted curves'),dict(value=1,label='Raw intersection points')])
+    enums=enum_choices(v)
     fields=[]
     for name in FIELDS:
         p=dict(parameter(v,ids[name]),label=LABELS[name])

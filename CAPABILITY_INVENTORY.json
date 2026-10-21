@@ -425,6 +425,18 @@
             ".workspace/evidence/manager-name-collisions-20261021/browser-verification.json"
           ],
           "scope": "Seven colliding component/mode names, native load/edit/cold behavior, source/package owner/CAD checks and browser CAD edit/byte-exact Undo/Redo/reopen verified. Four engineering regressions preserve exact original outputs. Manager identities match original serialized records and 200 native geometry samples are unchanged. Broader naming, large-model and portable coverage remains unproven."
+        },
+        {
+          "date": "2026-10-21",
+          "change": "Saved intersection export parameters now share named native CAD units, label separators, STEP representations and raw/adapted choices with study controls. Studies use readable section labels and explain explicit per-step overrides. Same-name user parameters remain ordinary fields.",
+          "evidence": [
+            "tests/test_cad_setting_studies.py",
+            ".workspace/evidence/cad-study-choices-20261021/final-native.log",
+            ".workspace/evidence/cad-study-choices-20261021/final-packaged.log",
+            ".workspace/evidence/cad-study-choices-20261021/browser-verification.json",
+            ".workspace/evidence/cad-study-choices-20261021/named-choices.png"
+          ],
+          "scope": "Five source/package native checks and 16 JS modules passed. Four cm/ft \u00d7 Shell/BREP source cases and four in/ft \u00d7 Shell/BREP browser cases match independent original STEP and IGES records, excluding timestamps only. Saved controls reopen with named values. Broader CAD geometry, override combinations, settings and study closure remain unproven."
         }
       ]
     },
@@ -883,6 +895,18 @@
             ".workspace/evidence/aero-run-reuse-20261021/solved-pressure.png"
           ],
           "scope": "One steady thin-wing condition with three wake iterations and three Y pressure slices; 246 numeric fields plus decoded pressure geometry/values exactly match independent original API results for both browser solves; 34 slice fields exactly match original slicer. Separate mixed-rotor source/package equality test passes. These controlled regression cases do not establish convergence, broader geometry/time cases or broad closure."
+        },
+        {
+          "date": "2026-10-21",
+          "change": "Saved intersection export parameters now share named native CAD units, label separators, STEP representations and raw/adapted choices with study controls. Studies use readable section labels and explain explicit per-step overrides. Same-name user parameters remain ordinary fields.",
+          "evidence": [
+            "tests/test_cad_setting_studies.py",
+            ".workspace/evidence/cad-study-choices-20261021/final-native.log",
+            ".workspace/evidence/cad-study-choices-20261021/final-packaged.log",
+            ".workspace/evidence/cad-study-choices-20261021/browser-verification.json",
+            ".workspace/evidence/cad-study-choices-20261021/named-choices.png"
+          ],
+          "scope": "Five source/package native checks and 16 JS modules passed. Four cm/ft \u00d7 Shell/BREP source cases and four in/ft \u00d7 Shell/BREP browser cases match independent original STEP and IGES records, excluding timestamps only. Saved controls reopen with named values. Broader CAD geometry, override combinations, settings and study closure remain unproven."
         }
       ]
     },

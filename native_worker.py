@@ -54,6 +54,8 @@ def parameter(v, pid):
     native_measurements.annotate(v,field)
     import native_export_controls
     native_export_controls.annotate(v,field)
+    import native_intersection_defaults
+    native_intersection_defaults.annotate(v,field)
     import native_connection_controls
     native_connection_controls.annotate(v,field)
     import native_boundary_controls

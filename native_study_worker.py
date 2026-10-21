@@ -124,7 +124,7 @@ def schema(v,parameter):
             item['studyNote']='Material models and declared input units are applied before property and layer values. Values use each case’s declared native units; workspace display conversion is not applied. Prepare a baseline laminate containing every layer to sweep; calculated solver properties remain outputs.'
         named=cap_choices.get(p)
         title=named['label']+' ('+item['name']+')' if named else item.get('label',item['name'])
-        item['label']=' / '.join(([geometry[p]] if p in geometry and geometry[p]!=owner else [])+[owner,item['group'],title])
+        item['label']=item.get('studyLabel') or ' / '.join(([geometry[p]] if p in geometry and geometry[p]!=owner else [])+[owner,item['group'],title])
         if named:item['choices']=copy.deepcopy(named['choices'])
         item['integer']=item['type'] in (v.PARM_INT_TYPE,v.PARM_BOOL_TYPE,v.PARM_LIMITED_INT_TYPE,v.PARM_POWER_INT_TYPE)
         reason=disk_fields.get(p) or wing_fields.get(p) or body_fields.get(p) or skin_fields.get(p) or attachment_fields.get(p) or blade_fields.get(p) or cap_fields.get(p) or profile_fields.get(p) or gear_fields.get(p) or family_fields.get(p) or native_prop_drivers.group_read_only_reason(v,p)
