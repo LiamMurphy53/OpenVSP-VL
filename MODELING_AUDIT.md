@@ -676,3 +676,7 @@ Supersedes the release-only limitation above: shared Modeling tools parameter sl
 ### Shared panel-state regression checks — 2026-10-20
 
 Added executable DOM-contract coverage for `preserveInspectorView`: replacement range focus with preventScroll, disambiguation of identical native IDs in different groups, disabled replacement protection, disclosure and both scroll axes, component/tab context isolation, and tool panels without inspector group wrappers. This is simulated DOM verification, not an on-screen browser result. All nine UI module test files pass.
+
+### Correlated chevron crash report — 2026-10-20
+
+A macOS Python crash at 14:15:07 Denver falls within the broad audit's chevron test window (approximately 14:13:54–14:15:48). It reports SIGTRAP/EXC_BREAKPOINT in `_xzm_xzone_malloc_freelist_outlined`, with `_PyObject_Malloc`, `PyTuple_New`, native SWIG vec3d sequence conversion and `_wrap_CompVecPnt01` in the stack. Filtered report and original report SHA are retained at `.workspace/evidence/full-native-audit-20261020/chevron-correlated-crash.json`. This is correlation, not unique worker attribution: its PID was not retained by the failed helper and the triggering candidate was removed. The allocator detection stack does not prove the original corruption location or establish a fix. Future reproduction must retain exact source/candidate, request, worker PID, return code and log.
