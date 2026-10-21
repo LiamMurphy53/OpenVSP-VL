@@ -56,3 +56,14 @@ assert.equal(endings.filter(e=>e.finished).length,3,'Disabled controls do not se
 
 slider.disabled=false;slider.value='14';slider.oninput();slider.isConnected=false;slider.onblur();slider.onpointerup();
 assert.equal(endings.filter(e=>e.finished).length,3,'A removed control cannot start another edit during error recovery');
+
+// Original native type 3 is a continuous fraction; type 4 is a limited integer.
+for(const type of [3,4]){
+ const added={id:'extra-'+type,name:'Resolution',type,value:33,min:2,max:1001};
+ assert.ok(sliderParameter(added).customSlider);
+ const markup=customSliderMarkup(added,'extra',{esc:String,displayValue:x=>x,parameterDimension:()=>null,readOnly:p=>!p.active});
+ assert.match(markup,type===4?/step="1"/:/step="any"/);
+ assert.match(markup,/disabled/,'Native locks also apply to added parameter types');
+ assert.doesNotMatch(customSliderMarkup({...added,active:true},'extra',{esc:String,displayValue:x=>x,parameterDimension:()=>null,readOnly:p=>!p.active}),/disabled/);
+}
+for(const type of [2,5,6])assert.equal(sliderParameter({...ordinary,type}).customSlider,undefined,'Do not invent steps for boolean, non-equal, or power-integer parameters');

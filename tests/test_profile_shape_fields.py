@@ -40,3 +40,18 @@ class ProfileShapeFields(unittest.TestCase):
                 reopened,_=self.worker({'action':'state'},path)
                 for state in [edited,reopened]:
                     c=state['components'][0];self.assertEqual({p['id']:p['value'] for p in c['params']},expected);self.assertEqual(c['surfaces'],expected_surfaces)
+
+    def test_fraction_and_limited_integer_slider_values_match_native(self):
+        v=self.v
+        for name,value in [('Tess_W',38),('XSecImageW',.73)]:
+            with self.subTest(name=name):
+                v.ClearVSPModel();gid=v.AddGeom('WING');v.Update()
+                pid=next(p for p in v.GetGeomParmIDs(gid) if v.GetParmName(p)==name)
+                self.assertIn(v.GetParmType(pid),(v.PARM_FRACTION_TYPE,v.PARM_LIMITED_INT_TYPE))
+                v.WriteVSPFile(str(self.model),v.SET_ALL)
+                v.SetParmValUpdate(pid,value)
+                expected={p:v.GetParmVal(p) for p in v.GetGeomParmIDs(gid)}
+                edited,path=self.worker(dict(action='mutate',operation='parameter',id=pid,value=value))
+                reopened,_=self.worker(dict(action='state'),path)
+                for state in [edited,reopened]:
+                    self.assertEqual({p['id']:p['value'] for p in state['components'][0]['params']},expected)

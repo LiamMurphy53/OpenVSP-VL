@@ -5,8 +5,10 @@ const integer=p=>[1,4,6].includes(p.type);
 const compact=value=>Number(value.toPrecision(12));
 export function sliderParameter(p){
  if(p.customSlider)return p;
- if(![0,1].includes(p.type)||p.choices||p.trigger||![p.value,p.min,p.max].every(Number.isFinite)||p.min>=p.max)return p;
- const span=p.max-p.min,range=span<=360?span:Math.max(Math.abs(p.value)*.5,p.type===1?10:1);
+ // Fraction parameters are continuous; limited integers are snapped by the
+ // native setter (for example, circumferential tessellation counts).
+ if(![0,1,3,4].includes(p.type)||p.choices||p.trigger||![p.value,p.min,p.max].every(Number.isFinite)||p.min>=p.max)return p;
+ const span=p.max-p.min,range=span<=360?span:Math.max(Math.abs(p.value)*.5,integer(p)?10:1);
  return {...p,customSlider:{key:'native:'+p.id,range,adjustable:true}};
 }
 export function sliderWindow(p,previous){
