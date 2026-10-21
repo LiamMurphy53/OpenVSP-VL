@@ -1,0 +1,18 @@
+import assert from 'node:assert/strict';
+import {cstSliderParameters,cstSliderMarkup,cstRequest,bindCstSliders} from '../web/cst-sliders.js';
+const c={id:'wing'},s={surface:0,index:2,cst:{upper:[.2,.4],lower:[-.3,-.1]}};
+const fields=new Map(['upper','lower'].flatMap(side=>s.cst[side].map((v,i)=>[`#cst-${side}-${i}`,{value:String(v)}])));
+const p=cstSliderParameters(c,s);assert.equal(p.length,4);
+assert.equal(new Set(p.map(x=>x.id)).size,4);
+assert.notEqual(p[0].id,cstSliderParameters(c,{...s,index:3})[0].id);
+assert.match(cstSliderMarkup(p[0],String),/Upper coefficient 0 slider/);
+assert.match(cstSliderMarkup(p[0],String),/Narrow Upper coefficient 0 slider range/);
+const slider={dataset:{customSlider:'cst-upper-0'},value:'.35',disabled:false};
+const wrapper={dataset:{sliderKey:p[0].customSlider.key},querySelector:()=>slider,querySelectorAll:()=>[]};
+const host={querySelector:key=>fields.get(key)||fields.get('#'+key.match(/id="([^"]+)"/)?.[1]),querySelectorAll:()=>[wrapper]};
+let calls=[];bindCstSliders(host,c,s,{geom:'wing',surface:0,index:2},{liveEdit:(...args)=>calls.push(args),isBusy:()=>false,toast:message=>assert.fail(message)});
+slider.oninput();assert.equal(calls.length,1);assert.equal(calls[0][3],false);
+assert.deepEqual(calls[0][2],{geom:'wing',surface:0,index:2,operation:'cst-coefficients',upper:[.35,.4],lower:[-.3,-.1]});
+slider.onpointerup();slider.onchange();assert.equal(calls.length,2);assert.equal(calls[1][3],true);
+fields.get('#cst-lower-1').value='';assert.throws(()=>cstRequest(host,s,{}),/finite/);
+console.log('CST coefficient sliders: section identity, live native requests, exact companion values and release passed.');

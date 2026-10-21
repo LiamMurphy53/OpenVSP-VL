@@ -152,9 +152,10 @@ def mutation(req):
         history_group=None
         if req.get('editGesture') is not None:
             token=req['editGesture']
-            if not isinstance(token,str) or not re.fullmatch(r'[0-9a-f]{32}',token) or req.get('operation') not in ('parameter','design-assist'):
+            if not isinstance(token,str) or not re.fullmatch(r'[0-9a-f]{32}',token) or req.get('operation') not in ('parameter','design-assist','cst-coefficients'):
                 raise ValueError('Invalid live modeling edit gesture.')
-            target={k:v for k,v in req.items() if k not in ('value','revision','editGesture')}
+            values=('upper','lower') if req.get('operation')=='cst-coefficients' else ('value',)
+            target={k:v for k,v in req.items() if k not in (*values,'revision','editGesture')}
             history_group=(token,json.dumps(target,sort_keys=True))
         folder=WORK/'transactions'/uuid.uuid4().hex; folder.mkdir(parents=True)
         candidate=folder/'aircraft.vsp3'; shutil.copy2(MODEL,candidate)

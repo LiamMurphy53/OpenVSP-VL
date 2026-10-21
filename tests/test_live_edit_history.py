@@ -32,3 +32,14 @@ class LiveHistory(unittest.TestCase):
         span=self.v.FindParm(self.gid,'TotalSpan','WingGeom');area=self.v.FindParm(self.gid,'TotalArea','WingGeom');token='c'*32
         self.change(span,19,token);self.change(area,60,token)
         self.assertEqual(len(service.HISTORY),2)
+
+    def test_cst_drag_is_one_native_undo_step(self):
+        service.mutation(dict(operation='cst-fit',geom=self.gid,index=1,degree=3,revision=service.REVISION))
+        baseline=len(service.HISTORY);before=self.model.read_bytes()
+        for value in (.15,.25,.35):
+            service.mutation(dict(operation='cst-coefficients',geom=self.gid,surface=0,index=1,
+                upper=[value,.2,.2,.1],lower=[-.1,-.2,-.2,-.1],editGesture='d'*32,revision=service.REVISION))
+        self.assertEqual(len(service.HISTORY),baseline+1)
+        final=self.model.read_bytes()
+        service.undo(revision=service.REVISION);self.assertEqual(self.model.read_bytes(),before)
+        service.undo(redo=True,revision=service.REVISION);self.assertEqual(self.model.read_bytes(),final)
