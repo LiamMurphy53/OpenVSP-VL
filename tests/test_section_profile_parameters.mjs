@@ -1,0 +1,13 @@
+import assert from 'node:assert/strict';
+import {sectionProfileParameters} from '../web/section-profile-parameters.js';
+const root={id:'root-camber',name:'Camber',value:0,active:true};
+const second={id:'second-surface-camber',name:'Camber',value:.02,active:false};
+const width={id:'second-width',name:'Width',value:2,displayReadOnly:true};
+const unrelated={id:'position',name:'XLoc',value:3};
+const component={params:[root,second,unrelated,width]};
+const section={surface:1,index:0,profileControls:{shapeFields:['second-surface-camber','second-width','missing']}};
+assert.deepEqual(sectionProfileParameters(component,section),[width,second]);
+assert.equal(sectionProfileParameters(component,section)[1],second,'Preserve native limits/activity and parameter identity');
+assert.deepEqual(sectionProfileParameters(component,{...section,generated:true}),[]);
+assert.deepEqual(sectionProfileParameters(component,{}),[]);
+console.log('Selected surface/profile IDs, native metadata and generated-profile guards passed.');

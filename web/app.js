@@ -27,7 +27,7 @@ import {wireEditor,bindWireEditor} from './wire-editor.js?v=20261010-123';
 import {installRegionOverlays,refreshRegionOverlays,drawRegionOverlays,focusRegionBoundary} from './region-overlay.js?v=20261010-123';
 import {setupGuide,bindSetupGuide,guidedResults,bindGuidedResults,hasGuide,refreshGuideFields,bindGuideFields,bindAeroGeometryCopy} from './analysis-guides.js?v=20261010-123';
 import {installRunWorkspace,refreshHistory,renderRunWorkspace,clearRunWorkspace} from './run-workspace.js?v=20261010-123';
-import {installTools,renderTools,setToolsVisible,renderPlots,plotSVG,openEngineeringSettings,openGeometryCases,openFlowPlanes,openParameterLinks} from './tools.js?v=20261020-live-sliders';
+import {installTools,renderTools,refreshToolGeometry,setToolsVisible,renderPlots,plotSVG,openEngineeringSettings,openGeometryCases,openFlowPlanes,openParameterLinks} from './tools.js?v=20261020-profile-sliders';
 import {installStudies,showStudies} from './studies.js?v=20261010-123';
 const $=s=>document.querySelector(s), esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const wingSelections=new Map(),attachmentFrames=new Set(),propCurveChoices=new Map();
@@ -75,7 +75,7 @@ function liveRequestEdit(key,slider,request,finished){
     const current=component()?.params.find(x=>x.id===edit.id);
     if(next.operation==='parameter'&&current?.value===next.value)continue;
     model=await api('/api/mutate',{...next,editGesture:edit.gesture,revision:model.revision});
-    prepareMesh();metrics();draw();
+    prepareMesh();metrics();draw();if(page==='tools')refreshToolGeometry();
    }
   }catch(error){edit.finished=true;edit.pending=null;toast(error.message);}
   finally{
