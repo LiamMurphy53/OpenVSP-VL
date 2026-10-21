@@ -34,7 +34,8 @@ class StudySets(unittest.TestCase):
         for batch in [original,result]:
             names=[]
             for case in batch['cases']:
-                response=service.job_state(case['stages'][0]['job'])['result'];entries=response['results'][0]['entries'];names.append(next(e['values'] for e in entries if e['name']=='Comp_Name'))
+                job=service.job_state(case['stages'][0]['job']);self.assertEqual(job['setIdentities'],plan['setIdentities'] if batch is original else updated['setIdentities'])
+                response=job['result'];entries=response['results'][0]['entries'];names.append(next(e['values'] for e in entries if e['name']=='Comp_Name'))
             self.assertEqual(names,[['Wing'],['Payload']])
         self.assertEqual(updated['axes'][0]['values'],[4,3])
 

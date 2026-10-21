@@ -817,6 +817,20 @@
             ".workspace/evidence/study-set-rebase-20261021/reviewed-selections.png"
           ],
           "scope": "Five focused source/package tests, 16 source study regressions, 15 JS modules and a two-case browser study passed; all 28 stable CompGeom fields per browser case equal original API results. Legacy/untracked or removed/replaced sets require a new explicit current-aircraft study; broader study and portable-recovery coverage remains unproven."
+        },
+        {
+          "date": "2026-10-21",
+          "change": "Saved native jobs retain their own geometry-set identities, including study and source-solution jobs. Input reuse follows moved sets, requires explicit replacement for untracked/missing selections, restores aerodynamic geometry-preparation inputs, and is now exposed for current VSPAEROSweep runs.",
+          "evidence": [
+            "tests/test_run_set_identity.py",
+            "tests/test_run_input_draft.mjs",
+            ".workspace/evidence/run-set-reuse-20261021/native.log",
+            ".workspace/evidence/run-set-reuse-20261021/packaged.log",
+            ".workspace/evidence/run-set-reuse-20261021/browser-verification.json",
+            ".workspace/evidence/run-set-reuse-20261021/aero-native-files.json",
+            ".workspace/evidence/run-set-reuse-20261021/legacy-replacement.png"
+          ],
+          "scope": "Six source tests, six packaged tests and 16 JS modules passed. Browser original/reused wing runs match 28 stable native result fields each; setup-only aerodynamic reuse reproduces native .vspaero/.vspgeom bytes exactly. Legacy replacement prompt prevents submission. Full aerodynamic solves, other analysis-family reuse, narrow UI and broad closure remain unproven."
         }
       ]
     },

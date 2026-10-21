@@ -265,7 +265,7 @@ def execute(batch,folder,run_lock,batch_lock):
                     stage.update(status='starting',attemptToken=uuid.uuid4().hex);save()
                     spec.update(studyCase=case['index'],studyStage=stage['index'],studyAttempt=stage['attemptToken'],studyParameters=[a['id'] for a in plan['axes'] if a['kind']=='parameter'])
                     with service.LOCK:
-                        job=service.start_job(spec,model_source=case_model,source_revision=plan['sourceRevision'],study_context=context,inherited_locks=locks)
+                        job=service.start_job(spec,model_source=case_model,source_revision=plan['sourceRevision'],study_context=context,inherited_locks=locks,set_identities=plan.get('setIdentities'))
                         stage.update(job=job['id'],status=job['status']);stage['attempts'].append(job['id']);save()
                     while job['status']=='running':
                         if cancelled():job=service.cancel_job(job['id'])

@@ -12,8 +12,9 @@ export function restoreSetSelection(el,sets,value,identity,esc){
  el.innerHTML=setOptions(sets,esc);el.value=selected.value;
  if(selected.value===''){
   el.dataset.missingSetValue=value;
-  el.insertAdjacentHTML('afterbegin',`<option value="" data-set-identity="${esc(selected.identity)}" disabled selected>Previous set removed; choose a replacement…</option>`);el.value='';
+  el.insertAdjacentHTML('afterbegin',`<option value="" data-set-identity="${esc(selected.identity)}" disabled selected>Choose a replacement geometry set…</option>`);el.value='';
  }else delete el.dataset.missingSetValue;
+ return selected.value!=='';
 }
 export function refreshSetSelections(host,sets,esc){
  for(const el of host.querySelectorAll('select[data-input]')){

@@ -221,7 +221,7 @@ def schema(name,structure=None):
         return data
 
 
-def start_job(req, *, model_source=None, source_revision=None, study_context=None, inherited_locks=()):
+def start_job(req, *, model_source=None, source_revision=None, study_context=None, inherited_locks=(), set_identities=None):
     with LOCK:
         if model_source is None:check_revision(req.get('revision'))
         if RUN_RESERVATION and study_context!=RUN_RESERVATION:raise ValueError('A design study is running. Finish or cancel it first.')
@@ -243,7 +243,12 @@ def start_job(req, *, model_source=None, source_revision=None, study_context=Non
                 if file.is_file() and not file.is_symlink() and not file.name.startswith('.') and (file.suffix!='.json' or file.name.endswith('.studio-state.json')) and file.name!='engine.log' and not (req['name']=='FlowPlaneSlicer' and re.fullmatch(r'.+\.case\.-?\d+\.quad\.\d+\.dat',file.name)):
                     shutil.copy2(file,folder/file.name)
         else:shutil.copy2(model_source or MODEL,model)
+        if source_job:set_identities=source_job.get('setIdentities')
+        elif model_source is None:
+            if 'current' not in SET_IDENTITIES:state()
+            set_identities=list(SET_IDENTITIES['current'])
         job=dict(id=jid,name=req['name'],status='running',started=time.time(),revision=source_revision or REVISION)
+        if set_identities is not None:job['setIdentities']=list(set_identities)
         if study_context:job.update(study=study_context[0],batch=study_context[1],case=req.get('studyCase'),stage=req.get('studyStage'),attempt=req.get('studyAttempt'))
         if source_job:job.update(sourceRun=source,revision=source_job['revision'])
         JOBS[jid]=job
