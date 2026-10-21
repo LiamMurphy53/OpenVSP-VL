@@ -3,6 +3,7 @@
 const windows=new Map();
 const integer=p=>[1,4,6].includes(p.type);
 const compact=value=>Number(value.toPrecision(12));
+const rangeLabel=value=>Number(value.toPrecision(6));
 export function sliderParameter(p){
  if(p.customSlider)return p;
  // Fraction parameters are continuous; limited integers are snapped by the
@@ -31,7 +32,7 @@ export function customSliderMarkup(p,fieldId,{esc,displayValue,parameterDimensio
  const key=p.customSlider.key,bounds=sliderWindow(p,windows.get(key));if(!bounds)return '';
  windows.set(key,bounds);
  const dimension=parameterDimension(p),convert=x=>compact(displayValue(x,dimension)),label=p.label||p.name;
- return `<div class="custom-slider" data-slider-key="${esc(key)}"><input type="range" data-custom-slider="${esc(fieldId)}" aria-label="${esc(label)} slider" min="${convert(bounds.low)}" max="${convert(bounds.high)}" step="${integer(p)?displayValue(1,dimension):'any'}" value="${convert(p.value)}" ${readOnly(p)?'disabled':''}><div class="custom-slider-range"><small data-slider-low>${convert(bounds.low)}</small>${p.customSlider.adjustable?`<div><button type="button" data-slider-resize="0.5" aria-label="Narrow ${esc(label)} slider range" ${readOnly(p)?'disabled':''}>−</button><button type="button" data-slider-resize="2" aria-label="Widen ${esc(label)} slider range" ${readOnly(p)?'disabled':''}>+</button></div>`:''}<small data-slider-high>${convert(bounds.high)}</small></div></div>`;
+ return `<div class="custom-slider" data-slider-key="${esc(key)}"><input type="range" data-custom-slider="${esc(fieldId)}" aria-label="${esc(label)} slider" min="${convert(bounds.low)}" max="${convert(bounds.high)}" step="${integer(p)?displayValue(1,dimension):'any'}" value="${convert(p.value)}" ${readOnly(p)?'disabled':''}><div class="custom-slider-range"><small data-slider-low title="${convert(bounds.low)}">${rangeLabel(convert(bounds.low))}</small>${p.customSlider.adjustable?`<div><button type="button" data-slider-resize="0.5" aria-label="Narrow ${esc(label)} slider range" ${readOnly(p)?'disabled':''}>−</button><button type="button" data-slider-resize="2" aria-label="Widen ${esc(label)} slider range" ${readOnly(p)?'disabled':''}>+</button></div>`:''}<small data-slider-high title="${convert(bounds.high)}">${rangeLabel(convert(bounds.high))}</small></div></div>`;
 }
 export function bindCustomSliders(host,parameters,{displayValue,parameterDimension,isBusy,liveEdit}){
  const byKey=new Map(parameters.map(sliderParameter).filter(p=>p.customSlider).map(p=>[p.customSlider.key,p]));
@@ -60,8 +61,9 @@ export function bindCustomSliders(host,parameters,{displayValue,parameterDimensi
    const next=resizeSliderWindow(p,current,Number(button.dataset.sliderResize));windows.set(key,next);
    slider.min=convert(next.low);slider.max=convert(next.high);slider.value=convert(p.value);
    input.value=convert(p.value);
-   wrapper.querySelector('[data-slider-low]').textContent=convert(next.low);
-   wrapper.querySelector('[data-slider-high]').textContent=convert(next.high);
+   for(const [selector,value] of [['[data-slider-low]',next.low],['[data-slider-high]',next.high]]){
+    const label=wrapper.querySelector(selector);label.textContent=rangeLabel(convert(value));label.title=String(convert(value));
+   }
   };
  }
 }

@@ -118,6 +118,18 @@
             ".workspace/evidence/section-profile-menu-browser/profile-selector.png"
           ],
           "scope": "Browser selected-tip change, original root profile preservation, exact original native full geometry, Undo/Redo and reload. Broader closure remains unproved."
+        },
+        {
+          "date": "2026-10-21",
+          "change": "Added live upper/lower CST coefficient sliders to the selected section, with adjustable ranges, retained exact numeric entry and one native undo record per gesture. Compact range labels prevent coefficient-grid overflow.",
+          "evidence": [
+            "tests/test_cst_sliders.mjs",
+            "tests/test_live_edit_history.py",
+            "tests/test_cst_identity.py",
+            ".workspace/evidence/cst-sliders-20261021/native-comparison.json",
+            ".workspace/evidence/cst-sliders-20261021/coefficient-sliders.png"
+          ],
+          "scope": "Desktop WING section: browser slider, range adjustment, saved reopening and byte-exact Undo/Redo verified; 201 profile points and both coefficient arrays match independent original SDK setters exactly. Broader family, lock/error and narrow-layout browser coverage remains unproven. W03 closure unchanged."
         }
       ]
     },
