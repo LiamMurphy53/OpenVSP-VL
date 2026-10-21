@@ -23,6 +23,13 @@ class AnalyticalNative(unittest.TestCase):
     tearDown=test_native.NativeIntegration.tearDown
     worker=test_native.NativeIntegration.worker
 
+    def test_reference_schema_labels_native_unit_conventions_explicitly(self):
+        cases={'HersheyBarTheory':{'FullSpan':'dimensionless','AngleOfAttackDegrees':'deg','FreestreamSpeed':'consistent length/time'},'VKTAirfoilTheory':{'ThicknessParameter':'dimensionless','CamberParameter':'dimensionless','TrailingEdgeAngleDegrees':'deg'},'EllipsoidFlowTheory':{'SemiAxisX':'consistent length','Center':'consistent length','FreestreamVelocity':'consistent length/time'}}
+        for name,expected in cases.items():
+            spec=native_analytical.schema(self.v,name);fields={e['name']:e for e in spec['inputs']}
+            for field,unit in expected.items():self.assertEqual(fields[field]['units'],unit)
+            self.assertTrue(all(e['label'] for e in spec['inputs']))
+
     def test_wing_lift_drag_and_half_span_match_official_api(self):
         v=self.v
         for both in [0,1]:

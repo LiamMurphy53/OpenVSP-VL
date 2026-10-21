@@ -47,9 +47,12 @@ def schema(v,name):
             'ThicknessParameter':(0,None),'TrailingEdgeAngleDegrees':(0,None),
             'SemiAxisX':(0,None),'SemiAxisY':(0,None),'SemiAxisZ':(0,None),
             'NumPointsU':(20,300),'NumPointsW':(20,300)}
+    labels={'NumPoints':'Samples per half-span' if name=='HersheyBarTheory' else 'Perimeter samples','AngleOfAttackDegrees':'Angle of attack','FreestreamSpeed':'Freestream speed','FullSpan':'Full span / unit chord','IncludeBothHalves':'Span coverage','ThicknessParameter':'Thickness mapping parameter','CamberParameter':'Camber mapping parameter','TrailingEdgeAngleDegrees':'Trailing-edge angle','Center':'Center','FreestreamVelocity':'Freestream velocity','NumPointsU':'Circumferential samples','NumPointsW':'Pole-to-pole samples',**{'SemiAxis'+a:'Semi-axis '+a for a in 'XYZ'}}
+    units={'AngleOfAttackDegrees':'deg','TrailingEdgeAngleDegrees':'deg','FreestreamSpeed':'consistent length/time','FreestreamVelocity':'consistent length/time','FullSpan':'dimensionless','ThicknessParameter':'dimensionless','CamberParameter':'dimensionless','Center':'consistent length',**{'SemiAxis'+a:'consistent length' for a in 'XYZ'}}
     entries=[]
     for n,t,value,doc in fields:
-        e=dict(name=n,index=0,type=t,values=[value],editable=True,description=doc)
+        e=dict(name=n,index=0,type=t,values=[value],editable=True,description=doc,label=labels.get(n,n))
+        if n in units:e['units']=units[n]
         if n in bounds:e.update(min=bounds[n][0],max=bounds[n][1])
         if n=='IncludeBothHalves':e['choices']=[dict(value=1,label='Both halves'),dict(value=0,label='One half')]
         entries.append(e)

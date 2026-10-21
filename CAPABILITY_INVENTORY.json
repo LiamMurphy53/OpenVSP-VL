@@ -767,6 +767,19 @@
             ".workspace/evidence/standalone-api-audit-20261020/inventory.json"
           ],
           "scope": "Reviewed reference-function family only; geometry/manager/general-vector APIs and full browser scope excluded from this subaudit. Broad W23 closure remains unproven."
+        },
+        {
+          "date": "2026-10-21",
+          "change": "Clarified analytical input units and standalone setup guidance. Verified nine saved browser reference runs across all 13 reviewed functions, original-engine arrays/CSV/profile/pressure equality, aircraft isolation, native artifact delivery, saved reopening and input reuse.",
+          "evidence": [
+            "ENGINEERING_UTILITY_AUDIT.md",
+            ".workspace/evidence/reference-workflows-20261021/browser-verification.json",
+            ".workspace/evidence/reference-workflows-20261021/artifact-delivery.json",
+            ".workspace/evidence/reference-workflows-20261021/final-native.log",
+            ".workspace/evidence/reference-workflows-20261021/final-packaged.log",
+            ".workspace/evidence/reference-workflows-20261021/atmosphere-reopened.png"
+          ],
+          "scope": "Nine desktop cases and 14 artifacts; both source and package suites pass 12 tests. Broader parameter/performance, narrow browser, recovery and study combinations are not established; broad W23 closure remains unproven."
         }
       ]
     },
