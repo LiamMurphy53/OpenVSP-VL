@@ -759,6 +759,17 @@
             "FEATURE_STATUS.md"
           ],
           "scope": "Three driver pairs, single/assembly contexts, mixed-member browser failure/recovery and exact cold original mesh/decks. Warm replay mismatch retained; broad closure remains Unproven."
+        },
+        {
+          "date": "2026-10-21",
+          "change": "Explained native warm assembly replay caching and verified fine/coarse/fine fresh-worker isolation against explicit original member regeneration.",
+          "evidence": [
+            "tests/test_assembly_remesh_isolation.py",
+            ".workspace/evidence/assembly-remesh-isolation-20261021/source-audit.json",
+            ".workspace/evidence/assembly-remesh-isolation-20261021/native.log",
+            ".workspace/evidence/assembly-remesh-isolation-20261021/packaged.log"
+          ],
+          "scope": "Three runs, distinct worker PIDs, exact mesh/deck regeneration and first/third equality. No production change required; broader closure remains Unproven."
         }
       ]
     },
@@ -1010,6 +1021,17 @@
             "FEATURE_STATUS.md"
           ],
           "scope": "Three driver pairs, single/assembly contexts, mixed-member browser failure/recovery and exact cold original mesh/decks. Warm replay mismatch retained; broad closure remains Unproven."
+        },
+        {
+          "date": "2026-10-21",
+          "change": "Explained native warm assembly replay caching and verified fine/coarse/fine fresh-worker isolation against explicit original member regeneration.",
+          "evidence": [
+            "tests/test_assembly_remesh_isolation.py",
+            ".workspace/evidence/assembly-remesh-isolation-20261021/source-audit.json",
+            ".workspace/evidence/assembly-remesh-isolation-20261021/native.log",
+            ".workspace/evidence/assembly-remesh-isolation-20261021/packaged.log"
+          ],
+          "scope": "Three runs, distinct worker PIDs, exact mesh/deck regeneration and first/third equality. No production change required; broader closure remains Unproven."
         }
       ]
     },
@@ -1072,6 +1094,17 @@
             ".workspace/evidence/structural-unit-controls-20261021/browser-verification.json"
           ],
           "scope": "Seven model-unit choices and unchanged geometry, native/package ownership checks and one desktop edit/group/history workflow. Fresh-process boundary references pass strictly; one prior warm-process MPa coordinate mismatch remains unexplained. Broad closure remains unproven."
+        },
+        {
+          "date": "2026-10-21",
+          "change": "Explained native warm assembly replay caching and verified fine/coarse/fine fresh-worker isolation against explicit original member regeneration.",
+          "evidence": [
+            "tests/test_assembly_remesh_isolation.py",
+            ".workspace/evidence/assembly-remesh-isolation-20261021/source-audit.json",
+            ".workspace/evidence/assembly-remesh-isolation-20261021/native.log",
+            ".workspace/evidence/assembly-remesh-isolation-20261021/packaged.log"
+          ],
+          "scope": "Three runs, distinct worker PIDs, exact mesh/deck regeneration and first/third equality. No production change required; broader closure remains Unproven."
         }
       ]
     }
