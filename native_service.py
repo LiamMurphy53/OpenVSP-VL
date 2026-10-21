@@ -55,12 +55,23 @@ def invoke(request, model, folder, timeout=90, log=None, inherited_locks=()):
     cmd=[interpreter(),str(ROOT/'native_worker.py'),str(request_path),str(model),str(response),*[str(fd) for fd in fds]]
     if log is None:
         with (folder/'engine.log').open('w') as stream:
-            process=subprocess.run(cmd,cwd=folder,stdout=stream,stderr=subprocess.STDOUT,timeout=timeout,pass_fds=fds)
+            with subprocess.Popen(cmd,cwd=folder,stdout=stream,stderr=subprocess.STDOUT,pass_fds=fds) as process:
+                timed_out=False
+                try:process.wait(timeout=timeout)
+                except subprocess.TimeoutExpired:
+                    timed_out=True;process.kill();process.wait()
+                    raise
+                finally:
+                    import signal
+                    code=process.returncode
+                    try:stopped=signal.Signals(-code).name if code is not None and code<0 else None
+                    except ValueError:stopped='signal '+str(-code)
+                    (folder/'worker-exit.json').write_text(json.dumps(dict(processID=process.pid,returncode=code,terminationSignal=stopped,timedOut=timed_out),indent=2)+'\n')
     else:
         process=subprocess.Popen(cmd,cwd=folder,stdout=log,stderr=subprocess.STDOUT,start_new_session=True,pass_fds=fds)
         return process,response
     if not response.exists():
-        raise RuntimeError('OpenVSP could not complete the request. See the local engine log.')
+        raise RuntimeError(f'OpenVSP worker {process.pid} stopped with {stopped or "exit code "+str(process.returncode)} without a response. See {folder / "engine.log"} and worker-exit.json.')
     data=json.loads(response.read_text())
     if process.returncode or 'error' in data: raise ValueError(data.get('error','OpenVSP process failed.'))
     return data

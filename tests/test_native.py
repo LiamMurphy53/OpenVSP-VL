@@ -32,11 +32,18 @@ class NativeIntegration(unittest.TestCase):
     def worker(self,request,model=None):
         folder=self.path/str(len(list(self.path.iterdir())));folder.mkdir()
         target=folder/'aircraft.vsp3';shutil.copy2(model or self.model,target)
-        req=folder/'request.json';req.write_text(json.dumps(request));response=folder/'response.json'
-        with (folder/'log.txt').open('w') as log:
-            p=subprocess.run([interpreter(),str(ROOT/'native_worker.py'),str(req),str(target),str(response)],cwd=folder,stdout=log,stderr=log,timeout=90)
-        data=json.loads(response.read_text())
-        if p.returncode: raise ValueError(data.get('error'))
+        # Retain the exact pre-request file, not only a potentially changed candidate.
+        shutil.copy2(target,folder/'input.vsp3')
+        from native_service import invoke
+        try:data=invoke(request,target,folder)
+        except ValueError:raise  # Ordinary native validation is an expected test outcome.
+        except Exception as error:
+            import uuid
+            evidence=ROOT/'.workspace/evidence/native-worker-failures'/uuid.uuid4().hex
+            shutil.copytree(folder,evidence)
+            raise RuntimeError(f'{error} Retained worker input and diagnostics: {evidence}') from error
+        finally:
+            if (folder/'engine.log').exists():shutil.copy2(folder/'engine.log',folder/'log.txt')
         return data,target
 
     def test_surface_coordinates_match_native_samples(self):
