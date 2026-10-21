@@ -672,3 +672,7 @@ The still-running audit reached 464 of 682 isolated test processes: 462 successf
 ### Live Modeling tools sliders — 2026-10-20
 
 Supersedes the release-only limitation above: shared Modeling tools parameter sliders now use the same serial latest-value native transaction queue and per-gesture Undo token as Properties. Native tool values/IDs remain unchanged (these editors retain their existing native units). The active slider stays enabled during requests; other controls remain locked. Panel refreshes retain open details, scroll and keyboard slider focus for the same component/tab. All eight UI module tests and app/tools syntax checks pass, including native-ID/value and input/release callback checks. An isolated native server started successfully, but browser automation reported no available browser; no on-screen drag, Undo or focus verification is claimed for this integration. Existing Properties browser evidence does not prove this new tool-panel integration.
+
+### Shared panel-state regression checks — 2026-10-20
+
+Added executable DOM-contract coverage for `preserveInspectorView`: replacement range focus with preventScroll, disambiguation of identical native IDs in different groups, disabled replacement protection, disclosure and both scroll axes, component/tab context isolation, and tool panels without inspector group wrappers. This is simulated DOM verification, not an on-screen browser result. All nine UI module test files pass.
