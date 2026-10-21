@@ -1,0 +1,18 @@
+import assert from 'node:assert/strict';
+import {podSliderParameters,podSliderMarkup,bindPodSliders} from '../web/pod-sliders.js';
+const c={id:'pod',type:'POD',params:[{rawGroup:'Design',name:'Length',value:26.25},{id:'ratio',rawGroup:'Design',name:'FineRatio',value:15,min:.1,max:1000}]};
+const ps=podSliderParameters(c);
+assert.equal(ps[0].value,3.5);assert.equal(ps[1].value,7.5);
+assert.match(podSliderMarkup(c,'diameter',{esc:String,displayValue:x=>x}),/Pod diameter slider/);
+const input={},slider={dataset:{customSlider:'pod-diameter'},value:'7',disabled:false};
+const wrapper={dataset:{sliderKey:'pod:pod:diameter'},querySelector:()=>slider,querySelectorAll:()=>[]};
+const host={querySelectorAll:()=>[wrapper],querySelector:()=>input};
+const calls=[];
+bindPodSliders(host,c,{displayValue:x=>x,nativeValue:x=>x,isBusy:()=>false,liveEdit:(...args)=>calls.push(args)});
+slider.oninput();slider.onchange();
+assert.equal(calls[0][2].value,7.5,'Diameter converts to native length/radius ratio');
+assert.equal(calls[0][3],false);assert.equal(calls[1][3],true);
+c.params[1].userLocked=true;assert.ok(podSliderParameters(c).every(p=>!p.active));
+assert.match(podSliderMarkup(c,'fineness',{esc:String,displayValue:x=>x}),/disabled/);
+assert.deepEqual(podSliderParameters({...c,type:'WING'}),[]);
+console.log('Pod slider conversion, live updates, and locks passed');

@@ -1,3 +1,4 @@
+import {podSliderMarkup} from './pod-sliders.js?v=20261021';
 // These controls only name and organize parameters returned by OpenVSP.
 // Every edit still submits the original parameter ID and native value.
 export function geometryTypeLabel(type){
@@ -46,5 +47,5 @@ export function podDiameterMarkup(c,{esc:E,displayValue,unitSuffix}){
  const length=c.params.find(p=>p.rawGroup==='Design'&&p.name==='Length'),ratio=c.params.find(p=>p.rawGroup==='Design'&&p.name==='FineRatio');
  if(!length||!ratio)return '';
  const diameter=2*length.value/ratio.value;
- return `<label class="tool-field" for="pod-diameter">Pod diameter (${E(unitSuffix('length'))})<input id="pod-diameter" aria-label="Pod diameter" type="number" step="any" min="${displayValue(2*length.value/ratio.max,'length')}" max="${displayValue(2*length.value/ratio.min,'length')}" value="${Number(displayValue(diameter,'length').toPrecision(12))}" ${length.value>0?'':'disabled'}><small>Maximum body diameter before component transforms.</small></label><label class="tool-field" for="pod-fineness">Fineness ratio<input id="pod-fineness" aria-label="Fineness ratio" type="number" step="any" min="${ratio.min/2}" max="${ratio.max/2}" value="${Number((ratio.value/2).toPrecision(12))}"><small>Length divided by diameter.</small></label>`;
+ return `<label class="tool-field" for="pod-diameter">Pod diameter (${E(unitSuffix('length'))})<input id="pod-diameter" aria-label="Pod diameter" type="number" step="any" min="${displayValue(2*length.value/ratio.max,'length')}" max="${displayValue(2*length.value/ratio.min,'length')}" value="${Number(displayValue(diameter,'length').toPrecision(12))}" ${length.value>0?'':'disabled'}><small>Maximum body diameter before component transforms.</small></label>${podSliderMarkup(c,'diameter',{esc:E,displayValue})}<label class="tool-field" for="pod-fineness">Fineness ratio<input id="pod-fineness" aria-label="Fineness ratio" type="number" step="any" min="${ratio.min/2}" max="${ratio.max/2}" value="${Number((ratio.value/2).toPrecision(12))}"><small>Length divided by diameter.</small></label>${podSliderMarkup(c,'fineness',{esc:E,displayValue})}`;
 }
