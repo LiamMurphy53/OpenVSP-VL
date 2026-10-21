@@ -1,0 +1,14 @@
+import assert from 'node:assert/strict';
+import {boundaryResults} from '../web/boundary-results.js';
+const E=x=>String(x).replaceAll('&','&amp;').replaceAll('<','&lt;');
+assert.equal(boundaryResults(null,E),'');
+const unknown=boundaryResults({available:false,reason:'Inspect <native> file'},E);
+assert.match(unknown,/Inspect &lt;native> file/);
+assert.doesNotMatch(unknown,/0 constrained|Translation X|No nodes were constrained/,'Unavailable is not an empty constraint result');
+const empty=boundaryResults({available:true,nodeCount:0,degreeCount:0,sourceFile:'structure.inp',definedConditions:1,directionCounts:[0,0,0,0,0,0]},E);
+assert.match(empty,/No nodes were constrained/);
+const some=boundaryResults({available:true,nodeCount:2,degreeCount:3,sourceFile:'assembly.inp',definedConditions:2,directionCounts:[1,0,1,0,0,1]},E);
+assert.match(some,/2 constrained nodes · 3 constrained degrees of freedom/);
+assert.match(some,/Rotation Z<\/td><td>1/);
+assert.match(some,/Assembly connection equations are separate/);
+console.log('Native boundary counts, empty selection and unavailable-format guidance stay distinct.');

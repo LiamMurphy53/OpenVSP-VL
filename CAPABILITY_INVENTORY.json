@@ -547,6 +547,18 @@
             ".workspace/evidence/laminate-units-20261021/browser-verification.json"
           ],
           "scope": "Original material-parameter equality across five systems and two exact solver-deck exports; one desktop material/inch solver display. Wider layups, browser authoring/history, narrow layout and W17 closure remain unproven."
+        },
+        {
+          "date": "2026-10-21",
+          "change": "Saved structural results expose native exported constrained-node and per-direction counts, including empty selections and separate assembly equations.",
+          "evidence": [
+            "native_boundary_results.py",
+            "tests/test_boundary_results.py",
+            "tests/test_boundary_results.mjs",
+            "MODELING_AUDIT.md",
+            ".workspace/evidence/boundary-results-20261021/browser-verification.json"
+          ],
+          "scope": "Native presets/custom/empty root-strip and two-member assembly execution; selected exact native decks, packaged checks and one desktop saved-result reload. Wider constraint combinations and broad workflow closure remain unproven."
         }
       ]
     },
@@ -568,6 +580,18 @@
             ".workspace/evidence/assembly-topology-20261021/browser-verification.json"
           ],
           "scope": "One symmetry-removed copy recovery, exact repaired mesh and existing assembly export/sizing/study regressions. Desktop repair/run verified. Broader references, narrow layout and full W18 closure remain unproven."
+        },
+        {
+          "date": "2026-10-21",
+          "change": "Saved structural results expose native exported constrained-node and per-direction counts, including empty selections and separate assembly equations.",
+          "evidence": [
+            "native_boundary_results.py",
+            "tests/test_boundary_results.py",
+            "tests/test_boundary_results.mjs",
+            "MODELING_AUDIT.md",
+            ".workspace/evidence/boundary-results-20261021/browser-verification.json"
+          ],
+          "scope": "Native presets/custom/empty root-strip and two-member assembly execution; selected exact native decks, packaged checks and one desktop saved-result reload. Wider constraint combinations and broad workflow closure remain unproven."
         }
       ]
     },

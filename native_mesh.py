@@ -153,6 +153,7 @@ def fea_schema(v,sid=None):
 
 
 def run_fea(v,req):
+    from native_boundary_results import report as boundary_report
     sid,gid,index=structure(v,req.get('structure'))
     sizing(v,gid,index,req.get('inputs',[]))
     spec=fea_schema(v,sid)
@@ -177,7 +178,7 @@ def run_fea(v,req):
         import native_preview
         native_preview.export_fea_mesh(v,sid)
     mesh=read_gmsh(Path.cwd()/'structure.msh',Path.cwd()/'structure.bdf' if has_masses else None)
-    return dict(version=v.GetVSPVersion(),analysis='FeaMeshAnalysis',engineOperation='ComputeFeaMesh',meshGenerations=1,exportOperation='ExportFeaMesh and ExportCADFiles' if len(selected)>1 else 'ComputeFeaMesh',structure=sid,formats=selected,resultID='',inputs=spec['inputs'],geometryInputs=[],results=[],meshFile='structure.msh',meshSummary=summary(mesh))
+    return dict(version=v.GetVSPVersion(),analysis='FeaMeshAnalysis',engineOperation='ComputeFeaMesh',meshGenerations=1,exportOperation='ExportFeaMesh and ExportCADFiles' if len(selected)>1 else 'ComputeFeaMesh',structure=sid,formats=selected,resultID='',inputs=spec['inputs'],geometryInputs=[],results=[],meshFile='structure.msh',meshSummary=summary(mesh),boundaryReport=boundary_report(v,[sid],selected,Path.cwd()/'structure.inp'))
 
 
 def assembly(v,aid=None):
@@ -227,6 +228,7 @@ def assembly_inputs(req,members):
 
 
 def run_assembly(v,req):
+    from native_boundary_results import report as boundary_report
     aid,members=assembly(v,req.get('structure'))
     inputs=assembly_inputs(req,members)
     selected=formats(req,ASSEMBLY_EXPORTS)
@@ -255,7 +257,7 @@ def run_assembly(v,req):
     v.ComputeFeaAssemblyMesh(aid)
     mesh=read_gmsh(Path.cwd()/'assembly.msh',Path.cwd()/'assembly.bdf' if has_masses else None)
     generated=assembly_schema(v,aid,check_connections=False)
-    return dict(version=v.GetVSPVersion(),analysis='FeaAssemblyMesh',engineOperation='ComputeFeaAssemblyMesh',assemblyComputations=1,exportOperation='ExportAssemblyMesh',structure=aid,members=members,memberSizing=spec['guide']['memberSizing'],generatedMemberSizing=generated['guide']['memberSizing'],formats=selected,resultID='',inputs=spec['inputs'],geometryInputs=[],results=[],meshFile='assembly.msh',meshSummary=summary(mesh))
+    return dict(version=v.GetVSPVersion(),analysis='FeaAssemblyMesh',engineOperation='ComputeFeaAssemblyMesh',assemblyComputations=1,exportOperation='ExportAssemblyMesh',structure=aid,members=members,memberSizing=spec['guide']['memberSizing'],generatedMemberSizing=generated['guide']['memberSizing'],formats=selected,resultID='',inputs=spec['inputs'],geometryInputs=[],results=[],meshFile='assembly.msh',meshSummary=summary(mesh),boundaryReport=boundary_report(v,members,selected,Path.cwd()/'assembly.inp'))
 
 
 def summary(mesh):
