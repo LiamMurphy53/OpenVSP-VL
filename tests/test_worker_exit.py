@@ -50,3 +50,16 @@ class WorkerExit(unittest.TestCase):
         saved=list((self.root/'.workspace/evidence/native-worker-failures').iterdir());self.assertEqual(len(saved),1)
         self.assertEqual((saved[0]/'input.vsp3').read_text(),'exact original input')
         self.assertEqual(json.loads((saved[0]/'worker-exit.json').read_text())['terminationSignal'],'SIGTERM')
+
+    def test_failed_candidate_never_replaces_aircraft_or_history(self):
+        script='import os,signal,sys;open(sys.argv[2],"w").write("partial candidate");os.kill(os.getpid(),signal.SIGTERM)'
+        (self.root/'native_worker.py').write_text(script)
+        history=['previous'];future=['future']
+        with patch.multiple(service,ROOT=self.root,WORK=self.root,MODEL=self.model,REVISION='original',HISTORY=history,FUTURE=future),patch.object(service,'interpreter',return_value=sys.executable):
+            with self.assertRaisesRegex(RuntimeError,'SIGTERM'):
+                service.mutation({'operation':'parameter','id':'length','value':4,'revision':'original'})
+            self.assertEqual(service.REVISION,'original');self.assertEqual(service.HISTORY,['previous']);self.assertEqual(service.FUTURE,['future'])
+        self.assertEqual(self.model.read_text(),'unchanged aircraft')
+        folders=list((self.root/'transactions').iterdir());self.assertEqual(len(folders),1)
+        self.assertEqual((folders[0]/'aircraft.vsp3').read_text(),'partial candidate')
+        self.assertEqual(json.loads((folders[0]/'worker-exit.json').read_text())['terminationSignal'],'SIGTERM')
