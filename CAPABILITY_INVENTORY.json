@@ -474,6 +474,17 @@
             ".workspace/evidence/visibility-ui-20261021/profile-drag-redo.png"
           ],
           "scope": "One desktop wing/point setup. Both native runs match independent SDK arrays; slider redo/history bytes exact. Broader and narrow-layout closure remains unproven."
+        },
+        {
+          "date": "2026-10-21",
+          "change": "Added original-SDK result comparisons for existing saved self-clearance and ground-plane distance workflows, including plane heights on either side of the wing.",
+          "evidence": [
+            "tests/test_geometry_cases.py",
+            ".workspace/evidence/clearance-cases-20261021/native.log",
+            ".workspace/evidence/clearance-cases-20261021/packaged.log",
+            "MODELING_AUDIT.md"
+          ],
+          "scope": "Three native executions with exact result-entry parity, unchanged source files and packaged repetition. Broader geometry/plane families and browser closure remain unproven."
         }
       ]
     },

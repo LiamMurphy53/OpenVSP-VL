@@ -179,3 +179,17 @@ class NativeGeometryCases(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,'mode.*preset'):
             self.worker(dict(action='analysis',name='GeometryAnalysis',inputs=[dict(name='CaseID',values=['ALL'])]),path)
         self.assertEqual(path.read_bytes(),before)
+
+    def test_self_clearance_and_ground_plane_distance_match_native(self):
+        self.fixture();v=self.v
+        for kind,height in [('EXTERNAL_SELF_INTERFERENCE',None),('PLANE_STATIC_DISTANCE_INTERFERENCE',-2.),('PLANE_STATIC_DISTANCE_INTERFERENCE',2.)]:
+            with self.subTest(kind=kind,height=height):
+                cid=self.case(kind)
+                if height is not None:
+                    v.SetParmVal(v.FindParm(cid,'SecondaryType','InterferenceCase'),v.Z_TARGET);v.SetParmVal(v.FindParm(cid,'SecondaryZGround','InterferenceCase'),height)
+                v.Update();v.WriteVSPFile(str(self.model),v.SET_ALL);baseline=self.model.read_bytes()
+                expected=self.direct('GeometryAnalysis',{'CaseID':[cid]})
+                data,path=self.worker(dict(action='analysis',name='GeometryAnalysis',inputs=[dict(name='CaseID',values=[cid])]))
+                self.assertTrue(data['results']);self.assertResults(expected,data['results']);self.assertEqual(path.read_bytes(),baseline)
+                saved=next(c for c in data['geometryCases'] if c['id']==cid)
+                if height is not None:self.assertEqual(next(p['value'] for p in saved['params'] if p['name']=='SecondaryZGround'),height)
