@@ -82,3 +82,5 @@
 #settings-fields .tool-field[hidden]{display:none}
 
 .custom-slider-range>small{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.custom-slider-range>div{flex-shrink:0}
+
+#mesh-host{scroll-margin-top:4rem}

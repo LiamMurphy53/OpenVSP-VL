@@ -1,6 +1,6 @@
 import {boundaryResults} from './boundary-results.js?v=20261021';
 import {waveDrawingsCard} from './wave-drawings.js?v=20261012-1';
-import {cfdChecksCard,withCfdDrawings,intersectionDrawings,nativeMessagesCard} from './cfd-results.js?v=20261010-123';
+import {cfdChecksCard,withCfdDrawings,intersectionDrawings,nativeMessagesCard,focusCfdProblem} from './cfd-results.js?v=20261021-focus';
 import {mountMeshViewer} from './mesh-viewer.js?v=20261021-flow-units';
 import {solverSetupCard} from './solver-setup.js?v=20261010-123';
 import {drawingMesh} from './structural-preview.js?v=20261010-123';
@@ -28,7 +28,7 @@ export function renderRunWorkspace(job){
  $('#reuse-reference-inputs')?.addEventListener('click',()=>app.reuseReferenceInputs(job));
  $('#open-source-run')?.addEventListener('click',()=>app.open(job.sourceRun));
  let previewSequence=0;
- async function preview(file,kind='mesh',caseIndex=1){
+ async function preview(file,kind='mesh',caseIndex=1,problem=null){
   const sequence=++previewSequence;if(dispose)dispose();dispose=null;$('#mesh-host').textContent='Loading native '+(kind==='mesh'||kind==='cfd'?'mesh':'solution')+'…';
   if(kind!=='aero')$('#solution-cases').innerHTML='';
   try{const query='?id='+job.id+'&file='+encodeURIComponent(file)+'&case='+caseIndex;let data;
@@ -39,6 +39,7 @@ export function renderRunWorkspace(job){
     data=await app.api('/api/artifact'+query);
    }
    if(kind==='cfd'&&job.result.meshFile){const nativeMesh=await app.api('/api/mesh?id='+job.id+'&file='+encodeURIComponent(job.result.meshFile));data=withCfdDrawings(nativeMesh,data);}else if(kind==='cfd')data=intersectionDrawings(data);
+   if(problem)data=focusCfdProblem(data,problem);
    if(kind==='mesh'&&job.name==='CompGeom')data.displayNote='This is the exact native trimmed component mesh from this saved area/volume analysis. Review its merged, removed and degenerate mesh diagnostics and compare tessellation before relying on the results.';
    if(kind==='mesh'&&job.name==='DegenGeomMesh')data.displayNote=job.result?.degenerateMesh?.nativeGeomType==='NGonMesh'?(job.result.degenerateMesh.studioPolygonSnapshot?'OpenVSP exported this polygon mesh as triangles for viewing. The saved Studio project restores its polygon geometry. Use VSPGEOM and companions with other tools.':'OpenVSP exported this polygon mesh as triangles for viewing. Download the native VSPGEOM file and companions for polygon data; this older project saves only polygon parameter records in VSP3.'):'OpenVSP generated and exported this mesh as triangles. The generated mesh is also preserved in the downloadable degenerate-mesh.vsp3 aircraft.';
    if(token!==generation||sequence!==previewSequence)return;
@@ -47,9 +48,11 @@ export function renderRunWorkspace(job){
    if(['cfd','guide','case','wave'].includes(kind)&&!data.nodes.length){$('#mesh-host').innerHTML='<p class="empty-state">'+esc(data.warnings[0]||'OpenVSP returned no drawing points for this run.')+'</p>';return;}
    if(data.cases){$('#solution-cases').innerHTML=`<label class="solution-case" for="solution-case">Solver case <select id="solution-case">${data.cases.map(c=>`<option value="${c.index}" ${c.index===data.case?'selected':''}>${c.index} · Mach ${c.mach} · α ${c.alpha}° · β ${c.beta}° · ${esc(c.label)}</option>`).join('')}</select></label>`;$('#solution-case').onchange=e=>preview(file,'aero',Number(e.target.value));}
    dispose=mountMeshViewer($('#mesh-host'),data,esc);
+   if(problem)$('#mesh-host').scrollIntoView({block:'start'});
   }catch(e){if(token===generation&&sequence===previewSequence)$('#mesh-host').textContent=e.message;}
  }
  $('[data-cfd-results]')?.addEventListener('click',()=>preview(job.result.cfdChecks.drawingFile,'cfd'));
+ document.querySelectorAll('[data-cfd-problem]').forEach(button=>button.onclick=()=>preview(job.result.cfdChecks.drawingFile,'cfd',1,button.dataset.cfdProblem));
  $('[data-cfd-mesh]')?.addEventListener('click',()=>preview(job.result.meshFile));
  document.querySelectorAll('[data-preview-file]').forEach(b=>b.onclick=()=>preview(b.dataset.previewFile));
  document.querySelectorAll('[data-wave-drawing]').forEach(b=>b.onclick=()=>preview(b.dataset.waveDrawing,'wave',job.result.waveDrawings.selectedCone));

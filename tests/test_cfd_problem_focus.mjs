@@ -1,0 +1,13 @@
+import assert from 'node:assert/strict';
+import {cfdChecksCard,withCfdDrawings,focusCfdProblem} from '../web/cfd-results.js';
+const mesh={nodes:[[0,0,0],[1,0,0],[0,1,0]],nodeIDs:[11,22,33],elements:[{id:1,kind:'face',nodes:[0,1,2],group:10}],groups:[{id:10,name:'Wing',count:1}],totalElements:1};
+const data={parts:[{index:0,name:'Native problem edges',objects:[{kind:'lines',nativeID:'bad-edge',nativeType:1,points:[[0,0,0],[1,0,0]]}]},{index:1,name:'Raw intersection curves',objects:[{kind:'lines',nativeID:'raw',nativeType:1,points:[[0,1,0],[1,1,0]]}]}],warnings:[],displayNote:'Original native drawing'};
+const before=structuredClone(mesh),merged=withCfdDrawings(mesh,data),focused=focusCfdProblem(merged,'BADEDGE');
+assert.deepEqual(focused.groups.filter(g=>!g.initiallyHidden).map(g=>g.name),['Native problem edges']);
+assert.equal(focused.nodes,merged.nodes);assert.equal(focused.elements,merged.elements,'Focusing cannot rewrite original connectivity');assert.deepEqual(mesh,before);
+assert.equal(merged.groups[0].initiallyHidden,undefined,'Returning to the full view keeps its defaults');
+assert.throws(()=>focusCfdProblem(merged,'BADTRI'),/no matching problem/);
+const job={id:'id',artifacts:[{name:'checks.json',size:200}],result:{meshFile:'mesh.msh',cfdChecks:{available:true,kind:'cfd',counts:{BADEDGE:1,BADTRI:0},drawingFile:'checks.json',rawCurvesFile:'raw.curv',adaptedCurvesFile:'adapted.curv',warnings:[]}}};
+assert.match(cfdChecksCard(job,String),/Inspect problem edges/);assert.doesNotMatch(cfdChecksCard(job,String),/Inspect problem triangles/);
+assert.doesNotMatch(cfdChecksCard({...job,artifacts:[{name:'checks.json',size:30000001}]},String),/data-cfd-problem/);
+console.log('Native CFD focus preserves nodes/connectivity, isolates only classified groups and respects preview limits');
