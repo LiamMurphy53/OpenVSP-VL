@@ -25,6 +25,7 @@ NATIVE_PROCESS = None
 RUN_RESERVATION = None
 SESSION_WARNING = None
 LAST_EDIT_GROUP = None
+SET_IDENTITIES = {}
 
 
 def acquire_run_lock(path):
@@ -77,19 +78,23 @@ def invoke(request, model, folder, timeout=90, log=None, inherited_locks=()):
     return data
 
 
-def save_session():
+def save_session(clear_warning=True):
     """Persist the native model revision and undo/redo paths for normal restarts."""
     global SESSION_WARNING
     import hashlib
     if not MODEL.is_file():return
+    retained={'current',*(str(p.relative_to(WORK)) for p in [*HISTORY,*FUTURE])}
+    for key in list(SET_IDENTITIES):
+        if key not in retained:del SET_IDENTITIES[key]
     data=dict(revision=REVISION,modelHash=hashlib.sha256(MODEL.read_bytes()).hexdigest(),
-              history=[str(p.relative_to(WORK)) for p in HISTORY],future=[str(p.relative_to(WORK)) for p in FUTURE])
-    WORK.mkdir(parents=True,exist_ok=True);temp=WORK/'session.json.tmp';temp.write_text(json.dumps(data));os.replace(temp,WORK/'session.json');SESSION_WARNING=None
+              history=[str(p.relative_to(WORK)) for p in HISTORY],future=[str(p.relative_to(WORK)) for p in FUTURE],setIdentities=SET_IDENTITIES)
+    WORK.mkdir(parents=True,exist_ok=True);temp=WORK/'session.json.tmp';temp.write_text(json.dumps(data));os.replace(temp,WORK/'session.json')
+    if clear_warning:SESSION_WARNING=None
 
 
 def restore_session():
     """Restore a verified native history; preserve inconsistent records for recovery."""
-    global REVISION,HISTORY,FUTURE,SESSION_WARNING
+    global REVISION,HISTORY,FUTURE,SESSION_WARNING,SET_IDENTITIES
     import hashlib
     with LOCK:
         path=WORK/'session.json'
@@ -107,13 +112,19 @@ def restore_session():
                     result.append(candidate)
                 return result
             history=snapshots(data['history']);future=snapshots(data['future'])
+            identities=data.get('setIdentities',{})
+            from native_set_identity import validate_registry
+            validate_registry(identities)
+            SET_IDENTITIES=identities
             REVISION=data['revision'];HISTORY=history;FUTURE=future;SESSION_WARNING=None;return True
         except (ValueError,OSError,KeyError,TypeError) as exc:
             backup=WORK/('session-recovery-'+uuid.uuid4().hex+'.json');shutil.copy2(path,backup)
-            REVISION=uuid.uuid4().hex;HISTORY=[];FUTURE=[];SESSION_WARNING=str(exc)+' The saved history record was preserved for recovery.';return False
+            REVISION=uuid.uuid4().hex;HISTORY=[];FUTURE=[];SET_IDENTITIES={};SESSION_WARNING=str(exc)+' The saved history record was preserved for recovery.';return False
 
 
 def state_meta(state):
+    from native_set_identity import annotate
+    if annotate(state,SET_IDENTITIES):save_session(clear_warning=False)
     state.update(revision=REVISION,canUndo=bool(HISTORY),canRedo=bool(FUTURE),name='Aircraft',
                  nativeOpen=bool(NATIVE_PROCESS and NATIVE_PROCESS.poll() is None))
     if SESSION_WARNING:state['warnings'].append(SESSION_WARNING)
@@ -131,15 +142,20 @@ def check_revision(value):
     if value != REVISION: raise ValueError('The model changed in another window. Reload the workspace before editing.')
 
 
-def commit(candidate,history_group=None):
+def commit(candidate,history_group=None,set_count=None,set_order=None):
     global REVISION,LAST_EDIT_GROUP
     grouped=history_group is not None and LAST_EDIT_GROUP==(history_group,REVISION)
     if MODEL.exists() and not grouped:
         path=WORK/'history'/f'{uuid.uuid4().hex}.vsp3'; path.parent.mkdir(exist_ok=True)
         shutil.copy2(MODEL,path); HISTORY.append(path)
+        if 'current' in SET_IDENTITIES:SET_IDENTITIES[str(path.relative_to(WORK))]=list(SET_IDENTITIES['current'])
         # Keep old history files on disk; only cap the visible undo chain.
         del HISTORY[:-40]
     FUTURE.clear()
+    if set_count is not None:
+        from native_set_identity import transfer
+        transfer(set_count,set_order,SET_IDENTITIES)
+    else:SET_IDENTITIES.pop('current',None)
     os.replace(candidate,MODEL)
     REVISION=uuid.uuid4().hex
     LAST_EDIT_GROUP=(history_group,REVISION) if history_group is not None else None
@@ -160,7 +176,7 @@ def mutation(req):
         folder=WORK/'transactions'/uuid.uuid4().hex; folder.mkdir(parents=True)
         candidate=folder/'aircraft.vsp3'; shutil.copy2(MODEL,candidate)
         data=invoke(dict(req,action='mutate'),candidate,folder)
-        commit(candidate,history_group)
+        commit(candidate,history_group,set_count=len(data['tools']['sets']),set_order=req.get('order') if req.get('operation')=='set-reorder' else None)
         return state_meta(data)
 
 
@@ -188,7 +204,11 @@ def undo(redo=False, revision=None):
         if not source: raise ValueError('No more history.')
         path=WORK/'history'/f'{uuid.uuid4().hex}.vsp3'; path.parent.mkdir(exist_ok=True)
         shutil.copy2(MODEL,path); target.append(path)
-        shutil.copy2(source.pop(),MODEL); REVISION=uuid.uuid4().hex
+        if 'current' in SET_IDENTITIES:SET_IDENTITIES[str(path.relative_to(WORK))]=list(SET_IDENTITIES['current'])
+        previous=source.pop();ids=SET_IDENTITIES.get(str(previous.relative_to(WORK)))
+        if ids is None:SET_IDENTITIES.pop('current',None)
+        else:SET_IDENTITIES['current']=list(ids)
+        shutil.copy2(previous,MODEL); REVISION=uuid.uuid4().hex
         save_session()
         return state()
 

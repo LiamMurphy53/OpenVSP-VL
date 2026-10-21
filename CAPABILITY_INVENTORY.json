@@ -242,6 +242,20 @@
             ".workspace/evidence/polygon-export-browser/export.png"
           ],
           "scope": "Exact original component-writer file bytes for transformed three-level source at active levels0and2, source preservation, rejected identities, service packaging and successful browser invocation. Broad closure remains unproved."
+        },
+        {
+          "date": "2026-10-21",
+          "change": "Pending analysis and geometry-preparation set choices now follow moved set contents using workspace-only identities retained with native Undo/Redo snapshots. Empty/duplicate-name sets and recreated slots are distinguished; analysis schema refresh preserves selection identity.",
+          "evidence": [
+            "native_set_identity.py",
+            "tests/test_set_identity.py",
+            "tests/test_set_selection.mjs",
+            ".workspace/evidence/set-selection-20261021/browser-verification.json",
+            ".workspace/evidence/set-selection-20261021/final-native.log",
+            ".workspace/evidence/set-selection-20261021/packaged.log",
+            ".workspace/evidence/set-selection-20261021/retained-set.png"
+          ],
+          "scope": "Source 20 related tests plus five final identity/recovery checks; packaged 21 related tests and 15 JS modules passed. Desktop duplicate-name wing/payload ordering, schema refresh, byte-exact Undo/Redo and original native CompGeom equality verified. Broader geometry/attachment, study and large-set browser coverage remains unproven."
         }
       ]
     },

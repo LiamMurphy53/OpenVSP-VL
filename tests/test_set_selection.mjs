@@ -1,0 +1,17 @@
+import assert from 'node:assert/strict';
+import {resolveSetSelection,setOptions,refreshSetSelections} from '../web/set-selection.js';
+const before=[{index:0,identity:'builtin:0',name:'All'},{index:3,identity:'a',name:'Same'},{index:4,identity:'b',name:'Same'}];
+const moved=[before[0],{...before[2],index:3},{...before[1],index:4}];
+assert.deepEqual(resolveSetSelection(moved,'3','a'),{value:'4',identity:'a'});
+assert.deepEqual(resolveSetSelection(before,'4','a'),{value:'3',identity:'a'});
+assert.equal(resolveSetSelection(before,'-1','').value,'-1');
+assert.equal(resolveSetSelection(before,'0','builtin:0').value,'0');
+assert.equal(resolveSetSelection(moved,'3','deleted').value,'','A new slot occupant cannot replace a missing set');
+assert.equal(resolveSetSelection(moved,'','a').value,'4','Undo can restore a missing collection');
+assert.equal(resolveSetSelection(before,'3','').identity,'a','Attach native identity to older drafts');
+assert.match(setOptions(before,String),/value="4" data-set-identity="b"/);
+const select={dataset:{input:'Set'},value:'3',selectedOptions:[{dataset:{setIdentity:'a'}}]};
+refreshSetSelections({querySelectorAll:()=>[select]},moved,String);assert.equal(select.value,'4');
+const study={dataset:{input:'Set',prefix:'study-0'},value:'3'};
+refreshSetSelections({querySelectorAll:()=>[study]},moved,String);assert.equal(study.value,'3','Saved-study baseline choices are separate');
+console.log('Native set identity follows moves/undo and rejects replacement slots, including duplicate names.');
