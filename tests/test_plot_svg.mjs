@@ -1,0 +1,10 @@
+import assert from 'node:assert/strict';
+import {plotSVG} from '../web/plot-svg.js';
+const svg=plotSVG([1,2],[4,8],'Case <x>','CL "native"',false,null,true);
+assert.match(svg,/Case &lt;x&gt;/);assert.match(svg,/CL &quot;native&quot;/);
+assert.equal((svg.match(/<circle /g)||[]).length,2);
+assert.doesNotMatch(svg,/NaN|Infinity/);
+assert.equal(plotSVG([1],[null],'X','Y'),'<p>No numeric samples.</p>');
+const gaps=plotSVG([1,2,3],[4,null,8],'X','Y');
+assert.match(gaps,/d="M [^"]+ M /,'Missing samples must break connected lines');
+console.log('Standalone result plots render without installed tool state and escape labels');

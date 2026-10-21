@@ -22,10 +22,11 @@ export function useSweptDefault(draft,item){
  stage.followDefaults=[...(stage.followDefaults||[]).filter(e=>e.scope!==item.scope||key(e)!==k),{scope:item.scope,name:item.name,index:item.index}];
  draft.axes=draft.axes.filter(a=>!(a.kind===(item.scope==='inputs'?'input':'geometryInput')&&a.stage===item.stage&&key(a)===k&&!a.member));
 }
+export function useAllSweptDefaults(draft,items){for(const item of items)useSweptDefault(draft,item);}
 export function omitFollowedDefaults(stage,scope,inputs){return inputs.filter(e=>!(stage.followDefaults||[]).some(f=>f.scope===scope&&key(f)===key(e)));}
 export function overridesMarkup(items,esc,dirty){
  const value=(item,x)=>item.choices?.find(c=>c.value===x)?.label??JSON.stringify(x);
- return items.length?`<section id="study-input-overrides" class="tool-card" ${dirty?'hidden':''}><h2>Explicit inputs for swept defaults</h2><p>These step inputs are set separately from the aircraft settings you are sweeping.</p>${items.map((item,i)=>`<article class="tool-item"><h3>Step ${item.stage+1} · ${esc(item.label)}</h3><p>Swept aircraft default: ${esc(item.defaultValues.map(x=>value(item,x)).join(', '))}.<br>Step input: ${item.inputSweep?'a separate input sweep':esc(item.values.map(x=>value(item,x)).join(', '))}.</p><button data-study-use-default="${i}">Use swept default${item.inputSweep?' and remove separate input sweep':''}</button></article>`).join('')}</section>`:'';
+ return items.length?`<section id="study-input-overrides" class="tool-card" ${dirty?'hidden':''}><h2>Explicit inputs for swept defaults</h2><p>These step inputs are set separately from the aircraft settings you are sweeping.</p>${items.length>1?`<button data-study-use-all-defaults>Use swept defaults in all listed inputs${items.some(item=>item.inputSweep)?' and remove separate input sweeps':''}</button>`:''}${items.map((item,i)=>`<article class="tool-item"><h3>Step ${item.stage+1} · ${esc(item.label)}</h3><p>Swept aircraft default: ${esc(item.defaultValues.map(x=>value(item,x)).join(', '))}.<br>Step input: ${item.inputSweep?'a separate input sweep':esc(item.values.map(x=>value(item,x)).join(', '))}.</p><button data-study-use-default="${i}">Use swept default${item.inputSweep?' and remove separate input sweep':''}</button></article>`).join('')}</section>`:'';
 }
 export function followingSpec(spec,stage,scope){
  return {...spec,inputs:spec.inputs.map(e=>(stage.followDefaults||[]).some(f=>f.scope===scope&&key(f)===key(e))?{...e,editable:false}:e)};

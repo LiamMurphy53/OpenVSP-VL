@@ -922,6 +922,17 @@
             ".workspace/evidence/study-default-overrides-20261021/input-review.png"
           ],
           "scope": "Real cm/ft CAD sweep initially produced two ft files; browser repair retained 24 unrelated frozen inputs and produced cm/ft files matching independent original STEP exports. Nine source/package checks, 16 broader study regressions and 17 JS modules pass. Per-member assembly review, geometry-inheritance execution, conditional native overrides and broad closure remain unproven."
+        },
+        {
+          "date": "2026-10-21",
+          "change": "Bulk reviewed input inheritance across flight and geometry preparation; distinct explicit editing labels.",
+          "evidence": [
+            "tests/test_geometry_inheritance.py",
+            "tests/test_study_overrides.mjs",
+            ".workspace/evidence/geometry-inheritance-20261021/browser-verification.json",
+            "FEATURE_STATUS.md"
+          ],
+          "scope": "Two wing sets, setup-only and actual solver, source/package and saved browser workflow; broader workflow closure remains Unproven."
         }
       ]
     },
