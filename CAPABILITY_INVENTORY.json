@@ -604,6 +604,17 @@
             ".workspace/evidence/fea-density-ownership-packaged-verified.log"
           ],
           "scope": "User edit/reopen and unchanged geometry, real sizing follower guards, nested native choices, selected packaged exports/recovery/bindings. Existing native CAD diagnostics and broader closure remain open."
+        },
+        {
+          "date": "2026-10-21",
+          "change": "Structural study sweeps reject calculated sizing counterparts after effective native absolute/relative basis selection; per-input axis guidance added.",
+          "evidence": [
+            "tests/test_sizing_sweep_drivers.py",
+            ".workspace/evidence/study-member-modes-20261021/before-noop.json",
+            ".workspace/evidence/study-member-modes-20261021/verification.json",
+            "FEATURE_STATUS.md"
+          ],
+          "scope": "Three driver pairs, single/assembly contexts, mixed-member browser failure/recovery and exact cold original mesh/decks. Warm replay mismatch retained; broad closure remains Unproven."
         }
       ]
     },
@@ -737,6 +748,17 @@
             ".workspace/evidence/study-member-selection-20261021/verification.json"
           ],
           "scope": "Two-to-one member browser selection, source/package plan preservation and exact original mesh/deck recovery; broad closure remains Unproven."
+        },
+        {
+          "date": "2026-10-21",
+          "change": "Structural study sweeps reject calculated sizing counterparts after effective native absolute/relative basis selection; per-input axis guidance added.",
+          "evidence": [
+            "tests/test_sizing_sweep_drivers.py",
+            ".workspace/evidence/study-member-modes-20261021/before-noop.json",
+            ".workspace/evidence/study-member-modes-20261021/verification.json",
+            "FEATURE_STATUS.md"
+          ],
+          "scope": "Three driver pairs, single/assembly contexts, mixed-member browser failure/recovery and exact cold original mesh/decks. Warm replay mismatch retained; broad closure remains Unproven."
         }
       ]
     },
@@ -977,6 +999,17 @@
             ".workspace/evidence/study-member-selection-20261021/verification.json"
           ],
           "scope": "Two-to-one member browser selection, source/package plan preservation and exact original mesh/deck recovery; broad closure remains Unproven."
+        },
+        {
+          "date": "2026-10-21",
+          "change": "Structural study sweeps reject calculated sizing counterparts after effective native absolute/relative basis selection; per-input axis guidance added.",
+          "evidence": [
+            "tests/test_sizing_sweep_drivers.py",
+            ".workspace/evidence/study-member-modes-20261021/before-noop.json",
+            ".workspace/evidence/study-member-modes-20261021/verification.json",
+            "FEATURE_STATUS.md"
+          ],
+          "scope": "Three driver pairs, single/assembly contexts, mixed-member browser failure/recovery and exact cold original mesh/decks. Warm replay mismatch retained; broad closure remains Unproven."
         }
       ]
     },

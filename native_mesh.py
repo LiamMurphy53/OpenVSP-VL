@@ -149,7 +149,34 @@ def fea_schema(v,sid=None):
         for controller,(absolute,relative) in FEA_PAIRS.items():
             if n==relative:entry['applicableWhen']=dict(input=controller,values=[v.REL])
         inputs.append(entry)
+    for entry in inputs:
+        if entry.get('applicableWhen'):
+            controller=entry['applicableWhen']['input'];basis='absolute length' if entry['name']==FEA_PAIRS[controller][0] else 'relative fraction'
+            entry['studyNote']='This input drives sizing only when '+FEA_SETTINGS[controller][2]+' uses '+basis+'. Cases that sweep a calculated sizing value stop before meshing.'
     return dict(name='FeaMeshAnalysis',structure=sid,exportFormats=list(FEA_EXPORTS),description='Generate the selected structure’s mesh with the original OpenVSP engine. All selected formats share one generated native mesh.',inputs=inputs,guide=dict(title='Structural mesh',note='Part geometry, materials, properties and boundary conditions come from the selected saved structure. Absolute lengths use native structural units; relative fractions are dimensionless. Linked sizing values are calculated by OpenVSP.',sensitivityNote='Compare saved runs with finer sizing and review the native mesh and log. Stress calculations use the exported decks in an external structural solver.',sections=[dict(title='Edge lengths and surface accuracy',inputs=['BaseAbsRel','BaseLen','BaseLenFrac','MinAbsRel','MinLen','MinFrac','MaxGapAbsRel','MaxGap','MaxGapFrac']),dict(title='Mesh growth and curved surfaces',inputs=['GrowthRatio','RigorLimit','NCircSeg']),dict(title='Geometry selection',inputs=['HalfMeshFlag']),dict(title='Elements and intersections',inputs=['ConvertToQuadsFlag','HighOrderElementFlag','IntersectSubSurfs','RelCurveTol','DemoteSurfsCubicFlag','CubicSurfTolerance']),dict(title='Solver deck identifiers and beam normals',inputs=['NodeOffset','ElementOffset','BeamPerElementNormal']),dict(title='CAD and curve output',inputs=list(FEA_CAD))]))
+
+
+def validate_swept_sizing(v,req):
+    """A sizing sweep must drive the selected native absolute/relative basis."""
+    patches=[p for p in req.get('inputSweeps',[]) if p.get('kind')=='input']
+    if not patches:return
+    if req['name']=='FeaAssemblyMesh':
+        _,members=assembly(v,req.get('structure'));merged=assembly_inputs(req,members)
+    else:
+        sid,_,_=structure(v,req.get('structure'));members=[sid];merged={sid:req.get('inputs',[])}
+    for sid in members:
+        parameters=sizing_parameters(v,sid)
+        values={n:v.GetParmVal(pid) for n,pid in parameters.items()}
+        values.update({e['name']:e['values'][0] for e in merged[sid] if len(e.get('values',[]))==1})
+        for patch in patches:
+            if patch.get('member') not in (None,sid):continue
+            for controller,(absolute,relative) in FEA_PAIRS.items():
+                follower,driver=(relative,absolute) if values[controller]==v.ABS else (absolute,relative)
+                if patch.get('name')==follower:
+                    label=FEA_LABELS.get(follower,FEA_SETTINGS.get(follower,(None,None,follower))[2])
+                    target=FEA_LABELS.get(driver,FEA_SETTINGS.get(driver,(None,None,driver))[2])
+                    parent=v.GetFeaStructParentGeomID(sid);index=v.GetFeaStructIndex(sid)
+                    raise ValueError(v.GetFeaStructName(parent,index)+': '+label+' is calculated in this case. Sweep '+target+' or change '+FEA_SETTINGS[controller][2]+'.')
 
 
 def run_fea(v,req):

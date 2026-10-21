@@ -547,9 +547,11 @@ def execute_analysis(v,req):
         data=native_analytical.run(v,req);errors(v);return data
     if name=='FeaMeshAnalysis':
         req=resolve_sweeps(v,req,native_mesh.fea_schema(v,req.get('structure')))
+        native_mesh.validate_swept_sizing(v,req)
         data=native_mesh.run_fea(v,req);errors(v);return data
     if name=='FeaAssemblyMesh':
         req=resolve_sweeps(v,req,native_mesh.assembly_schema(v,req.get('structure')))
+        native_mesh.validate_swept_sizing(v,req)
         data=native_mesh.run_assembly(v,req);errors(v);return data
     if name.startswith('VSPAERO') and name in ('VSPAEROSweep','VSPAEROSinglePoint'):
         import native_aero_guides

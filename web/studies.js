@@ -87,7 +87,7 @@ function inputChoices(){return draft.stages.flatMap((s,i)=>['input','geometryInp
  const scopes=[{spec,items:s[kind==='input'?'inputs':'geometryInputs']},...(kind==='input'&&s.name==='FeaAssemblyMesh'?(specs[i].guide.memberSizing||[]).map(m=>({spec:{inputs:m.inputs},items:[...(s.memberInputs?.find(x=>x.id===m.id)?.inputs||[]),...(s.inputs||[])],member:m.id,memberName:m.name})):[])];
  return scopes.flatMap(scope=>effective(scope.spec,scope.items).inputs.filter(e=>e.editable!==false&&!e.displayReadOnly&&[1,2,3,4].includes(e.type)).flatMap(e=>{
   const modes=[{valueMode:'array',component:null},...(e.values.length?(e.type===4?[null,0,1,2]:[null]).map(component=>({valueMode:'element',component})):[])];
-  return modes.map(({valueMode,component})=>({kind,stage:i,...(scope.member?{member:scope.member}:{}),name:e.name,index:e.index,valueMode,element:0,component,type:e.type,baseValues:clone(e.values),choices:e.choices,choiceList:e.choiceList,integer:e.type===1,
+  return modes.map(({valueMode,component})=>({kind,stage:i,...(scope.member?{member:scope.member}:{}),name:e.name,index:e.index,valueMode,element:0,component,type:e.type,baseValues:clone(e.values),choices:e.choices,choiceList:e.choiceList,studyNote:e.studyNote,integer:e.type===1,
    label:`Step ${i+1} · ${s.name} / ${scope.member?scope.memberName+' / ':kind==='geometryInput'?'Geometry / ':''}${e.label||e.name}${e.label&&e.label!==e.name?' ('+e.name+')':''} [${e.index}] / ${valueMode==='array'?'Entire input array':component!==null?['X','Y','Z'][component]+' coordinate':e.type===4?'XYZ vector':'One input value'}`,
    baseline:clone(valueMode==='array'?e.values:component===null?e.values[0]:e.values[0][component])}));
  }));
