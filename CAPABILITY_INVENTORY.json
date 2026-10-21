@@ -803,5 +803,22 @@
         }
       }
     }
+  },
+  "fullNativeAudit20261020": {
+    "baselineCommit": "4eb7e977db783095bc2fa53fce96e3ec27f100cf",
+    "processCount": 682,
+    "successfulProcessExits": 680,
+    "failedProcessExits": 2,
+    "topLevelCrashes": 0,
+    "timeouts": 0,
+    "expectedFailures": [
+      {
+        "test": "test_polygon_options.NativePolygonOptions.test_strict_cross_run_coarsened_graph_equivalence_remains_unproved",
+        "count": 1,
+        "log": "test_polygon_options.NativePolygonOptions.test_strict_cross_run_coarsened_graph_equivalence_remains_unproved.log"
+      }
+    ],
+    "evidence": ".workspace/evidence/full-native-audit-20261020/interpretation-final.json",
+    "scope": "Isolated regression evidence only. All 25 broad workflow closures remain unproven."
   }
 }
