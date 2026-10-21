@@ -1,0 +1,14 @@
+import assert from 'node:assert/strict';
+import {bindEngineeringSearch} from '../web/engineering-search.js';
+const make=()=>{const input={value:''},fields=[{textContent:'Structural model length units',title:'Model coordinates'},{textContent:'Structural solver unit system',title:'Output FEA units'},{textContent:'Export options',title:'Surface and mesh'}];return {input,fields,querySelector:()=>input,querySelectorAll:()=>fields};};
+const first=make();bindEngineeringSearch(first,'vehicle');first.input.value='structural';first.input.oninput();
+assert.deepEqual(first.fields.map(x=>x.hidden),[false,false,true]);
+const replacement=make();bindEngineeringSearch(replacement,'vehicle');
+assert.equal(replacement.input.value,'structural','Native edits retain the query');
+assert.deepEqual(replacement.fields.map(x=>x.hidden),[false,false,true],'Replacement fields receive the retained filter immediately');
+const other=make();bindEngineeringSearch(other,'aerodynamics');assert.equal(other.input.value,'');assert.ok(other.fields.every(x=>!x.hidden));
+replacement.input.value='OUTPUT FEA';replacement.input.oninput();assert.deepEqual(replacement.fields.map(x=>x.hidden),[true,false,true],'Descriptions and mixed case remain searchable');
+const history=make();bindEngineeringSearch(history,'vehicle');assert.equal(history.input.value,'OUTPUT FEA');
+history.input.value='';history.input.oninput();assert.ok(history.fields.every(x=>!x.hidden));
+const reopened=make();bindEngineeringSearch(reopened,'vehicle');assert.equal(reopened.input.value,'');
+console.log('Engineering search survives native refresh/history, isolates containers and clears cleanly.');

@@ -1,3 +1,4 @@
+import {bindEngineeringSearch} from './engineering-search.js?v=20261021';
 import {waveSettings,bindWaveSettings} from './wave-settings.js?v=20261012-1';
 import {parasiteSettings,bindParasiteSettings} from './parasite-settings.js?v=20261012-1';
 import {excrescenceEditor,bindExcrescences} from './excrescence-editor.js?v=20261012-1';
@@ -101,7 +102,7 @@ export function renderAdvanced(ctx){
    root.querySelector('#settings-fields').innerHTML=`<details><summary>Additional native settings</summary>${params(group.params.filter(p=>!guided.has(p.name)&&p.name!=='SRF_XYZIntCurve'))}<p class="native-tip">The installed engine’s standalone intersection workflow does not apply its saved XYZ export flag. Original native exports are preserved.</p></details>`;
   }
   document.querySelector('#engineering-settings').onchange=e=>{settingsChoice=e.target.value;ctx.render();};
-  document.querySelector('#settings-search').oninput=e=>{const query=e.target.value.toLowerCase();document.querySelectorAll('#settings-fields .tool-field').forEach(el=>el.hidden=!`${el.textContent} ${el.title}`.toLowerCase().includes(query));};
+  bindEngineeringSearch(root,group.id);
   bindExcrescences(h);
  }else if(active==='structural'){
   const s=d.structures.find(x=>x.id===structChoice)||d.structures.find(x=>x.geom===c?.id)||d.structures[0];if(s)structChoice=s.id;

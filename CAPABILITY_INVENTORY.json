@@ -570,6 +570,18 @@
             ".workspace/evidence/boundary-units-20261021/browser-verification.json"
           ],
           "scope": "Five original unit-system exports for a feet-based root-strip model; exact decks, packaged execution and desktop SI-to-inch edit/Undo/Redo. Broader coordinate and region combinations and W17 closure remain unproven."
+        },
+        {
+          "date": "2026-10-21",
+          "change": "Structural model units use named native choices; engineering searches survive edits/history and are isolated by settings container. Original same-name user fields remain separate.",
+          "evidence": [
+            "tests/test_structural_unit_controls.py",
+            "tests/test_engineering_search.mjs",
+            "tests/test_boundary_units.py",
+            "MODELING_AUDIT.md",
+            ".workspace/evidence/structural-unit-controls-20261021/browser-verification.json"
+          ],
+          "scope": "Seven model-unit choices and unchanged geometry, native/package ownership checks and one desktop edit/group/history workflow. Fresh-process boundary references pass strictly; one prior warm-process MPa coordinate mismatch remains unexplained. Broad closure remains unproven."
         }
       ]
     },
@@ -778,6 +790,18 @@
             ".workspace/evidence/visibility-ui-20261021/profile-drag-redo.png"
           ],
           "scope": "One desktop wing/point setup. Both native runs match independent SDK arrays; slider redo/history bytes exact. Broader and narrow-layout closure remains unproven."
+        },
+        {
+          "date": "2026-10-21",
+          "change": "Structural model units use named native choices; engineering searches survive edits/history and are isolated by settings container. Original same-name user fields remain separate.",
+          "evidence": [
+            "tests/test_structural_unit_controls.py",
+            "tests/test_engineering_search.mjs",
+            "tests/test_boundary_units.py",
+            "MODELING_AUDIT.md",
+            ".workspace/evidence/structural-unit-controls-20261021/browser-verification.json"
+          ],
+          "scope": "Seven model-unit choices and unchanged geometry, native/package ownership checks and one desktop edit/group/history workflow. Fresh-process boundary references pass strictly; one prior warm-process MPa coordinate mismatch remains unexplained. Broad closure remains unproven."
         }
       ]
     }

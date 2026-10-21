@@ -1,5 +1,7 @@
 """Boundary coordinate filters use scaled solver coordinates, not model units."""
-import sys,unittest
+import sys,unittest,subprocess
+from pathlib import Path
+import vsp_runtime
 import test_native
 
 @unittest.skipUnless(sys.version_info[:2]==(3,11),'Use matching native runtime.')
@@ -32,7 +34,17 @@ class BoundaryUnits(unittest.TestCase):
                     self.assertEqual(field['value'],v.GetParmVal(field['id']))
                 data,out=self.worker(dict(action='analysis',name='FeaMeshAnalysis',structure=sid,formats=['CALCULIX']))
                 self.assertEqual(self.model.read_bytes(),saved);self.assertEqual(out.read_bytes(),saved)
-                direct=self.path/'direct.inp';v.SetFeaMeshFileName(self.gid,index,v.FEA_CALCULIX_FILE_NAME,str(direct));v.ComputeFeaMesh(self.gid,index,v.FEA_CALCULIX_FILE_NAME)
+                # Match the application's cold, saved-model execution context.
+                # A warm reference has already meshed other unit systems.
+                direct=self.path/'direct.inp'
+                script="import sys;sys.path.insert(0,"+repr(str(Path(vsp_runtime.__file__).parent))+");from vsp_runtime import load;v=load();v.ClearVSPModel();v.ReadVSPFile(sys.argv[1]);v.Update();v.SetFeaMeshFileName(sys.argv[2],int(sys.argv[3]),v.FEA_CALCULIX_FILE_NAME,sys.argv[4]);v.ComputeFeaMesh(sys.argv[2],int(sys.argv[3]),v.FEA_CALCULIX_FILE_NAME)"
+                reference=subprocess.run([vsp_runtime.interpreter(),'-c',script,str(self.model),self.gid,str(index),str(direct)],capture_output=True,text=True,timeout=120)
+                self.assertEqual(reference.returncode,0,reference.stdout+reference.stderr)
+                if (out.parent/'structure.inp').read_bytes()!=direct.read_bytes():
+                    import shutil,uuid,json
+                    evidence=test_native.ROOT/'.workspace/evidence/boundary-unit-mismatches'/uuid.uuid4().hex
+                    shutil.copytree(out.parent,evidence);shutil.copy2(direct,evidence/'original-direct.inp')
+                    (evidence/'reference.json').write_text(json.dumps(dict(system=system,unit=unit,command=reference.args,stdout=reference.stdout,stderr=reference.stderr)))
                 self.assertEqual((out.parent/'structure.inp').read_bytes(),direct.read_bytes())
                 nodes={};constrained=set();section=''
                 for line in direct.read_text().splitlines():
