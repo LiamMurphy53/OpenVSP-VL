@@ -726,6 +726,17 @@
             "FEATURE_STATUS.md"
           ],
           "scope": "Two-member browser study, exact independent original mesh/deck comparisons, source/package regressions and invalid-input recovery; broader workflow closure remains Unproven."
+        },
+        {
+          "date": "2026-10-21",
+          "change": "Assembly selection retains incompatible member records/sweeps and restores the previous choice, with explicit shared recovery.",
+          "evidence": [
+            "tests/test_study_member_selection.py",
+            "tests/test_study_members.mjs",
+            ".workspace/evidence/study-member-selection-20261021/selection-verification.json",
+            ".workspace/evidence/study-member-selection-20261021/verification.json"
+          ],
+          "scope": "Two-to-one member browser selection, source/package plan preservation and exact original mesh/deck recovery; broad closure remains Unproven."
         }
       ]
     },
@@ -955,6 +966,17 @@
             "FEATURE_STATUS.md"
           ],
           "scope": "Two-member browser study, exact independent original mesh/deck comparisons, source/package regressions and invalid-input recovery; broader workflow closure remains Unproven."
+        },
+        {
+          "date": "2026-10-21",
+          "change": "Assembly selection retains incompatible member records/sweeps and restores the previous choice, with explicit shared recovery.",
+          "evidence": [
+            "tests/test_study_member_selection.py",
+            "tests/test_study_members.mjs",
+            ".workspace/evidence/study-member-selection-20261021/selection-verification.json",
+            ".workspace/evidence/study-member-selection-20261021/verification.json"
+          ],
+          "scope": "Two-to-one member browser selection, source/package plan preservation and exact original mesh/deck recovery; broad closure remains Unproven."
         }
       ]
     },

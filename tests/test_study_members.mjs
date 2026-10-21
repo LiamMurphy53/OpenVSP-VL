@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {memberSpecs,separateMembers,shareFirstMember,memberMarkup,memberPrefix} from '../web/study-members.js';
+import {memberSpecs,separateMembers,shareFirstMember,memberMarkup,validateMemberSelection,memberPrefix} from '../web/study-members.js';
 const input=(name,value)=>({name,index:0,values:[value],editable:true});
 const spec={name:'FeaAssemblyMesh',guide:{sections:[],memberSizing:[{id:'a',name:'Front',component:'Wing A',inputs:[input('BaseLen',1),input('MinLen',.2)]},{id:'b',name:'Rear',component:'Wing B',inputs:[input('BaseLen',2),input('MinLen',.3)]}]}};
 const stage={name:'FeaAssemblyMesh',inputs:[input('BaseLen',4)],memberInputs:[{id:'a',inputs:[input('BaseLen',3),input('MinLen',.1)]}]};
@@ -13,3 +13,8 @@ console.log('Study member editor preserves native precedence, independent values
 
 shareFirstMember(spec,stage);assert.equal(stage.memberInputs,undefined);assert.deepEqual(stage.inputs.map(e=>e.values[0]),[4,.1]);
 assert.equal(stage.freezeInputs,true,'Copying first member to all must retain shared values equal to the first native defaults');
+
+const other={guide:{memberSizing:[spec.guide.memberSizing[0]]}};
+assert.throws(()=>validateMemberSelection(other,{name:'FeaAssemblyMesh',memberInputs:[{id:'b',inputs:[]}]}),/previous assembly is retained/);
+assert.throws(()=>validateMemberSelection(other,{name:'FeaAssemblyMesh'},[{stage:2,member:'b'}],2),/remove sweeps/);
+assert.doesNotThrow(()=>validateMemberSelection(other,{name:'FeaAssemblyMesh',memberInputs:[{id:'a',inputs:[]}]},[{stage:3,member:'b'}],2));
