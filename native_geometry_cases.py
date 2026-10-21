@@ -93,7 +93,9 @@ def specialist_setup(v, case):
     """Explain the original manager's auxiliary requirements, without its math."""
     values={p['name']:p['value'] for p in case['params']}
     typ=values['IntererenceCheckType']
+    if typ==v.PLANE_STATIC_DISTANCE_INTERFERENCE and values['SecondaryType']==v.Z_TARGET:return None
     rules={
+        v.PLANE_STATIC_DISTANCE_INTERFERENCE:('Secondary','Gear ground plane or three-contact auxiliary', [v.AUX_GEOM_THREE_PT_GROUND,v.AUX_GEOM_THREE_PT_CCE], 'The native plane comes from the gear ground frame or three selected contacts. Moving or rotating the gear changes the plane in world coordinates.'),
         v.GEAR_CG_TIPBACK_ANALYSIS:('Primary','Two-contact ground plane', [v.AUX_GEOM_TWO_PT_GROUND], 'Set the attached gear’s nominal CG and CG range. OpenVSP calculates tipback about the selected two-contact pivot.'),
         v.GEAR_TIPOVER_ANALYSIS:('Primary','Two-contact ground plane', [v.AUX_GEOM_TWO_PT_GROUND], 'Set the attached gear’s nominal CG and CG range. OpenVSP calculates tipover about the selected side contacts.'),
         v.GEAR_WEIGHT_DISTRIBUTION_ANALYSIS:('Primary','Three-contact ground plane or composite clearance envelope', [v.AUX_GEOM_THREE_PT_GROUND,v.AUX_GEOM_THREE_PT_CCE], 'Choose three distinct gear contacts and set the attached gear’s nominal CG and CG range. Native reaction vectors follow contact order 1, 2, 3.'),
@@ -101,7 +103,7 @@ def specialist_setup(v, case):
     }
     if typ not in rules:return None
     role,label,modes,note=rules[typ];geoms=list(v.FindGeoms());refs=case['references']
-    compatible=[g for g in geoms if v.GetGeomTypeName(g).upper()=='AUXILIARY' and int(v.GetParmVal(g,'AuxiliaryGeomType','Design')) in modes and v.GetGeomParent(g) in geoms and v.GetGeomTypeName(v.GetGeomParent(g)).upper()=='GEAR']
+    compatible=[g for g in geoms if (typ==v.PLANE_STATIC_DISTANCE_INTERFERENCE and v.GetGeomTypeName(g).upper()=='GEAR') or (v.GetGeomTypeName(g).upper()=='AUXILIARY' and int(v.GetParmVal(g,'AuxiliaryGeomType','Design')) in modes and v.GetGeomParent(g) in geoms and v.GetGeomTypeName(v.GetGeomParent(g)).upper()=='GEAR')]
     problems=[];selected=None;selection=values[role+'Type'];mode=None
     if values['PrimaryType']==v.MODE_TARGET:
         mid=refs['PrimaryModeID']
@@ -119,7 +121,7 @@ def specialist_setup(v, case):
     elif role=='Secondary':problems.append('Choose Component as the secondary selection, then choose the required auxiliary ground plane.')
     elif mode:
         selected=next((g for g in geoms if v.GetGeomTypeName(g).upper()=='AUXILIARY' and 0<=mode['normalSet']<v.GetNumSets() and v.GetSetFlag(g,mode['normalSet'])),'')
-    return dict(role=role,required=label,note=note,compatible=[dict(id=g,name=v.GetGeomName(g)) for g in compatible],selected=selected,problems=problems,mode=mode,modeNote='OpenVSP applies this mode’s presets when the case runs. The compatible-component list describes the saved baseline; the native engine checks the resulting configuration.' if mode else '',selectionNote='For a primary set or mode, OpenVSP uses its first auxiliary geometry. Component selection lets you choose the auxiliary explicitly.')
+    return dict(title='Plane clearance setup' if typ==v.PLANE_STATIC_DISTANCE_INTERFERENCE else 'Landing-gear check setup',role=role,required=label,note=note,compatible=[dict(id=g,name=v.GetGeomName(g)) for g in compatible],selected=selected,problems=problems,mode=mode,modeNote='OpenVSP applies this mode’s presets when the case runs. The compatible-component list describes the saved baseline; the native engine checks the resulting configuration.' if mode else '',selectionNote='For a primary set or mode, OpenVSP uses its first auxiliary geometry. Component selection lets you choose the auxiliary explicitly.')
 
 
 def update(v):

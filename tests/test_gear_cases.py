@@ -151,4 +151,26 @@ class NativeGearCases(unittest.TestCase):
         self.assertTrue(state['tools']['geometryCases'][0]['specialistSetup']['problems'])
         with self.assertRaisesRegex(ValueError,'available primary native mode'):self.worker(dict(action='analysis',name='GeometryAnalysis',inputs=[dict(name='CaseID',values=[self.cid])]),path)
 
+
+
+    def test_transformed_component_planes_match_native_and_guide_valid_targets(self):
+        self.fixture();v=self.v
+        for name,value in [('IntererenceCheckType',v.PLANE_STATIC_DISTANCE_INTERFERENCE),('PrimaryType',v.GEOM_TARGET),('SecondaryType',v.GEOM_TARGET)]:v.SetParmVal(self.cid,name,'InterferenceCase',value)
+        for axis,value in [('X_Rel_Location',1.),('Y_Rel_Location',2.),('Z_Rel_Location',-1.),('Y_Rel_Rotation',13.),('Z_Rel_Rotation',20.)]:v.SetParmVal(self.gear,axis,'XForm',value)
+        script=self.path/'plane-reference.py';out=self.path/'plane-reference.json';root=Path(native_worker.__file__).parent
+        script.write_text("import sys,json;sys.path.insert(0,"+repr(str(root))+");from vsp_runtime import load;import native_worker,native_geometry_cases;v=load();v.ReadVSPFile(sys.argv[1]);v.Update();g=sys.argv[3];v.SetAuxiliaryGeomContactPtID(g,0,v.GetAuxiliaryGeomContactPtID(g,0));v.Update();native_geometry_cases.update(v);v.SetAnalysisInputDefaults('GeometryAnalysis');v.SetStringAnalysisInput('GeometryAnalysis','CaseID',[sys.argv[2]]);v.ExecAnalysis('GeometryAnalysis');native_worker.errors(v);open(sys.argv[4],'w').write(json.dumps(native_worker.collect_results(v)))")
+        for target,mode in [(self.gear,v.AUX_GEOM_THREE_PT_GROUND),(self.aux,v.AUX_GEOM_THREE_PT_GROUND),(self.aux,v.AUX_GEOM_THREE_PT_CCE)]:
+            with self.subTest(target=target,mode=mode):
+                v.SetParmVal(self.aux,'AuxiliaryGeomType','Design',mode);v.Update();v.SetAuxiliaryGeomContactPtID(self.aux,0,self.bogies[0]);v.Update();v.WriteVSPFile(str(self.model),v.SET_ALL)
+                try:native_references.set_references(v,self.cid,'GeometryAnalysis',dict(PrimaryGeomID=self.gid,SecondaryGeomID=target))
+                except native_references.ReloadRequired:pass
+                before=self.model.read_bytes();state,_=self.worker({'action':'state'});setup=state['tools']['geometryCases'][0]['specialistSetup'];self.assertEqual(setup['title'],'Plane clearance setup');self.assertEqual(setup['problems'],[]);self.assertIn(target,[g['id'] for g in setup['compatible']])
+                process=subprocess.run([interpreter(),str(script),str(self.model),self.cid,self.aux,str(out)],capture_output=True,text=True,timeout=90);self.assertEqual(process.returncode,0,process.stdout+process.stderr)
+                actual,path=self.worker(dict(action='analysis',name='GeometryAnalysis',inputs=[dict(name='CaseID',values=[self.cid])]))
+                self.assertResults(json.loads(out.read_text()),actual['results']);self.assertEqual(path.read_bytes(),before)
+        _,path=self.worker(dict(action='mutate',operation='geometry-case-reference',id=self.cid,key='SecondaryGeomID',value=self.gid));before=path.read_bytes()
+        with self.assertRaisesRegex(ValueError,'ground plane'):
+            self.worker(dict(action='analysis',name='GeometryAnalysis',inputs=[dict(name='CaseID',values=[self.cid])]),path)
+        self.assertEqual(path.read_bytes(),before)
+
 if __name__=='__main__':unittest.main()
