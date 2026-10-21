@@ -40,6 +40,7 @@ def snapshot(v,parameter,refs=None):
     import native_parasite_controls
     import native_wave_controls
     import native_connection_controls
+    import native_boundary_controls
     import native_rotor_speeds
     import native_rotor_disks
     def parms(cid):return [parameter(v,p) for p in v.FindContainerParmIDs(cid)]
@@ -62,7 +63,7 @@ def snapshot(v,parameter,refs=None):
         propDriverCombinations=native_prop_drivers.native_preview.prop_driver_combinations(v) if v.GetNumActuatorDisks() else [],
         disks=[dict(id=v.FindActuatorDisk(i),index=i,name=v.GetContainerName(v.FindActuatorDisk(i)),**native_prop_drivers.configuration(v,v.FindActuatorDisk(i),refs,parameter)) for i in range(v.GetNumActuatorDisks())],
         rotatingGroups=[dict(id=v.FindUnsteadyGroup(i),index=i,name=v.GetUnsteadyGroupName(i),components=list(v.GetUnsteadyGroupCompIDs(i)),surfaces=list(v.GetUnsteadyGroupSurfIndexes(i)),params=parms(v.FindUnsteadyGroup(i))) for i in range(v.GetNumUnsteadyGroups())],
-        boundaryConditions=[dict(structure=s,id=b,name=v.GetContainerName(b),references=refs.get(b,{}),params=parms(b)) for s in v.GetFeaStructIDVec() for b in v.GetFeaBCIDVec(s)],
+        boundaryConditions=[dict(structure=s,id=b,coordinateUnit=native_boundary_controls.coordinate_unit(v),name=v.GetContainerName(b),references=refs.get(b,{}),params=parms(b)) for s in v.GetFeaStructIDVec() for b in v.GetFeaBCIDVec(s)],
         structuralSubsurfaces=[dict(structure=s,id=p,name=v.GetFeaSubSurfName(p),params=native_region_curves.parameters(v,p,refs,parameter),**native_regions.details(v,p,refs),**native_region_curves.details(v,p,refs,parameter)) for s in v.GetFeaStructIDVec() for p in v.GetFeaSubSurfIDVec(s)],
         layers=[dict(material=m,id=l,name=v.GetContainerName(l),references=refs.get(l,{}),params=parms(l)) for m in laminate_materials(v) for l in v.GetFeaLayerIDVec(m)],
         assemblies=[dict(id=a,name=v.GetFeaAssemblyName(a),structures=list(v.GetFeaAssemblyStructureIDVec(a)),fixedPoints=native_connection_controls.catalog(v,a),params=parms(a),connections=[dict(id=v.GetFeaAssemblyConnectionID(a,i),index=i,references=refs.get(v.GetFeaAssemblyConnectionID(a,i),{}),params=parms(v.GetFeaAssemblyConnectionID(a,i))) for i in range(v.NumFeaAssemblyConnections(a))]) for a in v.GetFeaAssemblyIDVec()],

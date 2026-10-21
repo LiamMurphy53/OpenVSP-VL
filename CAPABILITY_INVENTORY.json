@@ -559,6 +559,17 @@
             ".workspace/evidence/boundary-results-20261021/browser-verification.json"
           ],
           "scope": "Native presets/custom/empty root-strip and two-member assembly execution; selected exact native decks, packaged checks and one desktop saved-result reload. Wider constraint combinations and broad workflow closure remain unproven."
+        },
+        {
+          "date": "2026-10-21",
+          "change": "Corrected structural boundary filter labels from model units to actual native solver length units, with explicit unchanged-number behavior on solver-system changes.",
+          "evidence": [
+            "tests/test_boundary_units.py",
+            "MODELING_AUDIT.md",
+            ".workspace/evidence/boundary-units-20261021/source-provenance.json",
+            ".workspace/evidence/boundary-units-20261021/browser-verification.json"
+          ],
+          "scope": "Five original unit-system exports for a feet-based root-strip model; exact decks, packaged execution and desktop SI-to-inch edit/Undo/Redo. Broader coordinate and region combinations and W17 closure remain unproven."
         }
       ]
     },

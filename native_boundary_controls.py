@@ -28,8 +28,9 @@ def annotate(v,p):
         if v.GetParmVal(v.FindParm(v.GetParmContainer(p['id']),'ConMode','FeaBC'))!=v.FEA_BCM_USER:p.update(active=False,readOnly=True,editable=False,readOnlyReason='OpenVSP calculates these constraints from the boundary preset.')
     else:
         for axis in 'XYZ':
-            labels={axis+'LTFlag':'Enable '+axis+' upper coordinate limit',axis+'LGFlag':'Enable '+axis+' lower coordinate limit',axis+'LTVal':axis+' maximum coordinate (native model units)',axis+'GTVal':axis+' minimum coordinate (native model units)'}
+            labels={axis+'LTFlag':'Enable '+axis+' upper coordinate limit',axis+'LGFlag':'Enable '+axis+' lower coordinate limit',axis+'LTVal':axis+' maximum coordinate ('+coordinate_unit(v)+')',axis+'GTVal':axis+' minimum coordinate ('+coordinate_unit(v)+')'}
             if name in labels:p['label']=labels[name]
+            if name in (axis+'LTVal',axis+'GTVal'):p['nativeUnit']=coordinate_unit(v)
 
 
 def validate_parameter(v,pid):
@@ -43,3 +44,8 @@ def study_metadata(v):
 def study_priority(v,pid):
     if v.GetParmGroupName(pid)!='FeaBC':return None
     return -10 if v.GetParmName(pid) in ('ConMode','Type') or v.GetParmName(pid).endswith('Flag') else 20
+
+
+def coordinate_unit(v):
+    system=v.GetParmVal(v.FindParm(v.GetVehicleID(),'StructUnit','FeaStructure'))
+    return {v.SI_UNIT:'m',v.CGS_UNIT:'cm',v.MPA_UNIT:'mm',v.BFT_UNIT:'ft',v.BIN_UNIT:'in'}.get(system,'structural solver length units')
