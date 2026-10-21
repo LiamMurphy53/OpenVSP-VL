@@ -1071,6 +1071,18 @@
             ".workspace/evidence/assembly-remesh-isolation-20261021/packaged.log"
           ],
           "scope": "Three runs, distinct worker PIDs, exact mesh/deck regeneration and first/third equality. No production change required; broader closure remains Unproven."
+        },
+        {
+          "date": "2026-10-21",
+          "change": "Stop stubborn isolated worker/solver groups on cancel/timeout, preserve stopping state until lock release and recover malformed result receipts.",
+          "evidence": [
+            "native_processes.py",
+            "tests/test_job_stop_recovery.py",
+            ".workspace/evidence/job-stop-recovery-20261021/before.json",
+            ".workspace/evidence/job-stop-recovery-20261021/packaged-verification.json",
+            ".workspace/evidence/job-stop-recovery-20261021/browser-verification.json"
+          ],
+          "scope": "Five real-process control fixtures, native study cancel/resume, source/relocated checks and actual browser VSPAERO cancellation/retry with original numeric/pressure equality; broad recovery closure remains Unproven."
         }
       ]
     },
@@ -1167,6 +1179,18 @@
             "FEATURE_STATUS.md"
           ],
           "scope": "Three exact native restoration cases, strict28-module isolation, unchanged tool hashes, source/relocated decoder checks and saved yaw five-field browser viewing; broad closure remains Unproven."
+        },
+        {
+          "date": "2026-10-21",
+          "change": "Stop stubborn isolated worker/solver groups on cancel/timeout, preserve stopping state until lock release and recover malformed result receipts.",
+          "evidence": [
+            "native_processes.py",
+            "tests/test_job_stop_recovery.py",
+            ".workspace/evidence/job-stop-recovery-20261021/before.json",
+            ".workspace/evidence/job-stop-recovery-20261021/packaged-verification.json",
+            ".workspace/evidence/job-stop-recovery-20261021/browser-verification.json"
+          ],
+          "scope": "Five real-process control fixtures, native study cancel/resume, source/relocated checks and actual browser VSPAERO cancellation/retry with original numeric/pressure equality; broad recovery closure remains Unproven."
         }
       ]
     }

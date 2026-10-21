@@ -23,6 +23,7 @@ JOBS = {}
 REVISION = uuid.uuid4().hex
 NATIVE_PROCESS = None
 RUN_RESERVATION = None
+ANALYSIS_TIMEOUT_SECONDS = 1800
 SESSION_WARNING = None
 LAST_EDIT_GROUP = None
 SET_IDENTITIES = {}
@@ -225,7 +226,7 @@ def start_job(req, *, model_source=None, source_revision=None, study_context=Non
     with LOCK:
         if model_source is None:check_revision(req.get('revision'))
         if RUN_RESERVATION and study_context!=RUN_RESERVATION:raise ValueError('A design study is running. Finish or cancel it first.')
-        if any(j['status']=='running' for j in list_jobs()): raise ValueError('An analysis is already running. Wait for it or cancel it first.')
+        if any(j['status']=='running' or j.get('stopping') for j in list_jobs()): raise ValueError('An analysis is already running. Wait for it or cancel it first.')
         source=req.get('sourceRun')
         source_job=None
         if req['name'] in ('CpSlicer','VSPAEROReadPreviousAnalysis','FlowPlaneSlicer') and not source:
@@ -272,7 +273,7 @@ def start_job(req, *, model_source=None, source_revision=None, study_context=Non
         save_job(job)
         def finish():
             try:
-                code=process.wait(timeout=1800)
+                code=process.wait(timeout=ANALYSIS_TIMEOUT_SECONDS)
                 with LOCK:
                     job['exitCode']=code
                     if code<0:
@@ -284,16 +285,31 @@ def start_job(req, *, model_source=None, source_revision=None, study_context=Non
                     if job.get('terminationSignal'):stopped+=' ('+job['terminationSignal']+')'
                     elif code:stopped+=' (exit code '+str(code)+')'
                     data=json.loads(response.read_text()) if response.exists() else {'error':stopped+'. Inspect the saved aircraft and run log.'}
+                    if not isinstance(data,dict):raise ValueError('Expected a native result object.')
                     if code or 'error' in data: job.update(status='failed',error=data.get('error','Engine failed.'))
                     else: job.update(status='complete',result=data)
             except subprocess.TimeoutExpired:
-                import signal
-                os.killpg(process.pid,signal.SIGTERM)
-                with LOCK:job.update(status='failed',error='Analysis exceeded the 30-minute limit. The process was stopped.')
+                from native_processes import stop_group
+                forced=stop_group(process.pid,process)
+                with LOCK:
+                    if job['status']!='cancelled':job.update(status='failed',error='Analysis exceeded the 30-minute limit. Native processes were stopped.')
+                    job.update(timedOut=True,forceStopped=job.get('forceStopped',False) or forced,exitCode=process.returncode)
+            except (ValueError,OSError) as error:
+                with LOCK:
+                    if job['status']!='cancelled':job.update(status='failed',error='The native result receipt could not be read: '+str(error))
             finally:
                 log.close()
-                with LOCK:job['finished']=time.time();save_job(job)
-        threading.Thread(target=finish,daemon=True).start()
+                with LOCK:
+                    code=process.poll()
+                    if code is not None:
+                        job['exitCode']=code
+                        if code<0:
+                            import signal
+                            try:job['terminationSignal']=signal.Signals(-code).name
+                            except ValueError:job['terminationSignal']='signal '+str(-code)
+                    if not job.get('stopping'):job['finished']=time.time()
+                    save_job(job)
+        monitor=threading.Thread(target=finish,daemon=True);job['_monitor']=monitor;monitor.start()
         return job_state(jid)
 
 
@@ -318,11 +334,17 @@ def load_job(jid):
     if not job.get('processID') and (folder/'.engine-owner.json').is_file():job['processID']=json.loads((folder/'.engine-owner.json').read_text())['pid']
     result_path=folder/'response.json'
     if result_path.exists():
-        result=json.loads(result_path.read_text())
-        if job.get('status') not in ('cancelled','failed'):
+        try:
+            result=json.loads(result_path.read_text())
+            if not isinstance(result,dict):raise ValueError('Expected a native result object.')
+        except (ValueError,OSError) as error:
+            result={'error':'The saved native result receipt could not be read: '+str(error)} if not lock_is_held(folder/'.engine.lock') else None
+        if result is not None and job.get('status') not in ('cancelled','failed'):
             if 'error' in result:job.update(status='failed',error=result['error'])
             else:job.update(status='complete',result=result)
     elif job.get('status')=='running' and not lock_is_held(folder/'.engine.lock'):job.update(status='interrupted',error='The engine process ended before this run produced results.')
+    if job.get('stopping') and not lock_is_held(folder/'.engine.lock'):
+        job.update(stopping=False,finished=job.get('finished',time.time()));save_job(job)
     JOBS[jid]=job
     return job
 
@@ -334,8 +356,8 @@ def list_jobs():
                 try:load_job(folder.name)
                 except (ValueError,OSError,KeyError):continue
         for jid,j in list(JOBS.items()):
-            if j['status']=='running' and '_process' not in j:load_job(jid)
-        return [dict((k,v) for k,v in j.items() if k in ('id','name','status','started','finished','revision','error','study','batch','case','stage','attempt')) for j in sorted(JOBS.values(),key=lambda j:j['started'],reverse=True)]
+            if (j['status']=='running' or j.get('stopping')) and '_process' not in j:load_job(jid)
+        return [dict((k,v) for k,v in j.items() if k in ('id','name','status','started','finished','revision','error','study','batch','case','stage','attempt','stopping')) for j in sorted(JOBS.values(),key=lambda j:j['started'],reverse=True)]
 
 
 def artifacts(jid):
@@ -396,10 +418,12 @@ def result_csv(jid):
 
 
 def job_state(jid):
-    if jid not in JOBS or (JOBS[jid]['status']=='running' and '_process' not in JOBS[jid]):load_job(jid)
+    if jid not in JOBS or ((JOBS[jid]['status']=='running' or JOBS[jid].get('stopping')) and '_process' not in JOBS[jid]):load_job(jid)
     job=JOBS[jid]
-    data={k:v for k,v in job.items() if not k.startswith('_')}
     folder=job_folder(jid)
+    if job.get('stopping') and not lock_is_held(folder/'.engine.lock'):
+        job.update(stopping=False,finished=job.get('finished',time.time()));save_job(job)
+    data={k:v for k,v in job.items() if not k.startswith('_')}
     setup=folder/'analysis-setup.json'
     if setup.is_file() and not setup.is_symlink():
         data['analysisSetup']=json.loads(setup.read_text())
@@ -426,17 +450,25 @@ def job_state(jid):
 
 
 def cancel_job(jid):
-    import signal
+    from native_processes import stop_group
     with LOCK:
         job_state(jid);job=JOBS[jid]
-        if job['status']=='running':
-            process=job.get('_process');pid=process.pid if process else job.get('processID')
-            if not process and (not pid or not lock_is_held(job_folder(jid)/'.engine.lock')):raise ValueError('The native process is no longer running.')
-            job['status']='cancelled'
-            try: os.killpg(pid,signal.SIGTERM)
-            except ProcessLookupError: pass
+        if job['status']!='running' and not job.get('stopping'):return job_state(jid)
+        process=job.get('_process');pid=process.pid if process else job.get('processID')
+        if not process and (not pid or not lock_is_held(job_folder(jid)/'.engine.lock')):raise ValueError('The native process is no longer running.')
+        job.update(status='cancelled',stopping=True);save_job(job)
+    try:
+        forced=stop_group(pid,process)
+    finally:
+        with LOCK:
+            # A restarted server can retry a previously requested stop using its
+            # saved group ID; it does not need the original Popen handle.
+            if not lock_is_held(job_folder(jid)/'.engine.lock'):
+                job.update(stopping=False,finished=time.time())
+            if process is not None:job['exitCode']=process.poll()
+            if 'forced' in locals():job['forceStopped']=job.get('forceStopped',False) or forced
             save_job(job)
-        return job_state(jid)
+    return job_state(jid)
 
 
 def native_open():
