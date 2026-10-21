@@ -715,6 +715,17 @@
             ".workspace/evidence/boundary-targets-20261021/browser-verification.json"
           ],
           "scope": "One original unassigned-input mis-selection, active/disabled/native ownership checks, late assembly-member validation and one desktop failed-run/repair/native-deck workflow. Broader constraint and browser families and broad workflow closure remain unproven."
+        },
+        {
+          "date": "2026-10-21",
+          "change": "Direct editable per-member study sizing with explicit shared/member transitions and native conditional fields.",
+          "evidence": [
+            "web/study-members.js",
+            "tests/test_study_members.mjs",
+            ".workspace/evidence/study-member-editor-20261021/verification.json",
+            "FEATURE_STATUS.md"
+          ],
+          "scope": "Two-member browser study, exact independent original mesh/deck comparisons, source/package regressions and invalid-input recovery; broader workflow closure remains Unproven."
         }
       ]
     },
@@ -933,6 +944,17 @@
             "FEATURE_STATUS.md"
           ],
           "scope": "Two wing sets, setup-only and actual solver, source/package and saved browser workflow; broader workflow closure remains Unproven."
+        },
+        {
+          "date": "2026-10-21",
+          "change": "Direct editable per-member study sizing with explicit shared/member transitions and native conditional fields.",
+          "evidence": [
+            "web/study-members.js",
+            "tests/test_study_members.mjs",
+            ".workspace/evidence/study-member-editor-20261021/verification.json",
+            "FEATURE_STATUS.md"
+          ],
+          "scope": "Two-member browser study, exact independent original mesh/deck comparisons, source/package regressions and invalid-input recovery; broader workflow closure remains Unproven."
         }
       ]
     },

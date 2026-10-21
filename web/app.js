@@ -31,7 +31,7 @@ import {installRegionOverlays,refreshRegionOverlays,drawRegionOverlays,focusRegi
 import {setupGuide,bindSetupGuide,guidedResults,bindGuidedResults,hasGuide,refreshGuideFields,bindGuideFields,bindAeroGeometryCopy} from './analysis-guides.js?v=20261021-references';
 import {installRunWorkspace,refreshHistory,renderRunWorkspace,clearRunWorkspace} from './run-workspace.js?v=20261021-boundaries';
 import {installTools,renderTools,refreshToolGeometry,setToolsVisible,renderPlots,plotSVG,openEngineeringSettings,openGeometryCases,openFlowPlanes,openParameterLinks} from './tools.js?v=20261021-plots';
-import {installStudies,showStudies} from './studies.js?v=20261021-plots';
+import {installStudies,showStudies} from './studies.js?v=20261021-members';
 const $=s=>document.querySelector(s), esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const wingSelections=new Map(),attachmentFrames=new Set(),propCurveChoices=new Map();
 let model=null,selected=null,page='design',busy=false,query='',sectionIndex=0;
