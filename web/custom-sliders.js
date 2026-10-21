@@ -38,9 +38,20 @@ export function bindCustomSliders(host,parameters,{displayValue,parameterDimensi
   const slider=wrapper.querySelector('[data-custom-slider]'),input=host.querySelector(`[id="${slider.dataset.customSlider}"]`);
   if(!input)continue;
   const dimension=parameterDimension(p),convert=x=>compact(displayValue(x,dimension));
-  slider.oninput=()=>{if(!slider.disabled){input.value=slider.value;if(liveEdit)return liveEdit(p,slider,Number(slider.value),false);}};
-  slider.onchange=()=>{if(!slider.disabled){input.value=slider.value;if(liveEdit)return liveEdit(p,slider,Number(slider.value),true);if(!isBusy())return input.onchange?.();}};
-  slider.onpointercancel=()=>{if(liveEdit&&!slider.disabled)return liveEdit(p,slider,Number(slider.value),true);};
+  let editing=false,lastFinishedValue=null;
+  const finish=()=>{
+   if(slider.disabled||slider.isConnected===false||(!editing&&lastFinishedValue===slider.value))return;
+   editing=false;lastFinishedValue=slider.value;input.value=slider.value;
+   if(liveEdit)return liveEdit(p,slider,Number(slider.value),true);
+   if(!isBusy())return input.onchange?.();
+  };
+  slider.oninput=()=>{if(!slider.disabled){editing=true;input.value=slider.value;if(liveEdit)return liveEdit(p,slider,Number(slider.value),false);}};
+  slider.onchange=finish;
+  // A drag can return to its starting value, or lose focus/capture before
+  // change arrives. Finish once, without depending on browser event order.
+  slider.onpointerup=()=>{if(editing&&liveEdit)return finish();};
+  slider.onpointercancel=()=>{if(editing&&liveEdit)return finish();};
+  slider.onblur=()=>{if(editing&&liveEdit)return finish();};
   for(const button of wrapper.querySelectorAll('[data-slider-resize]'))button.onclick=()=>{
    if(isBusy()||slider.disabled)return;
    const current=windows.get(key)||sliderWindow(p);if(!current)return;

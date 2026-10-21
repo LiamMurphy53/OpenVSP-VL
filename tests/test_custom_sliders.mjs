@@ -40,3 +40,19 @@ const toolEvents=[];
 bindCustomSliders(host,[ordinary],{displayValue:x=>x,parameterDimension:()=>null,isBusy:()=>false,liveEdit:(p,el,value,finished)=>toolEvents.push({operation:'parameter',id:p.id,value,finished})});
 slider.value='13.75';slider.oninput();slider.onchange();
 assert.deepEqual(toolEvents,[{operation:'parameter',id:'length',value:13.75,finished:false},{operation:'parameter',id:'length',value:13.75,finished:true}]);
+
+const endings=[];
+bindCustomSliders(host,[ordinary],{displayValue:x=>x,parameterDimension:()=>null,isBusy:()=>false,liveEdit:(p,el,value,finished)=>endings.push({value,finished})});
+slider.value='10';slider.oninput();slider.value='11';slider.oninput();slider.value='10';slider.oninput();
+slider.onpointerup();slider.onchange();slider.onblur();
+assert.equal(endings.filter(e=>e.finished).length,1,'Returning to original value still ends drag exactly once');
+assert.deepEqual(endings.at(-1),{value:10,finished:true});
+slider.value='12';slider.oninput();slider.onblur();slider.onchange();
+assert.equal(endings.filter(e=>e.finished).length,2,'Focus loss ends an active edit without duplicate change');
+slider.value='13';slider.oninput();slider.onpointercancel();slider.onpointerup();
+assert.equal(endings.filter(e=>e.finished).length,3,'Lost pointer capture ends the active edit once');
+slider.disabled=true;slider.onblur();slider.onpointerup();slider.onchange();
+assert.equal(endings.filter(e=>e.finished).length,3,'Disabled controls do not send final edits');
+
+slider.disabled=false;slider.value='14';slider.oninput();slider.isConnected=false;slider.onblur();slider.onpointerup();
+assert.equal(endings.filter(e=>e.finished).length,3,'A removed control cannot start another edit during error recovery');

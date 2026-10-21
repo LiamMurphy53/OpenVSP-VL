@@ -1,4 +1,4 @@
-import {customSliderMarkup,bindCustomSliders} from './custom-sliders.js?v=20261019-live';
+import {customSliderMarkup,bindCustomSliders} from './custom-sliders.js?v=20261020-release';
 import {displayValue,nativeValue,unitSuffix} from './display-units.js?v=20261019';
 const sliderRanges={'wing-aspect-ratio':[.2,40],'wing-taper':[.05,2],'wing-sweep':[-70,70],'wing-dihedral':[-45,90],'wing-washout':[-30,30],'wing-thickness':[.1,40],'wing-camber':[0,15],'prop-pitch':[-45,90],'prop-blades':[1,16],'prop-thickness':[.1,40]};
 const assistDimension=control=>control.startsWith('body-')?'length':['wing-taper','wing-aspect-ratio','wing-thickness','wing-camber','prop-thickness','prop-blades'].includes(control)?null:'angle';

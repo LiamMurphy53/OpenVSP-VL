@@ -706,3 +706,7 @@ A new original-engine regression verifies selected profile shape IDs against `Ge
 ### Editable profile editor duplication fix — 2026-10-20
 
 A real native editable-curve snapshot exposed 102 shape fields including raw control-point arrays, plus repeated Width/Height/SymType/CloseFlag controls already rendered by the dedicated curve editor. The new generic Section profile shape card now skips profiles with native editable control points, preserving their dedicated coordinate/handle/constraint controls and avoiding duplicate input IDs. Parameterized adjacent profiles retain the new sliders. Verified against an original-engine Wing with editable root and NACA tip (`.workspace/evidence/editable-profile-sliders-20261020/state.json`), plus all ten UI module files. No broad completion or on-screen interaction claim.
+
+### Slider gesture completion fallbacks — 2026-10-20
+
+Live range controls now finish an active gesture on pointer release, cancellation or focus loss as well as change. Final dispatch is deduplicated across event ordering, including a drag that returns to its starting value. Detached or disabled controls cannot submit a late final edit during native error recovery. Existing native update/gesture Undo semantics are unchanged. Shared handler regressions cover return-to-start without change, release/change duplication, focus loss, pointer cancellation and detached/disabled guards; all ten UI module files and app/tools syntax checks pass. These are event-handler checks, not new on-screen browser evidence.
