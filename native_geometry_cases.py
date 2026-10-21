@@ -156,7 +156,7 @@ def snapshot(v, parameter, refs):
             if pid in azel_ids:continue
             p=parameter(v,pid);p['active']=activity.get(pid,True)
             if p['name'] in PARAM_LABELS:p['label']=PARAM_LABELS[p['name']]
-            if p['name'] in choices:p['choices']=choices[p['name']]
+            if p['name'] in choices:p['choices']=[dict(choice) for choice in choices[p['name']]]
             if p['name']=='LastResult':p['active']=False
             reason=calculated_reason(v,cid,p['name'])
             if reason:p.update(active=False,readOnly=True,description=reason)

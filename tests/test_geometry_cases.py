@@ -85,3 +85,19 @@ class NativeGeometryCases(unittest.TestCase):
         self.assertGreater(area[0],0)
         self.assertEqual(next(e['values'] for e in actual['entries'] if e['name']=='Direction'),[[0,0,1]])
         self.assertEqual(path.read_bytes(),baseline)
+
+    def test_case_specific_choices_do_not_leak_between_saved_cases(self):
+        self.fixture();v=self.v
+        types=['VISIBLE_FROM_POINT_ANALYSIS','EXTERNAL_INTERFERENCE','VISIBLE_FROM_POINT_ANALYSIS','PACKAGING_INTERFERENCE']
+        ids=[self.case(typ) for typ in types]
+        state,path=self.worker({'action':'state'})
+        cases={c['id']:c for c in state['tools']['geometryCases']}
+        ordinary={v.SET_TARGET,v.GEOM_TARGET}
+        for cid,typ in zip(ids,types):
+            choices=next(p['choices'] for p in cases[cid]['params'] if p['name']=='SecondaryType')
+            expected=ordinary|({v.XYZ_TARGET} if typ=='VISIBLE_FROM_POINT_ANALYSIS' else set())
+            self.assertEqual({c['value'] for c in choices},expected,typ)
+            self.assertEqual(len(choices),len(expected),'No repeated options from earlier cases')
+        reopened,_=self.worker({'action':'state'},path)
+        self.assertEqual([next(p['choices'] for p in c['params'] if p['name']=='SecondaryType') for c in reopened['tools']['geometryCases']],
+                         [next(p['choices'] for p in c['params'] if p['name']=='SecondaryType') for c in state['tools']['geometryCases']])

@@ -411,7 +411,19 @@
       "workflow": "Saved geometry analysis cases",
       "category": "Engineering",
       "closure": "Unproven",
-      "originalPlanRow": "| Saved geometry analysis cases | Named case creation/naming/removal; all 20 native type choices; geometry/mode references, native active parameters, visibility directions/cutouts; Analyze selection, shortcuts, native summaries, configuration, reuse and exports. Five calculation types and an actual browser wing projection match native execution; headless case updates call the official manager. See `.workspace/evidence/geometry-cases-verification.md` | Case-specific guidance; native result mesh/line/point drawing inspection is now implemented with basic projection browser evidence (geometry-case-drawing-implementation.md), with all-family native comparison still queued; valid specialist landing-gear/auxiliary/visibility cases for remaining types; broader mode/study/reference coverage, Undo/Redo, cold recovery, responsive and portable support. All 20 types are exposed but full coverage remains unproved. |"
+      "originalPlanRow": "| Saved geometry analysis cases | Named case creation/naming/removal; all 20 native type choices; geometry/mode references, native active parameters, visibility directions/cutouts; Analyze selection, shortcuts, native summaries, configuration, reuse and exports. Five calculation types and an actual browser wing projection match native execution; headless case updates call the official manager. See `.workspace/evidence/geometry-cases-verification.md` | Case-specific guidance; native result mesh/line/point drawing inspection is now implemented with basic projection browser evidence (geometry-case-drawing-implementation.md), with all-family native comparison still queued; valid specialist landing-gear/auxiliary/visibility cases for remaining types; broader mode/study/reference coverage, Undo/Redo, cold recovery, responsive and portable support. All 20 types are exposed but full coverage remains unproved. |",
+      "followups": [
+        {
+          "date": "2026-10-20",
+          "change": "Isolated per-case native choice metadata so visibility observation-point choices do not leak into clearance menus or duplicate across visibility cases.",
+          "evidence": [
+            "tests/test_geometry_cases.py",
+            "MODELING_AUDIT.md",
+            ".workspace/evidence/geometry-case-choice-isolation-20261020/packaged-verification.json"
+          ],
+          "scope": "Mixed saved case menus and reopening, five native geometry-case tests, packaged state preservation. Broader W12 closure remains unproven."
+        }
+      ]
     },
     {
       "id": "W13",
