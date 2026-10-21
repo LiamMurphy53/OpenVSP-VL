@@ -18,7 +18,7 @@ def call(v,cid,action):
 
 
 def evaluate(v,cid):
-    cases.require_observation_component(v,cid)
+    cases.validate_observation_targets(v,[cid])
     cases.update(v)
     rid=call(v,cid,0)
     if not rid or not v.GetResultsName(rid):raise ValueError('OpenVSP did not produce a result for this case. Review its geometry selections and required auxiliary setup.')

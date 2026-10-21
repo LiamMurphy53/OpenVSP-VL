@@ -193,18 +193,53 @@ def require_observation_component(v,cid):
         raise ValueError(v.GetContainerName(cid)+': the installed OpenVSP XYZ visibility path crashes. In Geometry checks, use Create observation-point component, then run this case with that component selected.')
 
 
+def check_observation_targets(v,ids,apply_modes=False):
+    """Inspect case inputs in original evaluation order, without calculating."""
+    refs=native_references.references(v) if apply_modes else {}
+    applied_modes=[]
+    for cid in ids:
+        primary=v.GetParmVal(v.FindParm(cid,'PrimaryType','InterferenceCase'))
+        if apply_modes and primary==v.MODE_TARGET:
+            mode=refs.get(cid,{}).get('PrimaryModeID','')
+            if mode in v.GetAllModes():
+                v.ApplyModeSettings(mode);v.Update();applied_modes.append(v.GetModeName(mode))
+        try:require_observation_component(v,cid)
+        except ValueError:
+            if applied_modes:
+                raise ValueError(v.GetContainerName(cid)+': after native mode '+', '.join(applied_modes)+', this case uses the crashing XYZ visibility path. Edit the mode preset’s Secondary selection to Component and select an observation-point component in Geometry checks.') from None
+            raise
+    return dict(checkedCases=ids)
+
+
+def validate_observation_targets(v,ids):
+    # Modes may alter this or later cases. Simulate their native updates in a
+    # separate engine, so validation cannot change the calculation baseline.
+    if not any(v.GetParmVal(v.FindParm(cid,'PrimaryType','InterferenceCase'))==v.MODE_TARGET for cid in ids):
+        return check_observation_targets(v,ids)
+    from pathlib import Path
+    import uuid
+    import native_ngon
+    from native_service import invoke
+    folder=Path.cwd()/('visibility-preflight-'+uuid.uuid4().hex);folder.mkdir()
+    model=folder/'aircraft.vsp3';filename=v.GetVSPFileName()
+    try:native_ngon.write(v,model)
+    finally:v.SetVSP3FileName(filename)
+    return invoke(dict(action='geometry-case-preflight',cases=ids),model,folder)
+
+
 def validate(v,schema):
     values=next(e['values'] for e in schema['inputs'] if e['name']=='CaseID')
     if len(values)!=1:raise ValueError('Choose one saved geometry analysis case.')
     if not v.GetAllGeometryAnalysesIDVec():raise ValueError('Create a named case in Modeling tools → Geometry checks before running this analysis.')
     if values[0] not in ['ALL','all',*v.GetAllGeometryAnalysesIDVec()]:raise ValueError('Choose an available saved geometry analysis case.')
     cases=configuration(v)
+    selected=[c['id'] for c in cases if values[0] in ('ALL','all',c['id'])]
+    validate_observation_targets(v,selected)
     # ExecAll applies each mode in case order. Later component-based checks can
     # depend on earlier presets; do not reject them against the initial baseline.
     sequential_modes=values[0] in ('ALL','all') and any(next(p['value'] for p in c['params'] if p['name']=='PrimaryType')==v.MODE_TARGET for c in cases)
     for case in cases:
         if values[0] not in ('ALL','all',case['id']):continue
-        require_observation_component(v,case['id'])
         setup=case['specialistSetup']
         if setup and setup['problems'] and not sequential_modes:raise ValueError(case['name']+': '+setup['problems'][0])
 

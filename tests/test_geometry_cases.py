@@ -146,3 +146,36 @@ class NativeGeometryCases(unittest.TestCase):
         recovered,_=self.worker(dict(action='mutate',operation='geometry-case-observation-point',id=cid),locked)
         after=next(p for c in recovered['components'] for p in c['params'] if p['id']==span)
         self.assertEqual(after['value'],original_span);self.assertTrue(after['userLocked']);self.assertEqual(locked.read_bytes(),before)
+
+    def visibility_mode(self,secondary):
+        v=self.v;cid=self.case('VISIBLE_FROM_POINT_ANALYSIS');pid=v.FindParm(cid,'SecondaryType','InterferenceCase')
+        group=v.AddVarPresetGroup('Visibility target');v.AddVarPresetParm(group,pid);setting=v.AddVarPresetSetting(group,'Target');v.SetVarPresetParmVal(group,setting,pid,secondary)
+        mode=v.CreateAndAddMode('Visibility mode',3,-1);v.ModeAddGroupSetting(mode,group,setting)
+        v.SetParmVal(v.FindParm(cid,'PrimaryType','InterferenceCase'),v.MODE_TARGET);v.Update();v.WriteVSPFile(str(self.model),v.SET_ALL)
+        _,path=self.worker(dict(action='mutate',operation='geometry-case-reference',id=cid,key='PrimaryModeID',value=mode))
+        return cid,pid,path
+
+    def test_visibility_mode_cannot_reintroduce_crashing_xyz_target(self):
+        self.fixture();v=self.v;cid,pid,path=self.visibility_mode(v.XYZ_TARGET);before=path.read_bytes()
+        for request in [dict(action='analysis',name='GeometryAnalysis',inputs=[dict(name='CaseID',values=[cid])]),dict(action='mutate',operation='geometry-case-result-mesh',id=cid)]:
+            with self.assertRaisesRegex(ValueError,'mode.*preset'):self.worker(request,path)
+        self.assertEqual(path.read_bytes(),before)
+
+    def test_visibility_mode_can_replace_baseline_xyz_with_valid_component(self):
+        self.fixture();v=self.v;cid,pid,path=self.visibility_mode(v.GEOM_TARGET)
+        _,path=self.worker(dict(action='mutate',operation='geometry-case-reference',id=cid,key='SecondaryGeomID',value=self.pod),path)
+        v.ClearVSPModel();v.ReadVSPFile(str(path));v.Update();v.SetParmVal(pid,v.XYZ_TARGET);v.Update();v.WriteVSPFile(str(path),v.SET_ALL);before=path.read_bytes()
+        expected=self.direct('GeometryAnalysis',{'CaseID':[cid]},model=path)
+        data,result=self.worker(dict(action='analysis',name='GeometryAnalysis',inputs=[dict(name='CaseID',values=[cid])]),path)
+        self.assertResults(expected,data['results']);self.assertEqual(path.read_bytes(),before);self.assertEqual(result.read_bytes(),before)
+
+    def test_run_all_checks_mode_effects_on_later_visibility_case(self):
+        self.fixture();v=self.v;first=self.case('COMP_GEOM');later=self.case('VISIBLE_FROM_POINT_ANALYSIS')
+        pid=v.FindParm(later,'SecondaryType','InterferenceCase');v.SetParmVal(pid,v.GEOM_TARGET)
+        group=v.AddVarPresetGroup('Later target');v.AddVarPresetParm(group,pid);setting=v.AddVarPresetSetting(group,'XYZ target');v.SetVarPresetParmVal(group,setting,pid,v.XYZ_TARGET)
+        mode=v.CreateAndAddMode('Earlier mode',3,-1);v.ModeAddGroupSetting(mode,group,setting);v.SetParmVal(v.FindParm(first,'PrimaryType','InterferenceCase'),v.MODE_TARGET);v.Update();v.WriteVSPFile(str(self.model),v.SET_ALL)
+        _,path=self.worker(dict(action='mutate',operation='geometry-case-reference',id=first,key='PrimaryModeID',value=mode))
+        _,path=self.worker(dict(action='mutate',operation='geometry-case-reference',id=later,key='SecondaryGeomID',value=self.pod),path);before=path.read_bytes()
+        with self.assertRaisesRegex(ValueError,'mode.*preset'):
+            self.worker(dict(action='analysis',name='GeometryAnalysis',inputs=[dict(name='CaseID',values=['ALL'])]),path)
+        self.assertEqual(path.read_bytes(),before)

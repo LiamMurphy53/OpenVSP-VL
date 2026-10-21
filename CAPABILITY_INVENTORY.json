@@ -441,6 +441,17 @@
             ".workspace/evidence/observation-point-recovery-20261020/packaged-verification.json"
           ],
           "scope": "Four native result comparisons, exact point, source isolation, Undo/Redo and existing geometry locks; packaged run. Raw engine defect is not repaired. Broader modes, ALL-case ordering, browser interaction and W12 closure remain unproven."
+        },
+        {
+          "date": "2026-10-20",
+          "change": "Added isolated native mode preflight for point visibility and case result actions; catches mode-restored XYZ and earlier-mode effects on later ALL cases without changing calculation baseline.",
+          "evidence": [
+            "tests/test_geometry_cases.py",
+            "MODELING_AUDIT.md",
+            ".workspace/evidence/visibility-mode-preflight-20261020/final-native.log",
+            ".workspace/evidence/visibility-mode-preflight-20261020/packaged.log"
+          ],
+          "scope": "15 native geometry/gear tests and four packaged cases. Prior-calculation-output dependencies, browser coverage and broad W12 closure remain unproven."
         }
       ]
     },

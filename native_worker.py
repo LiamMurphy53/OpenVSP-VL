@@ -665,6 +665,11 @@ def run(req, model):
     if req.get('validatePropertyLocks') and action!='mutate':
         import native_property_locks
         native_property_locks.require_unchanged(v,native_property_locks.records(v))
+    if action=='geometry-case-preflight':
+        ids=req.get('cases')
+        if not isinstance(ids,list) or not ids or any(cid not in v.GetAllGeometryAnalysesIDVec() for cid in ids):raise ValueError('Choose existing geometry cases for preflight.')
+        data=native_geometry_cases.check_observation_targets(v,ids,apply_modes=True)
+        errors(v);return data
     if action.startswith('study-'):
         import native_study_worker as study
         if action=='study-schema':data=study.schema(v,parameter)
