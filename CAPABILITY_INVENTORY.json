@@ -573,7 +573,18 @@
       "workflow": "Analytical utility functions",
       "category": "Engineering",
       "closure": "Unproven",
-      "originalPlanRow": "| Analytical utility functions | Saved native rectangular-wing lift/drag, VKT profile/Cp, ellipsoid Cp/integrals; input reuse, exact sample plots/CSV and pressure point previews; native equality and sphere reference checked | Audit additional standalone engineering API functions; wider parameter and large-sample coverage |"
+      "originalPlanRow": "| Analytical utility functions | Saved native rectangular-wing lift/drag, VKT profile/Cp, ellipsoid Cp/integrals; input reuse, exact sample plots/CSV and pressure point previews; native equality and sphere reference checked | Audit additional standalone engineering API functions; wider parameter and large-sample coverage |",
+      "followups": [
+        {
+          "date": "2026-10-20",
+          "change": "Mapped all 13 reviewed public standalone aerodynamic/atmosphere/drag reference functions to five existing saved workflows and inspected eleven successful native regression process logs.",
+          "evidence": [
+            "ENGINEERING_UTILITY_AUDIT.md",
+            ".workspace/evidence/standalone-api-audit-20261020/inventory.json"
+          ],
+          "scope": "Reviewed reference-function family only; geometry/manager/general-vector APIs and full browser scope excluded from this subaudit. Broad W23 closure remains unproven."
+        }
+      ]
     },
     {
       "id": "W24",
