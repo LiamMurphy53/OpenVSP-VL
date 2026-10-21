@@ -422,6 +422,15 @@
             ".workspace/evidence/geometry-case-choice-isolation-20261020/packaged-verification.json"
           ],
           "scope": "Mixed saved case menus and reopening, five native geometry-case tests, packaged state preservation. Broader W12 closure remains unproven."
+        },
+        {
+          "date": "2026-10-20",
+          "change": "Isolated original native XYZ observation-point visibility crashes; equivalent Blank-origin selection succeeds in two tested configurations.",
+          "evidence": [
+            "MODELING_AUDIT.md",
+            ".workspace/evidence/point-visibility-20261020/verification.json"
+          ],
+          "remaining": "Preserve XYZ workflow using verified native setup adaptation; include modes, case ordering and source isolation. Broad W12 closure remains unproven."
         }
       ]
     },
