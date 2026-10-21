@@ -534,7 +534,21 @@
       "workflow": "Structural BCs and laminates",
       "category": "Engineering",
       "closure": "Unproven",
-      "originalPlanRow": "| Structural BCs and laminates | Native BC targets and exported constraints; laminate layer references and native material outputs verified | Wider constraint/laminate combinations and browser coverage |"
+      "originalPlanRow": "| Structural BCs and laminates | Native BC targets and exported constraints; laminate layer references and native material outputs verified | Wider constraint/laminate combinations and browser coverage |",
+      "followups": [
+        {
+          "date": "2026-10-21",
+          "change": "Calculated material results label explicit native units; a three-angle laminate verifies all five structural systems, saved angle editing and independent native solver-deck parity.",
+          "evidence": [
+            "tests/test_laminate_units.py",
+            "MODELING_AUDIT.md",
+            ".workspace/evidence/laminate-units-20261021/exports-final-native.log",
+            ".workspace/evidence/laminate-units-20261021/packaged.log",
+            ".workspace/evidence/laminate-units-20261021/browser-verification.json"
+          ],
+          "scope": "Original material-parameter equality across five systems and two exact solver-deck exports; one desktop material/inch solver display. Wider layups, browser authoring/history, narrow layout and W17 closure remain unproven."
+        }
+      ]
     },
     {
       "id": "W18",
