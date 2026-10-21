@@ -52,6 +52,8 @@ def annotate(v,inputs):
         if key in maps:e['choices']=maps[key]
         if key=='ModeID' and e['values'][0] and e['values'][0] not in v.GetAllModes():
             e['choices'].append(dict(value=e['values'][0],label='Unavailable native mode · '+e['values'][0]))
+        aliases={'SelectedSetIndex':'Set','SelectedDegenSetIndex':'DegenSet',**{prefix+'FileFlag':native for native,prefix in [('SRF_Export','SRF'),('CURV_Export','CURV'),('PLOT3D_Export','P3D'),('IGES_Export','IGES'),('STEP_Export','STEP')]}}
+        if aliases.get(key,key) in parms:e['nativeParameter']=parms[aliases.get(key,key)]
         if key in parms:e['min'],e['max']=v.GetParmLowerLimit(parms[key]),v.GetParmUpperLimit(parms[key])
         if key=='ModeID':e['applicableWhen']=dict(input='UseMode',values=[1])
         if key in ['SelectedSetIndex','SelectedDegenSetIndex']:e['applicableWhen']=dict(input='UseMode',values=[0])

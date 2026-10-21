@@ -277,7 +277,7 @@ def validate(v,req,parameter,analysis_schema,set_inputs):
     specs=[];clean_stages=[]
     for i,stage in enumerate(stages):
         if not isinstance(stage,dict):raise ValueError('Choose a native analysis for every step.')
-        stage={k:copy.deepcopy(stage[k]) for k in ('name','inputs','memberInputs','geometryInputs','structure','formats','sourceStage','freezeInputs') if k in stage}
+        stage={k:copy.deepcopy(stage[k]) for k in ('name','inputs','memberInputs','geometryInputs','structure','formats','sourceStage','freezeInputs','followDefaults') if k in stage}
         if stage.get('name')=='VSPAEROSinglePoint':
             raise ValueError('OpenVSP retired VSPAEROSinglePoint. In Studies, replace this step with the supported single-condition solver, then save. It uses VSPAEROSweep with AlphaNpts, BetaNpts, MachNpts and ReCrefNpts set to one.')
         if stage.get('name')=='VSPAERODegenGeom':
@@ -287,7 +287,10 @@ def validate(v,req,parameter,analysis_schema,set_inputs):
             if isinstance(source,bool) or not isinstance(source,int) or not 0<=source<i or stage['name'] not in ('CpSlicer','VSPAEROReadPreviousAnalysis','FlowPlaneSlicer'):raise ValueError('A saved-solution step must refer to an earlier aerodynamic analysis.')
             if clean_stages[source]['name'] not in ('VSPAEROSweep','VSPAEROSinglePoint'):raise ValueError('Choose an earlier aerodynamic solution as the source.')
         if stage.get('name') in ('CpSlicer','VSPAEROReadPreviousAnalysis','FlowPlaneSlicer') and source is None:raise ValueError('Choose an earlier aerodynamic solution for this study step.')
+        import native_study_defaults
+        native_study_defaults.prepare(stage)
         spec=stage_schema(v,stage,analysis_schema,set_inputs)
+        native_study_defaults.validate(stage,spec)
         check_entries(v,stage.get('inputs',[]),{(e['name'],e['index']):e for e in spec['inputs']})
         specs.append(spec);clean_stages.append(stage)
     params={p['id']:p for p in schema(v,parameter)['parameters']};clean_axes=[];seen=set();count=1

@@ -907,6 +907,21 @@
             ".workspace/evidence/cad-study-choices-20261021/named-choices.png"
           ],
           "scope": "Five source/package native checks and 16 JS modules passed. Four cm/ft \u00d7 Shell/BREP source cases and four in/ft \u00d7 Shell/BREP browser cases match independent original STEP and IGES records, excluding timestamps only. Saved controls reopen with named values. Broader CAD geometry, override combinations, settings and study closure remain unproven."
+        },
+        {
+          "date": "2026-10-21",
+          "change": "Added review of explicit native step inputs bound to swept aircraft defaults, with a reversible Use swept default action. Per-input inheritance persists while other inputs stay frozen; inherited fields are disabled with an explicit-edit action. SurfaceIntersection now exposes native parameter bindings, including set/export aliases.",
+          "evidence": [
+            "tests/test_study_defaults.py",
+            "tests/test_study_overrides.mjs",
+            ".workspace/evidence/study-default-overrides-20261021/before-proof.json",
+            ".workspace/evidence/study-default-overrides-20261021/native.log",
+            ".workspace/evidence/study-default-overrides-20261021/packaged.log",
+            ".workspace/evidence/study-default-overrides-20261021/studies-regression.log",
+            ".workspace/evidence/study-default-overrides-20261021/browser-verification.json",
+            ".workspace/evidence/study-default-overrides-20261021/input-review.png"
+          ],
+          "scope": "Real cm/ft CAD sweep initially produced two ft files; browser repair retained 24 unrelated frozen inputs and produced cm/ft files matching independent original STEP exports. Nine source/package checks, 16 broader study regressions and 17 JS modules pass. Per-member assembly review, geometry-inheritance execution, conditional native overrides and broad closure remain unproven."
         }
       ]
     },
