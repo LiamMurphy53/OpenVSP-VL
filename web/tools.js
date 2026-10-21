@@ -1,4 +1,4 @@
-import {sectionProfileParameters} from './section-profile-parameters.js?v=20261020';
+import {sectionProfileParameters} from './section-profile-parameters.js?v=20261020-editable';
 import {preserveInspectorView} from './inspector-view.js?v=20261020-focus';
 import {customSliderMarkup,bindCustomSliders} from './custom-sliders.js?v=20261020-tools';
 import {visibleRenderer} from './visible-renderer.js?v=20261015';

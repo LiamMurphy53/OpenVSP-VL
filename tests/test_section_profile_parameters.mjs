@@ -10,4 +10,5 @@ assert.deepEqual(sectionProfileParameters(component,section),[width,second]);
 assert.equal(sectionProfileParameters(component,section)[1],second,'Preserve native limits/activity and parameter identity');
 assert.deepEqual(sectionProfileParameters(component,{...section,generated:true}),[]);
 assert.deepEqual(sectionProfileParameters(component,{}),[]);
+assert.deepEqual(sectionProfileParameters(component,{...section,controlPoints:[[0,0,0]]}),[],'Editable curves retain their dedicated controls without duplicate parameter IDs');
 console.log('Selected surface/profile IDs, native metadata and generated-profile guards passed.');
