@@ -1,0 +1,16 @@
+import assert from 'node:assert/strict';
+import {visibilityResults} from '../web/visibility-results.js';
+const E=x=>String(x).replaceAll('<','&lt;');
+const entry=(name,values,index=0)=>({name,values,index});
+const discrete={name:'Point_Visibility',entries:[entry('Center',[[12,4,3]]),entry('Dirs',[[1,0,0],[0,1,0]]),entry('Visible',[1,0]),entry('DistVisible',[-6.2,0]),entry('DistMiss',[4,2])]};
+let html=visibilityResults([discrete],E,String);
+assert.match(html,/Clear line of sight \(1\)/);assert.match(html,/Occluded \(0\)/);assert.match(html,/-6.2/);assert.match(html,/retain their native signs/);
+const bad={...discrete,entries:discrete.entries.map(e=>e.name==='Visible'?{...e,values:[1]}:e)};
+assert.match(visibilityResults([bad],E,String),/different lengths/);assert.doesNotMatch(visibilityResults([bad],E,String),/Clear line of sight/);
+const observers={...discrete,entries:[...discrete.entries,...discrete.entries.map(e=>({...e,index:1}))]};
+assert.match(visibilityResults([observers],E,String),/Observation point 2/);
+const continuous={name:'Point_Visibility',entries:[entry('Center',[[1,2,3]]),entry('Over_Nose',[-17]),entry('Fwd_Bounds',[-23,-17]),entry('Octant_Labels',['<UAR>','UFL']),entry('Octant_Area_Frac',[.1,.2]),entry('Poly_Visible',[0])]};
+html=visibilityResults([continuous],E,String);assert.match(html,/Over-nose elevation \(degrees\)/);assert.match(html,/-23,-17/);assert.match(html,/&lt;UAR>/);assert.match(html,/>0.1</);assert.match(html,/occluded region/);
+const unknown={...discrete,entries:discrete.entries.map(e=>e.name==='Visible'?{...e,values:[null,7]}:e)};
+html=visibilityResults([unknown],E,String);assert.match(html,/Native flag undefined/);assert.match(html,/Native flag 7/);assert.doesNotMatch(html,/Occluded \(0\)/);
+console.log('Native visibility flags, signed distances, observer indices, continuous fractions and malformed arrays passed.');
