@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {visibilityResults} from '../web/visibility-results.js';
+import {visibilityResults,visibilityObserverGroups} from '../web/visibility-results.js';
 const E=x=>String(x).replaceAll('<','&lt;');
 const entry=(name,values,index=0)=>({name,values,index});
 const discrete={name:'Point_Visibility',entries:[entry('Center',[[12,4,3]]),entry('Dirs',[[1,0,0],[0,1,0]]),entry('Visible',[1,0]),entry('DistVisible',[-6.2,0]),entry('DistMiss',[4,2])]};
@@ -15,3 +15,9 @@ html=visibilityResults([continuous],E,String);assert.match(html,/Over-nose eleva
 const unknown={...discrete,entries:discrete.entries.map(e=>e.name==='Visible'?{...e,values:[null,7]}:e)};
 html=visibilityResults([unknown],E,String);assert.match(html,/Native flag undefined/);assert.match(html,/Native flag 7/);assert.doesNotMatch(html,/Occluded \(0\)/);
 console.log('Native visibility flags, signed distances, observer indices, continuous fractions and malformed arrays passed.');
+
+const multiple={...discrete,entries:discrete.entries.map(e=>({...e,values:e.name==='Center'?[[12,4,3],[12,-4,3]]:e.name==='Dirs'?[[1,0,0],[0,1,0],[1,0,0],[0,1,0]]:[...e.values,...e.values]}))};
+const groups=visibilityObserverGroups(multiple.entries,0);assert.equal(groups.length,2);assert.deepEqual(groups[1].center,[12,-4,3]);assert.equal(groups[1].directions.length,2);
+html=visibilityResults([multiple],E,String);assert.match(html,/Observation point 2/);assert.match(html,/12,-4,3/);
+assert.equal(visibilityObserverGroups(multiple.entries.map(e=>e.name==='Dirs'?{...e,values:[[1,0,0],[0,1,0],[0,0,1]]}:e),0),null,'Uneven observer arrays cannot be assigned to points');
+assert.match(visibilityResults([continuous],E,String),/Visibility domain 1/);

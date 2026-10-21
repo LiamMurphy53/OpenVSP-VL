@@ -1,4 +1,4 @@
-import {visibilityResults} from './visibility-results.js?v=20261021-keyboard';
+import {visibilityResults} from './visibility-results.js?v=20261021-observers';
 // Configure saved native cases. Geometry and interference calculations stay in OpenVSP.
 let chosen='';
 export function renderGeometryCases({app,model,data,render,helpers:h}){
