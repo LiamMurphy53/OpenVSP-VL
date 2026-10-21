@@ -88,6 +88,17 @@
             "MODELING_AUDIT.md"
           ],
           "scope": "Exact original preset/capped geometry, native source flags, edits, cold reads and browser Undo/reload; W02 closure remains unproven."
+        },
+        {
+          "date": "2026-10-21",
+          "change": "Verified modern visibility point recovery/Undo/Redo, continuous/discrete runs and saved reopening, plus live profile slider keyboard focus, real pointer drag and one-step Undo/Redo.",
+          "evidence": [
+            "MODELING_AUDIT.md",
+            ".workspace/evidence/visibility-ui-20261021/verification.json",
+            ".workspace/evidence/visibility-ui-20261021/reopened-discrete-results.png",
+            ".workspace/evidence/visibility-ui-20261021/profile-drag-redo.png"
+          ],
+          "scope": "One desktop wing/point setup. Both native runs match independent SDK arrays; slider redo/history bytes exact. Broader and narrow-layout closure remains unproven."
         }
       ]
     },
@@ -452,6 +463,17 @@
             ".workspace/evidence/visibility-mode-preflight-20261020/packaged.log"
           ],
           "scope": "15 native geometry/gear tests and four packaged cases. Prior-calculation-output dependencies, browser coverage and broad W12 closure remain unproven."
+        },
+        {
+          "date": "2026-10-21",
+          "change": "Verified modern visibility point recovery/Undo/Redo, continuous/discrete runs and saved reopening, plus live profile slider keyboard focus, real pointer drag and one-step Undo/Redo.",
+          "evidence": [
+            "MODELING_AUDIT.md",
+            ".workspace/evidence/visibility-ui-20261021/verification.json",
+            ".workspace/evidence/visibility-ui-20261021/reopened-discrete-results.png",
+            ".workspace/evidence/visibility-ui-20261021/profile-drag-redo.png"
+          ],
+          "scope": "One desktop wing/point setup. Both native runs match independent SDK arrays; slider redo/history bytes exact. Broader and narrow-layout closure remains unproven."
         }
       ]
     },
@@ -671,6 +693,17 @@
             "MODELING_AUDIT.md"
           ],
           "scope": "Current host filesystem relocation; all258planes and both exact final native comparisons. Broader deployment/workflow closure remains unproven."
+        },
+        {
+          "date": "2026-10-21",
+          "change": "Verified modern visibility point recovery/Undo/Redo, continuous/discrete runs and saved reopening, plus live profile slider keyboard focus, real pointer drag and one-step Undo/Redo.",
+          "evidence": [
+            "MODELING_AUDIT.md",
+            ".workspace/evidence/visibility-ui-20261021/verification.json",
+            ".workspace/evidence/visibility-ui-20261021/reopened-discrete-results.png",
+            ".workspace/evidence/visibility-ui-20261021/profile-drag-redo.png"
+          ],
+          "scope": "One desktop wing/point setup. Both native runs match independent SDK arrays; slider redo/history bytes exact. Broader and narrow-layout closure remains unproven."
         }
       ]
     }
