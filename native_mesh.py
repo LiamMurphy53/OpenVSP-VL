@@ -189,7 +189,7 @@ def assembly(v,aid=None):
     return aid,members
 
 
-def assembly_schema(v,aid=None):
+def assembly_schema(v,aid=None,check_connections=True):
     aid,members=assembly(v,aid)
     spec=fea_schema(v,members[0])
     spec['inputs']=[e for e in spec['inputs'] if e['name'] not in FEA_CAD]
@@ -201,6 +201,8 @@ def assembly_schema(v,aid=None):
         member_settings.append(dict(id=sid,name=v.GetFeaStructName(gid,index),component=v.GetGeomName(gid),values={e['name']:e['values'][0] for e in inputs},inputs=inputs))
     spec.update(name='FeaAssemblyMesh',structure=aid,members=members,exportFormats=list(ASSEMBLY_EXPORTS),description='Mesh and export a native structural assembly, including fixed-point connections. Choose shared mesh settings for every member or separate settings for each member. Parts, materials, properties and constraints remain defined by each member.')
     spec['guide'].update(title='Structural assembly mesh',note='Shared mesh settings start with the first member’s saved sizing, element and deck settings and apply to every member. Separate settings use each member’s own values and native limits. Each member keeps its own parts, materials, properties, constraints and connections.',memberSizing=member_settings,sections=spec['guide']['sections'])
+    from native_connection_controls import inspect_assembly
+    if check_connections:spec['guide']['connectionIssues']=inspect_assembly(v,aid)
     return spec
 
 
@@ -233,6 +235,8 @@ def run_assembly(v,req):
     for sid in members:
         _,gid,index=structure(v,sid)
         sizing(v,gid,index,inputs[sid],apply=False)
+    from native_connection_controls import validate_assembly
+    validate_assembly(v,aid)
     for sid in members:
         _,gid,index=structure(v,sid)
         sizing(v,gid,index,inputs[sid])
@@ -244,13 +248,13 @@ def run_assembly(v,req):
             v.SetParmVal(p,int(v.GetParmName(p)[:-7] in selected))
     for fmt,ext in ASSEMBLY_EXPORTS.items():
         v.SetFeaAssemblyFileName(aid,getattr(v,'FEA_'+fmt+'_FILE_NAME'),str(Path.cwd()/('assembly.'+('dat' if fmt=='NASTRAN' else ext))))
-    spec=assembly_schema(v,aid)
+    spec=assembly_schema(v,aid,check_connections=False)
     from native_run_setup import save
     save(v,'FeaAssemblyMesh',spec['inputs'],structure=aid,formats=selected,
          members=members,memberSizing=spec['guide']['memberSizing'])
     v.ComputeFeaAssemblyMesh(aid)
     mesh=read_gmsh(Path.cwd()/'assembly.msh',Path.cwd()/'assembly.bdf' if has_masses else None)
-    generated=assembly_schema(v,aid)
+    generated=assembly_schema(v,aid,check_connections=False)
     return dict(version=v.GetVSPVersion(),analysis='FeaAssemblyMesh',engineOperation='ComputeFeaAssemblyMesh',assemblyComputations=1,exportOperation='ExportAssemblyMesh',structure=aid,members=members,memberSizing=spec['guide']['memberSizing'],generatedMemberSizing=generated['guide']['memberSizing'],formats=selected,resultID='',inputs=spec['inputs'],geometryInputs=[],results=[],meshFile='assembly.msh',meshSummary=summary(mesh))
 
 

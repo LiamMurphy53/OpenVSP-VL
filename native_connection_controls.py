@@ -90,3 +90,53 @@ def edit(v,r):
         tree.write(path,encoding='utf-8',xml_declaration=True);os.replace(path,filename)
     finally:path.unlink(missing_ok=True)
     raise native_references.ReloadRequired()
+
+
+def connection_issues(v,aid,refs=None,points=None):
+    """Check saved endpoints against current native member/copy topology."""
+    if refs is None:
+        from native_references import references
+        refs=references(v)
+    if points is None:
+        from native_part_controls import refresh
+        for sid in v.GetFeaAssemblyStructureIDVec(aid):refresh(v,structure=sid)
+        points=catalog(v,aid)
+    available={(p['structure'],p['id']):p for p in points}
+    issues=[]
+    for i in range(v.NumFeaAssemblyConnections(aid)):
+        cid=v.GetFeaAssemblyConnectionID(aid,i)
+        for side in ('Start','End'):
+            saved=refs.get(cid,{})
+            point=available.get((saved.get(side+'StructID'),saved.get(side+'FixPtID')))
+            index=v.GetParmVal(v.FindParm(cid,side+'FixPtSurfIndex','Connection'))
+            if point is None:
+                message=f'Connection {i+1}: {side.lower()} fixed point is unavailable in this assembly.'
+            elif index not in range(len(point['copies'])):
+                message=f'Connection {i+1}: {side.lower()} copy {int(index)} is unavailable for {point["label"]} ({len(point["copies"])} current copies).'
+            else:continue
+            issues.append(dict(connection=cid,index=i,side=side.lower(),message=message))
+    return issues
+
+
+def validate_assembly(v,aid):
+    issues=inspect_assembly(v,aid)
+    if issues:
+        raise ValueError(' '.join(i['message'] for i in issues)+' Repair the endpoints in Modeling tools → Assemblies before meshing.')
+
+
+def inspect_assembly(v,aid):
+    # Structural refresh changes native follower values and meshing state.
+    # Evaluate the saved endpoints in a separate original-engine process.
+    from pathlib import Path
+    import uuid,native_ngon
+    from native_service import invoke
+    folder=Path.cwd()/('connection-preflight-'+uuid.uuid4().hex);folder.mkdir()
+    model=folder/'aircraft.vsp3';filename=v.GetVSPFileName()
+    # Original serialization regenerates assembly output names. Keep caller
+    # destinations intact; the child uses only the snapshot.
+    outputs={(a,i):v.GetFeaAssemblyFileName(a,i) for a in v.GetFeaAssemblyIDVec() for i in range(v.FEA_NUM_FILE_NAMES)}
+    try:native_ngon.write(v,model)
+    finally:
+        v.SetVSP3FileName(filename)
+        for (a,i),name in outputs.items():v.SetFeaAssemblyFileName(a,i,name)
+    return invoke(dict(action='assembly-connection-preflight',assembly=aid),model,folder)['issues']

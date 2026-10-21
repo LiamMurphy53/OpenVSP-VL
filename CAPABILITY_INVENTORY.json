@@ -541,7 +541,21 @@
       "workflow": "Assemblies",
       "category": "Engineering",
       "closure": "Unproven",
-      "originalPlanRow": "| Assemblies | Members, fixed-point connections, native combined mesh and solver decks verified | Broader connection/symmetry cases and guided validation |"
+      "originalPlanRow": "| Assemblies | Members, fixed-point connections, native combined mesh and solver decks verified | Broader connection/symmetry cases and guided validation |",
+      "followups": [
+        {
+          "date": "2026-10-21",
+          "change": "Native assembly connection topology preflight names unavailable endpoint copies, with isolated native refresh and modern endpoint repair verified through meshing.",
+          "evidence": [
+            "tests/test_connection_topology.py",
+            "MODELING_AUDIT.md",
+            ".workspace/evidence/assembly-topology-20261021/delivery-native.log",
+            ".workspace/evidence/assembly-topology-20261021/recovery-packaged.log",
+            ".workspace/evidence/assembly-topology-20261021/browser-verification.json"
+          ],
+          "scope": "One symmetry-removed copy recovery, exact repaired mesh and existing assembly export/sizing/study regressions. Desktop repair/run verified. Broader references, narrow layout and full W18 closure remain unproven."
+        }
+      ]
     },
     {
       "id": "W19",

@@ -9,7 +9,7 @@ import {designAssistMarkup,bindDesignAssist,wingMountMarkup,bindWingMount} from 
 import {propertiesMode,propertiesModeMarkup,bindPropertiesMode,applyPropertiesMode} from './properties-mode.js?v=20261012-1';
 import {familyWorkflowsMarkup,bindFamilyWorkflows,disposeFamilyWorkflows} from './family-workflows.js?v=20261010-123';
 import {crewToolsEnabled,humanPromotedIDs,humanControlsMarkup,bindHumanControls,disposeHumanInspection} from './human-controls.js?v=20261010-123';
-import {assemblySizingMarkup,bindAssemblySizing,assemblySizingRequest,restoreAssemblySizing} from './assembly-sizing.js?v=20261010-123';
+import {assemblySizingMarkup,bindAssemblySizing,assemblySizingRequest,restoreAssemblySizing} from './assembly-sizing.js?v=20261021-connections';
 import {profilePromotedIDs,profileControlsMarkup,setProfilePreviewPlane} from './profile-controls.js?v=20261010-123';
 import {endCapPromotedIDs,endCapControlsMarkup} from './end-cap-controls.js?v=20261010-123';
 import {bindSkinning} from './skinning-controls.js?v=20261010-123';
