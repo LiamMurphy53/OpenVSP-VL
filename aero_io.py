@@ -197,7 +197,8 @@ def read_flow_plane(path):
     fields=[]
     for label, samples in [('Cp',pressure),('Speed',[math.hypot(*p) for p in velocities]),
                            ('U',[p[0] for p in velocities]),('V',[p[1] for p in velocities]),('W',[p[2] for p in velocities])]:
-        fields.append(dict(name=label,label=label,values=[sum(samples[n] for n in e['nodes'])/4 for e in elements],nodeValues=samples))
+        field_label={'Cp':'Pressure coefficient Cp (dimensionless)','Speed':'Velocity magnitude (native length/s)','U':'X velocity (native length/s)','V':'Y velocity (native length/s)','W':'Z velocity (native length/s)'}[label]
+        fields.append(dict(name=label,label=field_label,values=[sum(samples[n] for n in e['nodes'])/4 for e in elements],nodeValues=samples))
     return dict(filename=path.name,nodes=nodes,nodeIDs=ids,elements=elements,totalElements=cells,
                 groups=[dict(id=0,name='Native flow plane',count=cells)],higherOrder=False,unsupportedElements=0,
                 fields=fields,velocities=velocities,direction=direction,location=location,referenceSpeed=reference,solverVelocityScale=velocity_scale,

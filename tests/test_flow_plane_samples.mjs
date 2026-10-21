@@ -9,3 +9,5 @@ assert.match(flowPlaneHeader(mesh),/Y = -3.25/);assert.match(flowPlaneHeader(mes
 assert.throws(()=>flowPlaneCSV({...mesh,nodeIDs:[12]}),/incomplete/);
 assert.throws(()=>flowPlaneCSV({...mesh,fields:mesh.fields.slice(1)}),/incomplete/);
 console.log('Original nodal IDs/coordinates/fields retain full numeric precision; cell averages are not exported.');
+
+assert.match(flowPlaneHeader(mesh),/native length\/s; Cp is dimensionless/);

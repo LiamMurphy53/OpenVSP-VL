@@ -570,6 +570,18 @@
             ".workspace/evidence/aero-run-reuse-20261021/solved-pressure.png"
           ],
           "scope": "One steady thin-wing condition with three wake iterations and three Y pressure slices; 246 numeric fields plus decoded pressure geometry/values exactly match independent original API results for both browser solves; 34 slice fields exactly match original slicer. Separate mixed-rotor source/package equality test passes. These controlled regression cases do not establish convergence, broader geometry/time cases or broad closure."
+        },
+        {
+          "date": "2026-10-21",
+          "change": "Relocated prebuilt native airflow tools verified for steady/yaw/automatic-rotor restoration; viewer labels identify native velocity axes and dimensionless Cp.",
+          "evidence": [
+            "tests/test_flow_planes.py",
+            "tests/test_flow_plane_samples.mjs",
+            ".workspace/evidence/relocated-flow-20261021/verification.json",
+            ".workspace/evidence/relocated-flow-20261021/browser-fields.json",
+            "FEATURE_STATUS.md"
+          ],
+          "scope": "Three exact native restoration cases, strict28-module isolation, unchanged tool hashes, source/relocated decoder checks and saved yaw five-field browser viewing; broad closure remains Unproven."
         }
       ]
     },
@@ -578,7 +590,21 @@
       "workflow": "Native flow planes",
       "category": "Engineering",
       "closure": "Unproven",
-      "originalPlanRow": "| Native flow planes | Native file decoding and velocity/pressure display; selected native cases verified | Guided generation and browser verification across field types |"
+      "originalPlanRow": "| Native flow planes | Native file decoding and velocity/pressure display; selected native cases verified | Guided generation and browser verification across field types |",
+      "followups": [
+        {
+          "date": "2026-10-21",
+          "change": "Relocated prebuilt native airflow tools verified for steady/yaw/automatic-rotor restoration; viewer labels identify native velocity axes and dimensionless Cp.",
+          "evidence": [
+            "tests/test_flow_planes.py",
+            "tests/test_flow_plane_samples.mjs",
+            ".workspace/evidence/relocated-flow-20261021/verification.json",
+            ".workspace/evidence/relocated-flow-20261021/browser-fields.json",
+            "FEATURE_STATUS.md"
+          ],
+          "scope": "Three exact native restoration cases, strict28-module isolation, unchanged tool hashes, source/relocated decoder checks and saved yaw five-field browser viewing; broad closure remains Unproven."
+        }
+      ]
     },
     {
       "id": "W15",
@@ -1116,6 +1142,18 @@
             ".workspace/evidence/relocated-delivery-20261021/browser-verification.json"
           ],
           "scope": "Three isolated relocated integration tests,27 loaded production modules, moved launcher/browser21-field original comparison and exactCSV. Earlier contaminated run retained; full delivery closure remains Unproven."
+        },
+        {
+          "date": "2026-10-21",
+          "change": "Relocated prebuilt native airflow tools verified for steady/yaw/automatic-rotor restoration; viewer labels identify native velocity axes and dimensionless Cp.",
+          "evidence": [
+            "tests/test_flow_planes.py",
+            "tests/test_flow_plane_samples.mjs",
+            ".workspace/evidence/relocated-flow-20261021/verification.json",
+            ".workspace/evidence/relocated-flow-20261021/browser-fields.json",
+            "FEATURE_STATUS.md"
+          ],
+          "scope": "Three exact native restoration cases, strict28-module isolation, unchanged tool hashes, source/relocated decoder checks and saved yaw five-field browser viewing; broad closure remains Unproven."
         }
       ]
     }

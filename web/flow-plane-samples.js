@@ -9,5 +9,5 @@ export function flowPlaneCSV(mesh){
 }
 export function flowPlaneHeader(mesh){
  const axis=({1:'X',2:'Y',3:'Z'})[mesh.direction]||String(mesh.direction);
- return `${axis} = ${mesh.location} · Native reference speed (Vref): ${mesh.referenceSpeed}${Number.isFinite(mesh.solverVelocityScale)?' · Native solver velocity scale (Vmax): '+mesh.solverVelocityScale:''}. Coordinates and velocities use native model/solver units. Colours show cell averages; CSV retains every original node sample. Speed is the magnitude of the saved velocity vector.`;
+ return `${axis} = ${mesh.location} · Native reference speed (Vref): ${mesh.referenceSpeed}${Number.isFinite(mesh.solverVelocityScale)?' · Native solver velocity scale (Vmax): '+mesh.solverVelocityScale:''}. Coordinates use native model length units. X/Y/Z velocities and their magnitude use native length/s; Cp is dimensionless. Colours show cell averages; CSV retains every original node sample. Speed is the magnitude of the saved velocity vector.`;
 }

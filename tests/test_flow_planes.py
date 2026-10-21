@@ -76,6 +76,10 @@ class NativeFlowPlanes(unittest.TestCase):
         for saved,original in zip(files,direct):
             self.assertEqual(saved.read_bytes(),original.read_bytes())
             mesh=read_flow_plane(saved)
+            labels={f['name']:f['label'] for f in mesh['fields']}
+            self.assertEqual(labels['Cp'],'Pressure coefficient Cp (dimensionless)')
+            for name,axis in [('U','X'),('V','Y'),('W','Z')]:self.assertEqual(labels[name],axis+' velocity (native length/s)')
+            self.assertEqual(labels['Speed'],'Velocity magnitude (native length/s)')
             rows=saved.read_text().splitlines();count,cells=map(int,rows[1].split())
             self.assertEqual(len(mesh['nodes']),count);self.assertEqual(len(mesh['elements']),cells)
             for row,point,velocity,pressure in zip(rows[2:2+count],mesh['nodes'],mesh['velocities'],mesh['fields'][0]['nodeValues']):

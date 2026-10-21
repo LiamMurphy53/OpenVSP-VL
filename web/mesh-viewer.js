@@ -1,4 +1,4 @@
-import {flowPlaneCSV,flowPlaneHeader} from './flow-plane-samples.js?v=20261015';
+import {flowPlaneCSV,flowPlaneHeader} from './flow-plane-samples.js?v=20261021-units';
 import {installViewControls} from './view-controls.js?v=20261010-123';
 // Display native nodes, connectivity and solution samples. No solver math.
 export function mountMeshViewer(host,mesh,esc){

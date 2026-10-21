@@ -1,7 +1,7 @@
 import {boundaryResults} from './boundary-results.js?v=20261021';
 import {waveDrawingsCard} from './wave-drawings.js?v=20261012-1';
 import {cfdChecksCard,withCfdDrawings,intersectionDrawings,nativeMessagesCard} from './cfd-results.js?v=20261010-123';
-import {mountMeshViewer} from './mesh-viewer.js?v=20261010-123';
+import {mountMeshViewer} from './mesh-viewer.js?v=20261021-flow-units';
 import {solverSetupCard} from './solver-setup.js?v=20261010-123';
 import {drawingMesh} from './structural-preview.js?v=20261010-123';
 let app,dispose=null,generation=0;
