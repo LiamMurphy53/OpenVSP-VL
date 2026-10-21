@@ -1083,6 +1083,17 @@
             ".workspace/evidence/job-stop-recovery-20261021/browser-verification.json"
           ],
           "scope": "Five real-process control fixtures, native study cancel/resume, source/relocated checks and actual browser VSPAERO cancellation/retry with original numeric/pressure equality; broad recovery closure remains Unproven."
+        },
+        {
+          "date": "2026-10-21",
+          "change": "Verified persisted stop recovery after owner-process death without a Popen handle; analysis history now displays pending stopping state.",
+          "evidence": [
+            "tests/test_job_restart_stop.py",
+            ".workspace/evidence/restarted-job-stop-20261021/source.log",
+            ".workspace/evidence/restarted-job-stop-20261021/packaged-verification.json",
+            ".workspace/evidence/restarted-job-stop-20261021/browser-verification.json"
+          ],
+          "scope": "Two-process control fixture plus native study/server-exit regression in source/relocated package and browser recovery followed by original21-field CompGeom equality. Broad recovery closure remains Unproven."
         }
       ]
     },
@@ -1191,6 +1202,17 @@
             ".workspace/evidence/job-stop-recovery-20261021/browser-verification.json"
           ],
           "scope": "Five real-process control fixtures, native study cancel/resume, source/relocated checks and actual browser VSPAERO cancellation/retry with original numeric/pressure equality; broad recovery closure remains Unproven."
+        },
+        {
+          "date": "2026-10-21",
+          "change": "Verified persisted stop recovery after owner-process death without a Popen handle; analysis history now displays pending stopping state.",
+          "evidence": [
+            "tests/test_job_restart_stop.py",
+            ".workspace/evidence/restarted-job-stop-20261021/source.log",
+            ".workspace/evidence/restarted-job-stop-20261021/packaged-verification.json",
+            ".workspace/evidence/restarted-job-stop-20261021/browser-verification.json"
+          ],
+          "scope": "Two-process control fixture plus native study/server-exit regression in source/relocated package and browser recovery followed by original21-field CompGeom equality. Broad recovery closure remains Unproven."
         }
       ]
     }
