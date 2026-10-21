@@ -64,6 +64,7 @@ def editor_guide(v, case):
     if not single and values['SecondaryType']==v.GEOM_TARGET:references.append('SecondaryGeomID')
     if typ=='PROJ_AREA' and values['DirectionType']==v.GEOM_PROJ:references.append('DirectionGeomID')
     return dict(groups=groups,references=references,visibility=typ=='VISIBLE_FROM_POINT_ANALYSIS',rotationAction=typ in ('PLANE_2PT_ANGLE_INTERFERENCE','PLANE_1PT_ANGLE_INTERFERENCE','RISK_ANGLE'),
+                observationPoint=typ=='VISIBLE_FROM_POINT_ANALYSIS' and values['SecondaryType']==v.XYZ_TARGET,
                 note='Choose the primary geometry, then configure the calculation below. Settings for other calculation types remain under Additional native parameters. Lengths follow the aircraft’s native model units; angles use degrees.')
 
 
@@ -186,6 +187,12 @@ def annotate(v,inputs):
     return dict(guide=dict(title='Saved geometry analysis cases',note='Create and configure named checks in Modeling tools → Geometry checks. OpenVSP evaluates the selected saved case, or all cases, using its native clearance, visibility, geometry and landing-gear calculations. Special checks require the corresponding auxiliary or landing-gear geometry.',sensitivityNote='Review the native result descriptions and compare geometry tessellation and case settings before relying on a result.',sections=[dict(title='Saved case selection',inputs=['CaseID'])],cases=cases))
 
 
+def require_observation_component(v,cid):
+    value=lambda name:v.GetParmVal(v.FindParm(cid,name,'InterferenceCase'))
+    if value('IntererenceCheckType')==v.VISIBLE_FROM_POINT_ANALYSIS and value('SecondaryType')==v.XYZ_TARGET:
+        raise ValueError(v.GetContainerName(cid)+': the installed OpenVSP XYZ visibility path crashes. In Geometry checks, use Create observation-point component, then run this case with that component selected.')
+
+
 def validate(v,schema):
     values=next(e['values'] for e in schema['inputs'] if e['name']=='CaseID')
     if len(values)!=1:raise ValueError('Choose one saved geometry analysis case.')
@@ -197,6 +204,7 @@ def validate(v,schema):
     sequential_modes=values[0] in ('ALL','all') and any(next(p['value'] for p in c['params'] if p['name']=='PrimaryType')==v.MODE_TARGET for c in cases)
     for case in cases:
         if values[0] not in ('ALL','all',case['id']):continue
+        require_observation_component(v,case['id'])
         setup=case['specialistSetup']
         if setup and setup['problems'] and not sequential_modes:raise ValueError(case['name']+': '+setup['problems'][0])
 
@@ -212,7 +220,18 @@ def mutate(v,r):
         v.SetParmVal(v.FindParm(cid,'IntererenceCheckType','InterferenceCase'),typ)
         return True,None
     cid=one(r['id'],v.GetAllGeometryAnalysesIDVec(),'This saved geometry case no longer exists.')
-    if op=='geometry-case-delete':v.DeleteGeometryAnalysis(cid)
+    if op=='geometry-case-observation-point':
+        value=lambda name:v.GetParmVal(v.FindParm(cid,name,'InterferenceCase'))
+        if value('IntererenceCheckType')!=v.VISIBLE_FROM_POINT_ANALYSIS or value('SecondaryType')!=v.XYZ_TARGET:
+            raise ValueError('Choose an entered observation point on a point-visibility case first.')
+        coordinates=[finite(value('Secondary'+axis)) for axis in 'XYZ']
+        gid=v.AddGeom('BLANK');v.SetGeomName(gid,v.GetContainerName(cid)+' observation point')
+        for axis,coordinate in zip('XYZ',coordinates):
+            v.SetParmVal(v.FindParm(gid,axis+'_Rel_Location','XForm'),coordinate)
+        v.SetParmVal(v.FindParm(cid,'SecondaryType','InterferenceCase'),v.GEOM_TARGET)
+        v.Update()
+        native_references.set_reference(v,cid,'GeometryAnalysis','SecondaryGeomID',gid)
+    elif op=='geometry-case-delete':v.DeleteGeometryAnalysis(cid)
     elif op=='geometry-case-rename':v.SetContainerName(cid,name(r['name']))
     elif op=='geometry-case-reference':
         key=one(r['key'],REFS)

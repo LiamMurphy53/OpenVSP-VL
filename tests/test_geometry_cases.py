@@ -101,3 +101,48 @@ class NativeGeometryCases(unittest.TestCase):
         reopened,_=self.worker({'action':'state'},path)
         self.assertEqual([next(p['choices'] for p in c['params'] if p['name']=='SecondaryType') for c in reopened['tools']['geometryCases']],
                          [next(p['choices'] for p in c['params'] if p['name']=='SecondaryType') for c in state['tools']['geometryCases']])
+
+    def test_observation_point_recovery_preserves_coordinates_and_native_results(self):
+        self.fixture();v=self.v;cid=self.case('VISIBLE_FROM_POINT_ANALYSIS')
+        for name,value in [('SecondaryType',v.XYZ_TARGET),('SecondaryX',12.),('SecondaryY',4.),('SecondaryZ',3.)]:v.SetParmVal(v.FindParm(cid,name,'InterferenceCase'),value)
+        v.AddGeometryAnalysisAzEl(cid,15.,10.);v.AddGeometryAnalysisAzEl(cid,-20.,-5.);v.Update();v.WriteVSPFile(str(self.model),v.SET_ALL);original=self.model.read_bytes()
+        for request in [dict(action='analysis',name='GeometryAnalysis',inputs=[dict(name='CaseID',values=[cid])]),dict(action='mutate',operation='geometry-case-result-mesh',id=cid)]:
+            with self.assertRaisesRegex(ValueError,'Create observation-point component'):self.worker(request)
+        state,path=self.worker(dict(action='mutate',operation='geometry-case-observation-point',id=cid))
+        self.assertEqual(self.model.read_bytes(),original)
+        saved=next(c for c in state['tools']['geometryCases'] if c['id']==cid);point=saved['references']['SecondaryGeomID'];blank=next(g for g in state['components'] if g['id']==point)
+        self.assertEqual(blank['type'].upper(),'BLANK');self.assertEqual(len(state['components']),3)
+        for axis,coordinate in zip('XYZ',[12.,4.,3.]):self.assertEqual(next(p['value'] for p in blank['params'] if p['rawGroup']=='XForm' and p['name']==axis+'_Rel_Location'),coordinate)
+        self.assertFalse(saved['editorGuide']['observationPoint'])
+        for discrete,polygon in [(0,0),(0,1),(1,0),(1,1)]:
+            with self.subTest(discrete=discrete,polygon=polygon):
+                v.ClearVSPModel();v.ReadVSPFile(str(path));v.Update()
+                for name,value in [('DiscreteVisibilityFlag',discrete),('PolyVisibleFlag',polygon)]:v.SetParmVal(v.FindParm(cid,name,'InterferenceCase'),value)
+                v.Update();v.WriteVSPFile(str(path),v.SET_ALL);before=path.read_bytes()
+                expected=self.direct('GeometryAnalysis',{'CaseID':[cid]},model=path)
+                data,result_path=self.worker(dict(action='analysis',name='GeometryAnalysis',inputs=[dict(name='CaseID',values=[cid])]),path)
+                self.assertResults(expected,data['results']);self.assertEqual(result_path.read_bytes(),before)
+                result=next(r for r in data['results'] if r['name']=='Point_Visibility');self.assertEqual(next(e['values'] for e in result['entries'] if e['name']=='Center'),[[12.,4.,3.]])
+
+    def test_observation_point_recovery_rejects_other_case_types(self):
+        self.fixture();cid=self.case('COMP_GEOM');before=self.model.read_bytes()
+        with self.assertRaisesRegex(ValueError,'point-visibility case'):
+            self.worker(dict(action='mutate',operation='geometry-case-observation-point',id=cid))
+        self.assertEqual(self.model.read_bytes(),before)
+
+    def test_observation_point_recovery_is_one_undoable_edit_and_preserves_geometry_locks(self):
+        from unittest.mock import patch
+        import native_service as service
+        self.fixture();v=self.v;cid=self.case('VISIBLE_FROM_POINT_ANALYSIS');pid=v.FindParm(cid,'SecondaryType','InterferenceCase');v.SetParmVal(pid,v.XYZ_TARGET);v.Update();v.WriteVSPFile(str(self.model),v.SET_ALL);original=self.model.read_bytes()
+        with patch.multiple(service,WORK=self.path,MODEL=self.model,REVISION='original',HISTORY=[],FUTURE=[],LAST_EDIT_GROUP=None):
+            service.mutation(dict(operation='geometry-case-observation-point',id=cid,revision=service.REVISION));adapted=self.model.read_bytes();self.assertEqual(len(service.HISTORY),1)
+            service.undo(revision=service.REVISION);self.assertEqual(self.model.read_bytes(),original)
+            service.undo(redo=True,revision=service.REVISION);self.assertEqual(self.model.read_bytes(),adapted)
+        self.model.write_bytes(original)
+        # Saved locks apply to geometry properties, not case enum parameters.
+        span=v.FindParm(self.gid,'TotalSpan','WingGeom')
+        state,locked=self.worker(dict(action='mutate',operation='property-lock',parameters=[span],locked=True));before=locked.read_bytes()
+        original_span=next(p['value'] for c in state['components'] for p in c['params'] if p['id']==span)
+        recovered,_=self.worker(dict(action='mutate',operation='geometry-case-observation-point',id=cid),locked)
+        after=next(p for c in recovered['components'] for p in c['params'] if p['id']==span)
+        self.assertEqual(after['value'],original_span);self.assertTrue(after['userLocked']);self.assertEqual(locked.read_bytes(),before)

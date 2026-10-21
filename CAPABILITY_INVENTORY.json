@@ -431,6 +431,16 @@
             ".workspace/evidence/point-visibility-20261020/verification.json"
           ],
           "remaining": "Preserve XYZ workflow using verified native setup adaptation; include modes, case ordering and source isolation. Broad W12 closure remains unproven."
+        },
+        {
+          "date": "2026-10-20",
+          "change": "Added explicit undoable observation-point Blank creation from saved XYZ coordinates, native visibility execution and actionable rejection of the original raw XYZ crash path.",
+          "evidence": [
+            "tests/test_geometry_cases.py",
+            "MODELING_AUDIT.md",
+            ".workspace/evidence/observation-point-recovery-20261020/packaged-verification.json"
+          ],
+          "scope": "Four native result comparisons, exact point, source isolation, Undo/Redo and existing geometry locks; packaged run. Raw engine defect is not repaired. Broader modes, ALL-case ordering, browser interaction and W12 closure remain unproven."
         }
       ]
     },
