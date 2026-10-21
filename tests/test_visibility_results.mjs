@@ -4,6 +4,7 @@ const E=x=>String(x).replaceAll('<','&lt;');
 const entry=(name,values,index=0)=>({name,values,index});
 const discrete={name:'Point_Visibility',entries:[entry('Center',[[12,4,3]]),entry('Dirs',[[1,0,0],[0,1,0]]),entry('Visible',[1,0]),entry('DistVisible',[-6.2,0]),entry('DistMiss',[4,2])]};
 let html=visibilityResults([discrete],E,String);
+assert.match(html,/role="region" aria-label="Visibility directions and distances" tabindex="0"/);
 assert.match(html,/Clear line of sight \(1\)/);assert.match(html,/Occluded \(0\)/);assert.match(html,/-6.2/);assert.match(html,/retain their native signs/);
 const bad={...discrete,entries:discrete.entries.map(e=>e.name==='Visible'?{...e,values:[1]}:e)};
 assert.match(visibilityResults([bad],E,String),/different lengths/);assert.doesNotMatch(visibilityResults([bad],E,String),/Clear line of sight/);
