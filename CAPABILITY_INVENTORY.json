@@ -519,7 +519,21 @@
       "workflow": "VSPAERO pressure, wakes and slices",
       "category": "Engineering",
       "closure": "Unproven",
-      "originalPlanRow": "| VSPAERO pressure, wakes and slices | Dated source selection, native previous-result reopening, guided multi-axis slices, per-case plots/tables and source/input reuse now have two native tests and three browser/direct-engine comparisons, including a saved three-case alpha sweep (`.workspace/evidence/saved-solutions-verification.md`). ADB pressure/wake fields, case selection and inspection; native thin/thick slicer comparison; saved-source slicer workflow; all80flight/10preparation inputs grouped with native options/limits/dependencies, active selection alignment and separate saved-study preparation guide; browser saved study604entries/4219samples match independent SDK; short rotor execution matches native outputs but does not prove convergence (`.workspace/evidence/vspaero-guidance-verification.md`) | Unsteady/mixed/thick multi-case coverage; convergence review; full browser coverage |"
+      "originalPlanRow": "| VSPAERO pressure, wakes and slices | Dated source selection, native previous-result reopening, guided multi-axis slices, per-case plots/tables and source/input reuse now have two native tests and three browser/direct-engine comparisons, including a saved three-case alpha sweep (`.workspace/evidence/saved-solutions-verification.md`). ADB pressure/wake fields, case selection and inspection; native thin/thick slicer comparison; saved-source slicer workflow; all80flight/10preparation inputs grouped with native options/limits/dependencies, active selection alignment and separate saved-study preparation guide; browser saved study604entries/4219samples match independent SDK; short rotor execution matches native outputs but does not prove convergence (`.workspace/evidence/vspaero-guidance-verification.md`) | Unsteady/mixed/thick multi-case coverage; convergence review; full browser coverage |",
+      "followups": [
+        {
+          "date": "2026-10-21",
+          "change": "Verified full aerodynamic saved-input reuse in the browser, original-engine numeric/pressure equality and slicing from the reused solution. Rechecked the original mixed mirrored rotor/actuator-disk solver case in source and package.",
+          "evidence": [
+            ".workspace/evidence/aero-run-reuse-20261021/browser-verification.json",
+            ".workspace/evidence/aero-run-reuse-20261021/slice-verification.json",
+            ".workspace/evidence/aero-run-reuse-20261021/mixed-native.log",
+            ".workspace/evidence/aero-run-reuse-20261021/mixed-packaged.log",
+            ".workspace/evidence/aero-run-reuse-20261021/solved-pressure.png"
+          ],
+          "scope": "One steady thin-wing condition with three wake iterations and three Y pressure slices; 246 numeric fields plus decoded pressure geometry/values exactly match independent original API results for both browser solves; 34 slice fields exactly match original slicer. Separate mixed-rotor source/package equality test passes. These controlled regression cases do not establish convergence, broader geometry/time cases or broad closure."
+        }
+      ]
     },
     {
       "id": "W14",
@@ -831,6 +845,18 @@
             ".workspace/evidence/run-set-reuse-20261021/legacy-replacement.png"
           ],
           "scope": "Six source tests, six packaged tests and 16 JS modules passed. Browser original/reused wing runs match 28 stable native result fields each; setup-only aerodynamic reuse reproduces native .vspaero/.vspgeom bytes exactly. Legacy replacement prompt prevents submission. Full aerodynamic solves, other analysis-family reuse, narrow UI and broad closure remain unproven."
+        },
+        {
+          "date": "2026-10-21",
+          "change": "Verified full aerodynamic saved-input reuse in the browser, original-engine numeric/pressure equality and slicing from the reused solution. Rechecked the original mixed mirrored rotor/actuator-disk solver case in source and package.",
+          "evidence": [
+            ".workspace/evidence/aero-run-reuse-20261021/browser-verification.json",
+            ".workspace/evidence/aero-run-reuse-20261021/slice-verification.json",
+            ".workspace/evidence/aero-run-reuse-20261021/mixed-native.log",
+            ".workspace/evidence/aero-run-reuse-20261021/mixed-packaged.log",
+            ".workspace/evidence/aero-run-reuse-20261021/solved-pressure.png"
+          ],
+          "scope": "One steady thin-wing condition with three wake iterations and three Y pressure slices; 246 numeric fields plus decoded pressure geometry/values exactly match independent original API results for both browser solves; 34 slice fields exactly match original slicer. Separate mixed-rotor source/package equality test passes. These controlled regression cases do not establish convergence, broader geometry/time cases or broad closure."
         }
       ]
     },
