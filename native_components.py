@@ -1,4 +1,5 @@
 """Component groups and native geometry-set slots; no geometry arithmetic."""
+import native_managers
 import math
 
 # Native integer selectors in the model-global settings and Mode containers.
@@ -18,9 +19,8 @@ def count_parameter(v):
 
 
 def references(v):
-    from native_advanced import GLOBAL_NAMES
     selectors={}
-    for c in dict.fromkeys([*[c for c in v.FindContainers() if v.GetContainerName(c) in GLOBAL_NAMES],*v.GetAllModes()]):
+    for c in dict.fromkeys([*native_managers.ids(v),*v.GetAllModes()]):
         for p in v.FindContainerParmIDs(c):
             if v.GetParmType(p)==v.PARM_INT_TYPE and v.GetParmName(p) in SET_SELECTORS:
                 selectors[p]=dict(key='parameter:'+p,id=p,value=int(v.GetParmVal(p)),

@@ -1,4 +1,5 @@
 """Capture original native wave slicing-plane triangles and boundary loops."""
+import native_managers
 import ctypes,json,math
 from pathlib import Path
 import native_preview
@@ -13,7 +14,7 @@ def objects(v):
 
 def capture(v,data):
     result=next(r for r in data['results'] if r['id']==data['resultID']);fields={e['name']:e['values'] for e in result['entries'] if e.get('index',0)==0};angles=fields['Theta'];mach=fields['Mach'][0]
-    cid=v.FindContainer('WaveDragSettings',0);ids={n:v.FindParm(cid,n,'WaveDrag') for n in ('MachNumber','ThetaIndex','SlicingLoc')};saved={n:v.GetParmVal(pid) for n,pid in ids.items()};planes=[]
+    cid=native_managers.manager(v,'WaveDragSettings');ids={n:v.FindParm(cid,n,'WaveDrag') for n in ('MachNumber','ThetaIndex','SlicingLoc')};saved={n:v.GetParmVal(pid) for n,pid in ids.items()};planes=[]
     try:
         # Registered analysis Mach can differ from the saved manager default.
         # Set the original drawing manager to the native result's Mach before

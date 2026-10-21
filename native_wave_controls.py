@@ -1,10 +1,11 @@
 """Original saved wave-drag references and propulsive-face selections."""
+import native_managers
 import ctypes,json,os,xml.etree.ElementTree as ET
 import native_references
 LABELS={'UseMode':'Geometry selection','SelSetIndex':'Geometry set','RefFlag':'Reference area source','Sref':'Reference area (square model units)','MachNumber':'Supersonic Mach number','NumSlices':'Axial slices','NumRotSects':'Cone sections','SymmFlag':'Native slicing symmetry','PlaneFlag':'Show native slicing plane','ThetaIndex':'Native cone section for display','SlicingLoc':'Native plane position','SelBodyIndex':'Native comparison body','AreaPlotType':'Native area plot type','PointPlotFlag':'Show native plot points'}
 
 
-def ids(v):return {v.GetParmName(p):p for p in v.FindContainerParmIDs(v.FindContainer('WaveDragSettings',0))}
+def ids(v):return {v.GetParmName(p):p for p in v.FindContainerParmIDs(native_managers.manager(v,'WaveDragSettings'))}
 
 
 def refresh(v):
@@ -14,11 +15,11 @@ def refresh(v):
     if data.get('error'):raise ValueError(data['error'])
 
 
-def refs(v):return native_references.references(v).get(v.FindContainer('WaveDragSettings',0),{})
+def refs(v):return native_references.references(v).get(native_managers.manager(v,'WaveDragSettings'),{})
 
 
 def reason(v,pid):
-    if v.GetParmGroupName(pid)!='WaveDrag' or v.GetParmContainer(pid)!=v.FindContainer('WaveDragSettings',0):return ''
+    if v.GetParmGroupName(pid)!='WaveDrag' or v.GetParmContainer(pid)!=native_managers.manager(v,'WaveDragSettings'):return ''
     n=v.GetParmName(pid);p=ids(v)
     if n=='SelSetIndex' and v.GetParmVal(p['UseMode']):return 'The saved mode supplies wave-drag geometry selection.'
     if n=='Sref' and v.GetParmVal(p['RefFlag'])==v.COMPONENT_REF:return 'Calculated by the original wave-drag manager from its saved reference wing.'
@@ -26,7 +27,7 @@ def reason(v,pid):
 
 
 def annotate(v,p):
-    if p['rawGroup']!='WaveDrag' or v.GetParmContainer(p['id'])!=v.FindContainer('WaveDragSettings',0):return
+    if p['rawGroup']!='WaveDrag' or v.GetParmContainer(p['id'])!=native_managers.manager(v,'WaveDragSettings'):return
     if p['name'] in LABELS:p['label']=LABELS[p['name']]
     if p['name']=='RefFlag':p['choices']=[dict(value=v.MANUAL_REF,label='Entered reference area'),dict(value=v.COMPONENT_REF,label='Native wing area')]
     elif p['name']=='UseMode':p['choices']=[dict(value=0,label='Geometry set'),dict(value=1,label='Native mode')]
@@ -36,7 +37,7 @@ def annotate(v,p):
 
 
 def validate_parameter(v,pid,value=None):
-    if v.GetParmGroupName(pid)!='WaveDrag' or v.GetParmContainer(pid)!=v.FindContainer('WaveDragSettings',0):return
+    if v.GetParmGroupName(pid)!='WaveDrag' or v.GetParmContainer(pid)!=native_managers.manager(v,'WaveDragSettings'):return
     refresh(v);why=reason(v,pid)
     if why:raise ValueError(why)
     n=v.GetParmName(pid)
@@ -46,13 +47,13 @@ def validate_parameter(v,pid,value=None):
 
 
 def configuration(v,references):
-    cid=v.FindContainer('WaveDragSettings',0);p=ids(v)
+    cid=native_managers.manager(v,'WaveDragSettings');p=ids(v)
     return dict(reference=references.get(cid,{}),sections=[dict(title='Geometry and reference area',parameters=[p[n] for n in ['UseMode','SelSetIndex','RefFlag','Sref']]),dict(title='Supersonic slicing',parameters=[p[n] for n in ['MachNumber','NumSlices','NumRotSects','SymmFlag']]),dict(title='Saved plane inspector',parameters=[p[n] for n in ['PlaneFlag','ThetaIndex','SlicingLoc']])],wings=[dict(id=g,name=v.GetGeomName(g)) for g in v.FindGeoms() if v.GetGeomTypeName(g).upper()=='WING'],modes=[dict(id=m,name=v.GetModeName(m)) for m in v.GetAllModes()],faces=[dict(id=s,name=v.GetGeomName(g)+' · '+v.GetSubSurfName(s)) for g in v.FindGeoms() for s in v.GetSubSurfIDVec(g)])
 
 
 def mutate(v,r):
     from native_tools import one
-    p=ids(v);cid=v.FindContainer('WaveDragSettings',0);op=r['operation']
+    p=ids(v);cid=native_managers.manager(v,'WaveDragSettings');op=r['operation']
     if op=='wave-flow-faces':
         selected=r.get('faces');valid=[s for g in v.FindGeoms() for s in v.GetSubSurfIDVec(g)]
         if not isinstance(selected,list) or len(set(selected))!=len(selected) or any(s not in valid for s in selected):raise ValueError('Choose unique existing propulsive-face regions.')
@@ -93,5 +94,5 @@ def study_metadata(v):
 
 
 def study_priority(v,pid):
-    if v.GetParmGroupName(pid)!='WaveDrag' or v.GetParmContainer(pid)!=v.FindContainer('WaveDragSettings',0):return None
+    if v.GetParmGroupName(pid)!='WaveDrag' or v.GetParmContainer(pid)!=native_managers.manager(v,'WaveDragSettings'):return None
     return -10 if v.GetParmName(pid) in ('RefFlag','UseMode') else 40

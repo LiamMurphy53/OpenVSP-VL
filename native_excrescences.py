@@ -1,4 +1,5 @@
 """Saved native parasite-drag allowance records and original SDK operations."""
+import native_managers
 import os
 from native_tools import finite,name,one
 import native_references
@@ -22,7 +23,7 @@ def read(v):
 
 
 def value(v,x):
-    x=finite(x);pid=v.FindParm(v.FindContainer('ParasiteDragSettings',0),'ExcresVal','ParasiteDrag')
+    x=finite(x);pid=v.FindParm(native_managers.manager(v,'ParasiteDragSettings'),'ExcresVal','ParasiteDrag')
     low,high=v.GetParmLowerLimit(pid),v.GetParmUpperLimit(pid)
     if not low<=x<=high:raise ValueError(f'Allowance value must be within the current native limits {low}–{high}.')
     return x

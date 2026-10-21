@@ -1,11 +1,12 @@
 """Saved parasite-drag controls; the original manager owns atmosphere and units."""
+import native_managers
 import ctypes,json
 LABELS={'FreestreamType':'Atmosphere / supplied properties','RefFlag':'Reference area source','Sref':'Reference area','LengthUnit':'Native model length units','AltLengthUnit':'Altitude / density units','TempUnit':'Temperature units','PresUnit':'Pressure units','VinfUnitType':'Airspeed units','Vinf':'Airspeed','Alt':'Altitude','DeltaTemp':'Temperature offset','Temp':'Temperature','Pres':'Pressure','Density':'Density','DynaVisc':'Dynamic viscosity','Mach':'Mach number','Re_L':'Reynolds number per model length','SpecificHeatRatio':'Specific heat ratio','LamCfEqnType':'Laminar friction method','TurbCfEqnType':'Turbulent friction method','Set':'Geometry set','UseModeMassFlag':'Geometry selection','ExportSubCompFlag':'Component detail in export','SortBy':'Native report sorting'}
 UNIT_METHODS={'VinfUnitType':0,'AltLengthUnit':1,'TempUnit':2,'PresUnit':3}
 FLOW={'Vinf','Alt','DeltaTemp','Temp','Pres','Density','DynaVisc','Mach','Re_L','SpecificHeatRatio','Sref'}
 
 
-def ids(v):return {v.GetParmName(p):p for p in v.FindContainerParmIDs(v.FindContainer('ParasiteDragSettings',0)) if v.GetParmGroupName(p)=='ParasiteDrag'}
+def ids(v):return {v.GetParmName(p):p for p in v.FindContainerParmIDs(native_managers.manager(v,'ParasiteDragSettings')) if v.GetParmGroupName(p)=='ParasiteDrag'}
 
 
 PRESSURE_ATTRIBUTE='Studio.ParasitePressureUnit'
@@ -57,7 +58,7 @@ def options(v,name):
 
 
 def reason(v,pid):
-    if v.GetParmGroupName(pid)!='ParasiteDrag' or v.GetParmContainer(pid)!=v.FindContainer('ParasiteDragSettings',0):return ''
+    if v.GetParmGroupName(pid)!='ParasiteDrag' or v.GetParmContainer(pid)!=native_managers.manager(v,'ParasiteDragSettings'):return ''
     n=v.GetParmName(pid)
     if n in ('ExcresVal','ExcresType'):return 'Edit the named saved allowance using the drag-allowance editor.'
     if n=='Set' and v.GetParmVal(ids(v)['UseModeMassFlag']):return 'The saved native mode supplies geometry selection.'
@@ -68,7 +69,7 @@ def reason(v,pid):
 
 
 def annotate(v,p):
-    if p['rawGroup']!='ParasiteDrag' or v.GetParmContainer(p['id'])!=v.FindContainer('ParasiteDragSettings',0):return
+    if p['rawGroup']!='ParasiteDrag' or v.GetParmContainer(p['id'])!=native_managers.manager(v,'ParasiteDragSettings'):return
     if p['name'] in LABELS:p['label']=LABELS[p['name']]
     choices=options(v,p['name'])
     if choices:p['choices']=[c for c in choices if p['min']<=c['value']<=p['max']]
@@ -77,27 +78,27 @@ def annotate(v,p):
 
 
 def validate_parameter(v,pid,value=None):
-    if v.GetParmGroupName(pid)!='ParasiteDrag' or v.GetParmContainer(pid)!=v.FindContainer('ParasiteDragSettings',0):return
+    if v.GetParmGroupName(pid)!='ParasiteDrag' or v.GetParmContainer(pid)!=native_managers.manager(v,'ParasiteDragSettings'):return
     refresh(v);why=reason(v,pid)
     if why:raise ValueError(why)
     n=v.GetParmName(pid)
     if n in ('RefFlag','UseModeMassFlag') and value==1:
         import native_references
-        refs=native_references.references(v).get(v.FindContainer('ParasiteDragSettings',0),{})
+        refs=native_references.references(v).get(native_managers.manager(v,'ParasiteDragSettings'),{})
         key='ReferenceGeomID' if n=='RefFlag' else 'ModeID'
         available=[g for g in v.FindGeoms() if v.GetGeomTypeName(g).upper()=='WING'] if n=='RefFlag' else list(v.GetAllModes())
         if refs.get(key) not in available:raise ValueError('Save an existing reference wing or mode before enabling its parasite-drag selection.')
 
 
 def set_parameter(v,pid,value):
-    if v.GetParmGroupName(pid)!='ParasiteDrag' or v.GetParmContainer(pid)!=v.FindContainer('ParasiteDragSettings',0) or v.GetParmName(pid) not in UNIT_METHODS:return False
+    if v.GetParmGroupName(pid)!='ParasiteDrag' or v.GetParmContainer(pid)!=native_managers.manager(v,'ParasiteDragSettings') or v.GetParmName(pid) not in UNIT_METHODS:return False
     if isinstance(value,bool) or int(value)!=value:raise ValueError('Choose a native unit.')
     refresh(v);native_unit(v,UNIT_METHODS[v.GetParmName(pid)],value)
     refresh(v);return True
 
 
 def configuration(v,refs):
-    cid=v.FindContainer('ParasiteDragSettings',0);fields=ids(v)
+    cid=native_managers.manager(v,'ParasiteDragSettings');fields=ids(v)
     sections=[dict(title=title,parameters=[fields[n] for n in names if n in fields]) for title,names in [
         ('Geometry and reference area',['UseModeMassFlag','Set','RefFlag','Sref','LengthUnit']),
         ('Flight condition',['FreestreamType','Alt','DeltaTemp','Vinf','Mach','Re_L','SpecificHeatRatio']),
@@ -109,7 +110,7 @@ def configuration(v,refs):
 def mutate(v,r):
     from native_tools import one
     import native_references
-    cid=v.FindContainer('ParasiteDragSettings',0)
+    cid=native_managers.manager(v,'ParasiteDragSettings')
     if r['operation']=='parasite-pressure-unit':
         value=one(r.get('unit'),[c['value'] for c in options(v,'PresUnit')]);refresh(v);native_unit(v,3,value);v._studio_parasite_pressure_unit=value
         attr=pressure_attribute(v)
@@ -137,14 +138,14 @@ def study_metadata(v):
 
 
 def study_priority(v,pid):
-    if v.GetParmGroupName(pid)!='ParasiteDrag' or v.GetParmContainer(pid)!=v.FindContainer('ParasiteDragSettings',0):return None
+    if v.GetParmGroupName(pid)!='ParasiteDrag' or v.GetParmContainer(pid)!=native_managers.manager(v,'ParasiteDragSettings'):return None
     return -20 if v.GetParmName(pid) in UNIT_METHODS or v.GetParmName(pid)=='LengthUnit' else -10 if v.GetParmName(pid) in ('FreestreamType','RefFlag','UseModeMassFlag','TurbCfEqnType') else 40
 
 
 def guard_geometry_delete(v,gid):
     if v.GetParmVal(ids(v)['RefFlag'])!=v.COMPONENT_REF:return
     import native_references
-    ref=native_references.references(v).get(v.FindContainer('ParasiteDragSettings',0),{}).get('ReferenceGeomID')
+    ref=native_references.references(v).get(native_managers.manager(v,'ParasiteDragSettings'),{}).get('ReferenceGeomID')
     removed={gid};pending=[gid]
     while pending:
         for child in v.GetGeomChildren(pending.pop()):
@@ -155,5 +156,5 @@ def guard_geometry_delete(v,gid):
 def guard_mode_delete(v,mode):
     if not v.GetParmVal(ids(v)['UseModeMassFlag']):return
     import native_references
-    ref=native_references.references(v).get(v.FindContainer('ParasiteDragSettings',0),{}).get('ModeID')
+    ref=native_references.references(v).get(native_managers.manager(v,'ParasiteDragSettings'),{}).get('ModeID')
     if ref==mode:raise ValueError('This mode supplies saved parasite-drag geometry selection. Choose another mode or geometry sets before removing it.')

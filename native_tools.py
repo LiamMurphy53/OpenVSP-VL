@@ -1,4 +1,5 @@
 """Native modeling workflows. Every edit below delegates to the OpenVSP API."""
+import native_managers
 import math
 from pathlib import Path
 import native_advanced
@@ -102,7 +103,7 @@ def snapshot(v, parameter):
         **native_geometry_cases.snapshot(v,parameter,refs),
         controls=controls,controlGroups=[dict(id=v.FindControlSurfaceGroup(i),index=i,name=v.GetVSPAEROControlGroupName(i),members=list(v.GetActiveCSNameVec(i)),available=list(v.GetAvailableCSNameVec(i)),params=parms(v.FindControlSurfaceGroup(i))) for i in range(v.GetNumControlSurfaceGroups())],
         links=links,userParameters=[parameter(v,p) for p in v.GetAllUserParms()],presets=presets,
-        sources=sources,cfdDomain=native_cfd.configuration(v,refs,parameter),cfdDensity=parms(v.FindContainer('CFDGridDensity',0)),meshSettings=[dict(name=n,value=v.GetCFDMeshVal(getattr(v,n))) for n in MESH_SETTINGS if hasattr(v,n)],
+        sources=sources,cfdDomain=native_cfd.configuration(v,refs,parameter),cfdDensity=parms(native_managers.manager(v,'CFDGridDensity')),meshSettings=[dict(name=n,value=v.GetCFDMeshVal(getattr(v,n))) for n in MESH_SETTINGS if hasattr(v,n)],
         structures=structures,materials=[dict(id=i,index=n,name=v.GetContainerName(i),params=parms(i),libraryUsers=library_usage.get(i,[]),builtIn=i.startswith('_')) for n,i in enumerate(v.GetFeaMaterialIDVec())],
         properties=[dict(id=i,index=n,name=v.GetContainerName(i),params=parms(i),references=refs.get(i,{}),libraryUsers=library_usage.get(i,[])) for n,i in enumerate(v.GetFeaPropertyIDVec())],
         exports=list(native_files.EXPORTS),legacyExports=native_files.LEGACY_EXPORTS,importFormats=list(native_files.IMPORTS),exportGuides=native_export_controls.configuration(v),

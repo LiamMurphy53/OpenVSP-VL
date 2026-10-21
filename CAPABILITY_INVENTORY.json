@@ -49,6 +49,19 @@
             "MODELING_AUDIT.md"
           ],
           "remaining": "Earlier raw saved-conversion discrepancy is historical for covered canonical metadata fixtures. Legacy unarchived meshes, other generators and broader closure remain unproved."
+        },
+        {
+          "date": "2026-10-21",
+          "change": "Resolved original engineering managers by verified native fields while excluding component/user owners. All manager lookups and global-settings/reference discovery now tolerate components or modes sharing manager display names, without renaming aircraft geometry.",
+          "evidence": [
+            "native_managers.py",
+            "tests/test_manager_names.py",
+            ".workspace/evidence/manager-name-collisions-20261021/before-failure.json",
+            ".workspace/evidence/manager-name-collisions-20261021/native.log",
+            ".workspace/evidence/manager-name-collisions-20261021/packaged.log",
+            ".workspace/evidence/manager-name-collisions-20261021/browser-verification.json"
+          ],
+          "scope": "Seven colliding component/mode names, native load/edit/cold behavior, source/package owner/CAD checks and browser CAD edit/byte-exact Undo/Redo/reopen verified. Four engineering regressions preserve exact original outputs. Manager identities match original serialized records and 200 native geometry samples are unchanged. Broader naming, large-model and portable coverage remains unproven."
         }
       ]
     },
@@ -399,6 +412,19 @@
             ".workspace/evidence/global-setting-ownership-packaged.log"
           ],
           "scope": "Eight user-name collisions preserve all global values/geometry; imported custom Box uses the colliding name with exact original geometry and unchanged global units; selected real controls/wave arrays/bindings pass. Broad closure remains unproved."
+        },
+        {
+          "date": "2026-10-21",
+          "change": "Resolved original engineering managers by verified native fields while excluding component/user owners. All manager lookups and global-settings/reference discovery now tolerate components or modes sharing manager display names, without renaming aircraft geometry.",
+          "evidence": [
+            "native_managers.py",
+            "tests/test_manager_names.py",
+            ".workspace/evidence/manager-name-collisions-20261021/before-failure.json",
+            ".workspace/evidence/manager-name-collisions-20261021/native.log",
+            ".workspace/evidence/manager-name-collisions-20261021/packaged.log",
+            ".workspace/evidence/manager-name-collisions-20261021/browser-verification.json"
+          ],
+          "scope": "Seven colliding component/mode names, native load/edit/cold behavior, source/package owner/CAD checks and browser CAD edit/byte-exact Undo/Redo/reopen verified. Four engineering regressions preserve exact original outputs. Manager identities match original serialized records and 200 native geometry samples are unchanged. Broader naming, large-model and portable coverage remains unproven."
         }
       ]
     },

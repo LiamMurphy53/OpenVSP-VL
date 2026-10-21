@@ -1,4 +1,5 @@
 """Additional native engineering workflows and model-global settings."""
+import native_managers
 import native_references
 import native_regions
 import native_region_curves
@@ -7,7 +8,7 @@ import native_intersection_defaults
 import re
 import native_prop_drivers
 
-GLOBAL_NAMES={'Vehicle','CFDMeshSettings','SurfaceIntersectSettings','CFDGridDensity','VSPAEROSettings','WaveDragSettings','ParasiteDragSettings'}
+GLOBAL_NAMES=native_managers.NAMES
 PROP_CURVES=['PROP_CHORD','PROP_TWIST','PROP_THICK','PROP_CLI','PROP_RAKE','PROP_SKEW','PROP_SWEEP','PROP_AXIAL','PROP_TANGENTIAL']
 SUBSURF_TYPES=['SS_LINE','SS_RECTANGLE','SS_ELLIPSE','SS_CONTROL','SS_LINE_ARRAY','SS_FINITE_LINE','SS_XSEC_CURVE','SS_INTERSECT']
 PART_TYPES=['FEA_RIB','FEA_SPAR','FEA_SLICE','FEA_FIX_POINT','FEA_DOME','FEA_RIB_ARRAY','FEA_SLICE_ARRAY','FEA_TRIM','FEA_POLY_SPAR']
@@ -21,7 +22,7 @@ def laminate_materials(v):
 
 
 def container_ids(v):
-    ids=[c for c in v.FindContainers() if v.GetContainerName(c) in GLOBAL_NAMES]
+    ids=native_managers.ids(v)
     ids.extend(v.FindActuatorDisk(i) for i in range(v.GetNumActuatorDisks()))
     ids.extend(v.FindUnsteadyGroup(i) for i in range(v.GetNumUnsteadyGroups()))
     for s in v.GetFeaStructIDVec():
@@ -59,7 +60,7 @@ def snapshot(v,parameter,refs=None):
         rotorSpeedBackup=native_rotor_speeds.configuration(v),
         rotorDiskBackup=native_rotor_disks.configuration(v),
         propellers=propellers,propModes=enums(v,['PROP_BLADES','PROP_BOTH','PROP_DISK']),
-        globalSettings=[dict(id=c,name=v.GetContainerName(c),params=parms(c),waveGuide=native_wave_controls.configuration(v,refs) if v.GetContainerName(c)=='WaveDragSettings' else None,parasiteGuide=native_parasite_controls.configuration(v,refs) if v.GetContainerName(c)=='ParasiteDragSettings' else None,selection=native_intersection_selection.configuration(v,parameter) if v.GetContainerName(c)=='SurfaceIntersectSettings' else None,exportDefaults=native_intersection_defaults.configuration(v,parameter) if v.GetContainerName(c)=='SurfaceIntersectSettings' else None) for c in v.FindContainers() if v.GetContainerName(c) in GLOBAL_NAMES],
+        globalSettings=[dict(id=c,name=v.GetContainerName(c),params=parms(c),waveGuide=native_wave_controls.configuration(v,refs) if v.GetContainerName(c)=='WaveDragSettings' else None,parasiteGuide=native_parasite_controls.configuration(v,refs) if v.GetContainerName(c)=='ParasiteDragSettings' else None,selection=native_intersection_selection.configuration(v,parameter) if v.GetContainerName(c)=='SurfaceIntersectSettings' else None,exportDefaults=native_intersection_defaults.configuration(v,parameter) if v.GetContainerName(c)=='SurfaceIntersectSettings' else None) for c in native_managers.ids(v)],
         propDriverCombinations=native_prop_drivers.native_preview.prop_driver_combinations(v) if v.GetNumActuatorDisks() else [],
         disks=[dict(id=v.FindActuatorDisk(i),index=i,name=v.GetContainerName(v.FindActuatorDisk(i)),**native_prop_drivers.configuration(v,v.FindActuatorDisk(i),refs,parameter)) for i in range(v.GetNumActuatorDisks())],
         rotatingGroups=[dict(id=v.FindUnsteadyGroup(i),index=i,name=v.GetUnsteadyGroupName(i),components=list(v.GetUnsteadyGroupCompIDs(i)),surfaces=list(v.GetUnsteadyGroupSurfIndexes(i)),params=parms(v.FindUnsteadyGroup(i))) for i in range(v.GetNumUnsteadyGroups())],

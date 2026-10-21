@@ -1,4 +1,5 @@
 """Original native saved-database interrogation, preserving solved flight setup."""
+import native_managers
 import math,re
 from pathlib import Path
 
@@ -7,7 +8,7 @@ NAME='FlowPlaneSlicer'
 
 def schema(v):
     fields=[dict(name=a+'SlicePosVec',index=0,type=v.DOUBLE_DATA,values=[2.] if a=='Y' else [],editable=True,numericList=True,label=a+' plane positions',description='Comma-separated coordinates in the saved solution’s native model units.') for a in 'XYZ']
-    cid=v.FindContainer('VSPAEROSettings',0);pid=v.FindParm(cid,'QuadTreeBufferLevels','VSPAERO')
+    cid=native_managers.manager(v,'VSPAEROSettings');pid=v.FindParm(cid,'QuadTreeBufferLevels','VSPAERO')
     fields.append(dict(name='QuadTreeBufferLevels',index=0,type=v.INT_DATA,values=[0],editable=True,label='Flow-plane buffer levels',min=v.GetParmLowerLimit(pid),max=v.GetParmUpperLimit(pid),description=v.GetParmDescript(pid)))
     note='Compute new airflow planes from a completed saved native pressure database. The original solver interrogates the saved solution; it does not solve new flight conditions. Positions use that solution’s native coordinate units.'
     return dict(name=NAME,label='Airflow planes from a saved solution',description=note,inputs=fields,engineOperation='VSPAERO::RestartAndInterrogateSolution (saved-reader repair)',guide=dict(title='Airflow planes from a saved solution',note=note,sensitivityNote='Compare buffer levels and plane positions. The underlying aerodynamic solution and its convergence remain those of the selected source run.',sections=[dict(title='Native cutting planes',inputs=[e['name'] for e in fields])]))

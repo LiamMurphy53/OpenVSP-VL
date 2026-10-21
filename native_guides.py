@@ -1,4 +1,5 @@
 """Human-readable setup for official analyses; all calculations remain native."""
+import native_managers
 import json
 import math
 import shutil
@@ -145,7 +146,7 @@ def annotate(v,name,inputs):
     guide=dict(title=title,note=note,sections=[dict(title=t,inputs=keys) for t,keys in sections])
     if name=='CompGeom':guide['sensitivityNote']='Compare native geometry tessellation and review merged, removed and degenerate mesh diagnostics. The saved mesh is the native trimmed component mesh, not a CFD-quality mesh. For degenerate geometry, use a native mode; this release ignores the separate degenerate-set input.'
     if name=='WaveDrag':
-        cid=v.FindContainer('WaveDragSettings',0);pid=v.FindParm(cid,'Sref','WaveDrag');ref=v.FindParm(cid,'RefFlag','WaveDrag')
+        cid=native_managers.manager(v,'WaveDragSettings');pid=v.FindParm(cid,'Sref','WaveDrag');ref=v.FindParm(cid,'RefFlag','WaveDrag')
         guide['reference']=dict(parameter=pid,value=v.GetParmVal(pid),source=int(v.GetParmVal(ref)),min=v.GetParmLowerLimit(pid),max=v.GetParmUpperLimit(pid),wings=[dict(id=g,name=v.GetGeomName(g),area=v.GetParmVal(v.FindParm(g,'TotalArea','WingGeom'))) for g in v.FindGeoms() if v.GetGeomTypeName(g).upper()=='WING'])
     if name=='MassProp':
         guide['massComponents']=[dict(id=g,name=v.GetGeomName(g),settings=[dict(id=p,name=v.GetParmName(p),value=v.GetParmVal(p)) for p in v.GetGeomParmIDs(g) if v.GetParmGroupName(p)=='Mass_Props']) for g in v.FindGeoms()]
@@ -242,7 +243,7 @@ def validate(v,name,schema):
 def set_reference(v,r):
     from native_tools import finite,one
     if r['analysis']!='WaveDrag':raise ValueError('Choose the native wave-drag reference settings.')
-    c=v.FindContainer('WaveDragSettings',0);p=v.FindParm(c,'Sref','WaveDrag')
+    c=native_managers.manager(v,'WaveDragSettings');p=v.FindParm(c,'Sref','WaveDrag')
     if r.get('wing'):
         g=one(r['wing'],[g for g in v.FindGeoms() if v.GetGeomTypeName(g).upper()=='WING'])
         area=v.GetParmVal(v.FindParm(g,'TotalArea','WingGeom'))
@@ -334,7 +335,7 @@ def save_preview(v,data,name):
             source=candidates[0];shutil.copy2(source,requested)
         data['csvFile']=requested.name;data['nativeCSVSource']=source.name
     if name=='WaveDrag':
-        c=v.FindContainer('WaveDragSettings',0)
+        c=native_managers.manager(v,'WaveDragSettings')
         data['guideSettings']={n:v.GetParmVal(v.FindParm(c,n,'WaveDrag')) for n in ('Sref','RefFlag')}
         import native_wave_references
         native_wave_references.save(v,data)

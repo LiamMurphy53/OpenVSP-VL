@@ -1,4 +1,5 @@
 """Guided native surface-intersection inputs; no geometry or CAD calculations."""
+import native_managers
 from pathlib import Path
 
 EXPORTS={'SRF':'Surface data','CURV':'Intersection curves','P3D':'Plot3D surfaces','IGES':'IGES CAD','STEP':'STEP CAD'}
@@ -9,7 +10,7 @@ PERSISTENT_FIELDS=['DemoteSurfsCubicFlag','CubicSurfTolerance','HalfMesh','STEPM
 
 def mutate_settings(v,request):
     from native_tools import finite,one
-    cid=v.FindContainer('SurfaceIntersectSettings',0)
+    cid=native_managers.manager(v,'SurfaceIntersectSettings')
     params={v.GetParmName(p):p for p in v.FindContainerParmIDs(cid)}
     values=request.get('values')
     if not isinstance(values,dict) or not values:raise ValueError('Choose intersection settings to save.')
@@ -44,7 +45,7 @@ def annotate(v,inputs):
                 CADLenUnit=choices([('LEN_MM','mm'),('LEN_CM','cm'),('LEN_M','m'),('LEN_IN','in'),('LEN_FT','ft'),('LEN_YD','yd')]),
                 CADLabelDelim=choices([('DELIM_COMMA','Comma'),('DELIM_USCORE','Underscore'),('DELIM_SPACE','Space'),('DELIM_NONE','No separator')]),
                 ModeID=[dict(value='',label='Choose a mode…'),*[dict(value=m,label=v.GetModeName(m)) for m in v.GetAllModes()]])
-    cid=v.FindContainer('SurfaceIntersectSettings',0)
+    cid=native_managers.manager(v,'SurfaceIntersectSettings')
     parms={v.GetParmName(p):p for p in v.FindContainerParmIDs(cid)}
     for e in inputs:
         key=e['name'];e['label']=labels.get(key,key)

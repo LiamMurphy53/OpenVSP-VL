@@ -1,4 +1,5 @@
 """Guided VSPAERO input organization. Numerical operations stay in OpenVSP."""
+import native_managers
 SECTIONS=[
  ('Aircraft geometry',['UseModeFlag','ModeID','GeomSet','ThinGeomSet','Symmetry']),
  ('Reference dimensions',['RefFlag','WingID','Sref','bref','cref','ScurveFlag','MACFlag']),
@@ -45,7 +46,7 @@ SET_FIELDS={'GeomSet':'Thick geometry set','ThinGeomSet':'Thin geometry set',
 
 def saved_set_parameter(v,pid):
     return (v.GetParmGroupName(pid)=='VSPAERO' and v.GetParmName(pid) in SET_FIELDS
-            and v.GetParmContainer(pid)==v.FindContainer('VSPAEROSettings',0))
+            and v.GetParmContainer(pid)==native_managers.manager(v,'VSPAEROSettings'))
 
 
 def validate_saved_parameter(v,pid,value):
@@ -55,7 +56,7 @@ def validate_saved_parameter(v,pid,value):
 
 def annotate_parameter(v,p):
     if p['rawGroup']!='VSPAERO':return
-    if v.GetParmContainer(p['id'])!=v.FindContainer('VSPAEROSettings',0):return
+    if v.GetParmContainer(p['id'])!=native_managers.manager(v,'VSPAEROSettings'):return
     if p['name'] in SET_FIELDS:
         p['label']=SET_FIELDS[p['name']]
         p['choices']=[dict(value=-1,label='None')]+[dict(value=i,label=f'{v.GetSetName(i)} · {i}') for i in range(v.GetNumSets())]
@@ -72,7 +73,7 @@ def annotate_parameter(v,p):
 
 def annotate(v,inputs,geometry=False):
     import re
-    cid=v.FindContainer('VSPAEROSettings',0)
+    cid=native_managers.manager(v,'VSPAEROSettings')
     parms={v.GetParmName(p):p for p in v.FindContainerParmIDs(cid)}
     aliases={'NumWakeNodes':'RootWakeNodes','PropBladesMode':'m_PropBladesMode','FreezeWakeAtIteration':'m_FreezeWakeAtIteration','2DFEMFlag':'Write2DFEMFlag','TecplotFlag':'WriteTecplotFlag','CGGeomSet':'MassSet','CGDegenSet':'MassDegenSet','UseModeFlag':'UseMode','UseCGModeFlag':'CGUseMode','ScurveFlag':'SCurveFlag'}
     maps=enum_choices(v)

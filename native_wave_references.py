@@ -1,4 +1,5 @@
 """Original OpenVSP ideal-body curves, using each saved cone's native values."""
+import native_managers
 import ctypes,json,math
 from pathlib import Path
 import native_preview
@@ -20,7 +21,7 @@ def save(v,data):
     _,engine,bridge=native_preview.adapter(v)
     fn=bridge.studio_wave_plot_data
     fn.argtypes=[ctypes.c_char_p,ctypes.c_char_p,ctypes.c_char_p];fn.restype=ctypes.c_char_p
-    cid=v.FindContainer('WaveDragSettings',0)
+    cid=native_managers.manager(v,'WaveDragSettings')
     saved=json.loads(fn(engine,v.FindParm(cid,'MachNumber','WaveDrag').encode(),v.FindParm(cid,'NumSlices','WaveDrag').encode()))
     if 'error' in saved:raise ValueError(saved['error'])
     result=next(r for r in data['results'] if r['id']==data['resultID'])

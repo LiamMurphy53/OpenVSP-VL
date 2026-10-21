@@ -1,4 +1,5 @@
 """Saved native VSPAERO cutting planes; all geometry and slicing stay native."""
+import native_managers
 from native_tools import finite, name, one
 
 
@@ -16,7 +17,7 @@ def snapshot(v, parameter):
             elif p['name']=='CutPosition':p['label']='Position (native model units)'
             elif p['name']=='DrawCutFlag':p['label']='Show native cutting plane'
         planes.append(dict(id=cid,name=v.GetContainerName(cid),params=ps))
-    cid=v.FindContainer('VSPAEROSettings',0)
+    cid=native_managers.manager(v,'VSPAEROSettings')
     settings=[parameter(v,v.FindParm(cid,n,'VSPAERO')) for n in ['CpSliceFlag','QuadTreeBufferLevels']]
     settings[0]['label']='Calculate pressure slices with VSPAERO'
     settings[1]['label']='Flow-plane buffer levels'

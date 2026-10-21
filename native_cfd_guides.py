@@ -1,4 +1,5 @@
 """Readable setup and validation for original native CFD mesh analysis."""
+import native_managers
 from pathlib import Path
 import math
 NAME='CfdMeshAnalysis'
@@ -14,7 +15,7 @@ def filename(value):
 def parameters(v):
     result={}
     for container in ['CFDGridDensity','CFDMeshSettings']:
-        cid=v.FindContainer(container,0)
+        cid=native_managers.manager(v,container)
         for p in v.FindContainerParmIDs(cid):result[v.GetParmName(p)]=p
     return result
 

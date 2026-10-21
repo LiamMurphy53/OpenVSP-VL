@@ -1,11 +1,12 @@
 """Saved native intersection geometry selection and ModeID references."""
+import native_managers
 import native_references
 
 FIELDS=['UseMode','Set','DegenSet']
 
 
 def configuration(v,parameter=None):
-    cid=v.FindContainer('SurfaceIntersectSettings',0)
+    cid=native_managers.manager(v,'SurfaceIntersectSettings')
     if parameter is None:
         from native_worker import parameter
     ids={v.GetParmName(p):p for p in v.FindContainerParmIDs(cid)}
