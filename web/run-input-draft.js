@@ -1,4 +1,4 @@
-import {setInputNames} from './set-selection.js?v=20261021';
+import {setInputNames} from './set-selection.js?v=20261022-cg';
 // Reuse native recorded values. Set identities distinguish moved/deleted sets
 // from a new occupant of the same numeric slot.
 export function runInputDraft(spec,inputs,prefix,host,job){

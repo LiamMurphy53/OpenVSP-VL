@@ -47,3 +47,25 @@ class StudySets(unittest.TestCase):
         self.assertEqual(mapped[0]['geometryInputs'][0]['values'],[4]);self.assertEqual(mapped_axes[0]['values'],[[4,3],[-1,0]]);self.assertEqual(mapped_axes[1]['values'],[4,3]);self.assertEqual(stages[0]['geometryInputs'][0]['values'],[3])
         with self.assertRaisesRegex(ValueError,'removed or replaced'):rebind(old,[*old[:3],'replacement','wing'],stages,axes,{'selector'})
         with self.assertRaisesRegex(ValueError,'identity is unavailable'):rebind(None,new,stages,axes,{'selector'})
+
+    def test_cg_set_inputs_and_sweeps_follow_native_identity_on_current_baseline(self):
+        v=self.v;body=v.AddGeom('POD')
+        for i,geom in [(3,self.gid),(4,body)]:
+            v.SetSetName(i,'Same CG set')
+            for g in v.FindGeoms():v.SetSetFlag(g,i,g==geom)
+        v.Update();v.WriteVSPFile(str(self.model),v.SET_ALL)
+        for name in ('CGGeomSet','CGDegenSet'):
+            self.assertIn(name,v.GetAnalysisInputNames('VSPAEROSweep'));self.assertEqual(v.GetAnalysisInputType('VSPAEROSweep',name),v.INT_DATA)
+        stages=[dict(name='VSPAEROSweep',inputs=[dict(name='StopBeforeRun',values=[1]),dict(name='CGGeomSet',values=[3]),dict(name='CGDegenSet',values=[4])])]
+        axes=[dict(kind='input',stage=0,name='CGGeomSet',index=0,valueMode='element',values=[3,4])]
+        plan=self.save(axes,stages);folder=studies.study_folder(plan['id']);frozen=(folder/'aircraft.vsp3').read_bytes();definition=(folder/'definition.json').read_bytes()
+        order=[4,3,*range(5,v.GetNumSets())];service.mutation(dict(operation='set-reorder',order=order,revision=service.REVISION))
+        with self.assertRaisesRegex(ValueError,'Review the current aircraft'):self.save(axes,stages,id=plan['id'],definitionVersion=plan['version'],baseline='current')
+        review=studies.rebind_current_aircraft(dict(id=plan['id'],definitionVersion=plan['version'],revision=service.REVISION))
+        fields={e['name']:e['values'] for e in review['stages'][0]['inputs']}
+        self.assertEqual(fields['CGGeomSet'],[4]);self.assertEqual(fields['CGDegenSet'],[3]);self.assertEqual(review['axes'][0]['values'],[4,3])
+        self.assertEqual((folder/'aircraft.vsp3').read_bytes(),frozen);self.assertEqual((folder/'definition.json').read_bytes(),definition)
+        updated=self.save(review['axes'],review['stages'],id=plan['id'],definitionVersion=plan['version'],baseline='current',setIdentities=review['setIdentities'])
+        self.assertEqual(updated['axes'][0]['values'],[4,3])
+        self.assertEqual(updated['stages'][0]['inputs'],review['stages'][0]['inputs'])
+        service.restore_session();self.assertEqual(studies.definition(plan['id'])['setIdentities'],updated['setIdentities'])

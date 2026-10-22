@@ -1,6 +1,6 @@
 // User-set collection IDs move with native set contents. Never infer identity
 // from names or membership: both may be identical for different sets.
-export const setInputNames=new Set(['Set','GeomSet','ThinGeomSet','ThickGeomSet','DegenSet','SelectedSetIndex','SelectedDegenSetIndex','TargetSet','BoundarySet']);
+export const setInputNames=new Set(['Set','GeomSet','ThinGeomSet','ThickGeomSet','DegenSet','SelectedSetIndex','SelectedDegenSetIndex','TargetSet','BoundarySet','CGGeomSet','CGDegenSet']);
 export function resolveSetSelection(sets,value,identity){
  if(identity){const set=sets.find(s=>s.identity===identity);return {value:set?String(set.index):'',identity};}
  const set=sets.find(s=>String(s.index)===String(value));

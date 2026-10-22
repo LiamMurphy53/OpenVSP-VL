@@ -12,3 +12,10 @@ assert.equal(resolveSetSelection([{index:3,identity:'replacement'}],draft[0].val
 const legacy=runInputDraft(spec,inputs,'analysis',host,{id:'old'});assert.equal(resolveSetSelection([{index:3,identity:'replacement'}],legacy[0].value,legacy[0].setIdentity).value,'','Untracked runs require an explicit replacement');
 const geo=runInputDraft({inputs:[{name:'ThinGeomSet',type:1,index:0}]},[{name:'ThinGeomSet',values:[4]}],'geometry',{querySelector:()=>({dataset:{scalar:'true'}})},job);assert.equal(geo[0].setIdentity,'pod');
 console.log('Saved run values, geometry setup, set moves, replaced sets and untracked selection recovery passed.');
+for(const name of ['CGGeomSet','CGDegenSet']){
+ const cg=runInputDraft({inputs:[{name,type:1,index:0}]},[{name,values:[3]}],'analysis',{querySelector:()=>({dataset:{scalar:'true'}})},job)[0];
+ assert.equal(cg.setIdentity,'wing',name+' must preserve saved native set identity');
+ assert.equal(resolveSetSelection([{index:4,identity:'wing'}],cg.value,cg.setIdentity).value,'4');
+ assert.equal(resolveSetSelection([{index:3,identity:'replacement'}],cg.value,cg.setIdentity).value,'');
+}
+console.log('Both CG geometry sets follow saved-run identities and reject replacement occupants.');

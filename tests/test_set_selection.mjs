@@ -15,3 +15,8 @@ refreshSetSelections({querySelectorAll:()=>[select]},moved,String);assert.equal(
 const study={dataset:{input:'Set',prefix:'study-0'},value:'3'};
 refreshSetSelections({querySelectorAll:()=>[study]},moved,String);assert.equal(study.value,'3','Saved-study baseline choices are separate');
 console.log('Native set identity follows moves/undo and rejects replacement slots, including duplicate names.');
+for(const name of ['CGGeomSet','CGDegenSet']){
+ const field={dataset:{input:name},value:'3',selectedOptions:[{dataset:{setIdentity:'a'}}]};
+ refreshSetSelections({querySelectorAll:()=>[field]},moved,String);assert.equal(field.value,'4',name+' pending selection follows its geometry');
+}
+console.log('Pending CG normal and degenerate selections follow native set moves.');

@@ -2,7 +2,7 @@
 import copy
 import math
 
-SET_INPUTS={'Set','GeomSet','ThinGeomSet','ThickGeomSet','DegenSet','SelectedSetIndex','SelectedDegenSetIndex','TargetSet','BoundarySet'}
+SET_INPUTS={'Set','GeomSet','ThinGeomSet','ThickGeomSet','DegenSet','SelectedSetIndex','SelectedDegenSetIndex','TargetSet','BoundarySet','CGGeomSet','CGDegenSet'}
 
 
 def references(stages,axes,selector_ids):

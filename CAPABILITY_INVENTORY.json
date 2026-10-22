@@ -851,6 +851,19 @@
             "FEATURE_STATUS.md"
           ],
           "scope": "Three exact native restoration cases, strict28-module isolation, unchanged tool hashes, source/relocated decoder checks and saved yaw five-field browser viewing; broad closure remains Unproven."
+        },
+        {
+          "date": "2026-10-22",
+          "change": "Added CGGeomSet/CGDegenSet to shared analysis draft/saved-run and study set-identity handling.",
+          "evidence": [
+            "PROJECT_STATUS.md",
+            "native_study_sets.py",
+            "web/set-selection.js",
+            "tests/test_study_sets.py",
+            "tests/test_run_input_draft.mjs",
+            ".workspace/evidence/cg-set-identity-20261022/"
+          ],
+          "scope": "Previous-source JS failure;34 JS modules,3 source/3 strict relocated study methods, browser pending selectors and35 original MassProp numeric fields per target verified. No new VSPAERO solve/degenerate CG/browser saved-run claim; workflow closure stays Unproven."
         }
       ]
     },
@@ -1472,6 +1485,19 @@
             ".workspace/evidence/flowpath-studies-20261022/packaged-verification.json"
           ],
           "scope": "Five source/relocated methods and six shared regressions pass; six SDK geometry/result cases; browser two-case native equality, actual CSV and saved reopening. Broader representations/couplings/layouts remain unproven."
+        },
+        {
+          "date": "2026-10-22",
+          "change": "Added CGGeomSet/CGDegenSet to shared analysis draft/saved-run and study set-identity handling.",
+          "evidence": [
+            "PROJECT_STATUS.md",
+            "native_study_sets.py",
+            "web/set-selection.js",
+            "tests/test_study_sets.py",
+            "tests/test_run_input_draft.mjs",
+            ".workspace/evidence/cg-set-identity-20261022/"
+          ],
+          "scope": "Previous-source JS failure;34 JS modules,3 source/3 strict relocated study methods, browser pending selectors and35 original MassProp numeric fields per target verified. No new VSPAERO solve/degenerate CG/browser saved-run claim; workflow closure stays Unproven."
         }
       ]
     },

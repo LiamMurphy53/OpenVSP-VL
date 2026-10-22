@@ -1,4 +1,4 @@
-import {resolveSetSelection} from './set-selection.js?v=20261021';
+import {resolveSetSelection} from './set-selection.js?v=20261022-cg';
 // Export drafts follow native set identities, including duplicate names and Undo.
 export function reconcileExportDraft(draft,sets){
  const missing=[];

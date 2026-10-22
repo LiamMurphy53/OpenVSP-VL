@@ -1,6 +1,6 @@
 import {bindPodSliders} from './pod-sliders.js?v=20261021';
 import {runInputDraft} from './run-input-draft.js?v=20261021';
-import {refreshSetSelections,restoreSetSelection} from './set-selection.js?v=20261021';
+import {refreshSetSelections,restoreSetSelection,setInputNames} from './set-selection.js?v=20261022-cg';
 import {analysisInputUnit} from './analysis-units.js?v=20261020';
 import {scaleActionsMarkup,bindScaleActions} from './scale-controls.js?v=20261015-scale';
 import {customSliderMarkup,bindCustomSliders} from './custom-sliders.js?v=20261021-more';
@@ -228,7 +228,7 @@ function inputMarkup(spec,prefix,sets=model.tools.sets){
   else if((spec.standaloneNative||e.vectorCoordinates)&&e.type===4&&e.values.length===1)control=`<div ${attrs} data-vector="true" class="analysis-vector" role="group" aria-label="${esc(e.label||pretty(e.name))}">${['X','Y','Z'].map((axis,i)=>`<label for="${id}-${axis}">${axis}<div class="number-wrap"><input id="${id}-${axis}" data-coordinate="${i}" type="number" step="any" value="${esc(e.values[0][i])}" ${e.editable?'':'disabled'}></div></label>`).join('')}</div>`;
   else if(e.choiceList)control=`<select ${attrs} data-choice-list="true" multiple size="5">${e.choiceList.map(c=>`<option value="${esc(c.value)}" ${e.values.includes(c.value)?'selected':''}>${esc(c.label)}</option>`).join('')}</select>`;
   else if(scalar&&e.choices)control=`<select ${attrs}>${e.choices.map(c=>`<option value="${esc(c.value)}" ${c.value===e.values[0]?'selected':''}>${esc(c.label)}</option>`).join('')}</select>`;
-  else if(scalar&&e.type===1&&['Set','GeomSet','ThinGeomSet','ThickGeomSet','DegenSet','SelectedSetIndex','SelectedDegenSetIndex','TargetSet','BoundarySet'].includes(e.name))control=`<select ${attrs}><option value="-1" ${e.values[0]===-1?'selected':''}>None</option>${sets.map(s=>`<option value="${s.index}" data-set-identity="${esc(s.identity||'')}" ${e.values[0]===s.index?'selected':''}>${esc(s.name)} (${s.index})</option>`).join('')}</select>`;
+  else if(scalar&&e.type===1&&setInputNames.has(e.name))control=`<select ${attrs}><option value="-1" ${e.values[0]===-1?'selected':''}>None</option>${sets.map(s=>`<option value="${s.index}" data-set-identity="${esc(s.identity||'')}" ${e.values[0]===s.index?'selected':''}>${esc(s.name)} (${s.index})</option>`).join('')}</select>`;
   else if(scalar&&[1,2].includes(e.type))control=`<div class="number-wrap"><input ${attrs} type="number" step="${e.type===1?'1':'any'}" ${e.min!==undefined&&e.min!==null?`min="${e.min}"`:''} ${e.max!==undefined&&e.max!==null?`max="${e.max}"`:''} value="${esc(e.values[0])}"></div>`;
   else if(scalar&&e.type===3)control=`<input class="parameter-search" ${attrs} type="text" value="${esc(e.displayValue!==undefined?String(e.values[0]).split(/[\\/]/).at(-1):e.values[0])}">`;
   else control=`<textarea ${attrs} rows="${e.type===4?3:1}">${esc(JSON.stringify(e.values))}</textarea>`;
