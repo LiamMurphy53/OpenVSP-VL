@@ -16,3 +16,20 @@ assert.deepEqual(calls[0][2],{geom:'wing',surface:0,index:2,operation:'cst-coeff
 slider.onpointerup();slider.onchange();assert.equal(calls.length,2);assert.equal(calls[1][3],true);
 fields.get('#cst-lower-1').value='';assert.throws(()=>cstRequest(host,s,{}),/finite/);
 console.log('CST coefficient sliders: section identity, live native requests, exact companion values and release passed.');
+
+// A revolution profile uses its own fields and native operation, retaining both sides.
+const bor={surface:'bor',index:0,cst:{upper:[.2,.4],lower:[-.3,-.1]}},bp=cstSliderParameters({id:'revolution'},bor);
+const borFields=new Map(['upper','lower'].flatMap(side=>bor.cst[side].map((v,i)=>[`#bor-${side}-${i}`,{value:String(v),disabled:true}])));
+const bs={dataset:{customSlider:'bor-upper-0'},value:'.55',disabled:false};
+const bw={dataset:{sliderKey:bp[0].customSlider.key},querySelector:()=>bs,querySelectorAll:()=>[]};
+const bh={querySelector:key=>borFields.get(key)||borFields.get('#'+key.match(/id="([^"]+)"/)?.[1]),querySelectorAll:()=>[bw]};
+const borCalls=[];
+bindCstSliders(bh,{id:'revolution'},bor,{geom:'revolution'},{prefix:'bor',operation:'bor-cst-coefficients',liveEdit:(...args)=>borCalls.push(args),isBusy:()=>false,toast:assert.fail});
+bs.oninput();bs.onpointerup();bs.onchange();
+assert.equal(borCalls.length,2);
+assert.deepEqual(borCalls[1][2],{geom:'revolution',operation:'bor-cst-coefficients',upper:[.55,.4],lower:[-.3,-.1]});
+assert.equal(borCalls[1][3],true);
+assert.match(cstSliderMarkup(bp[0],String,'bor'),/data-custom-slider="bor-upper-0"/);
+assert.notEqual(bp[0].id,p[0].id);
+borFields.get('#bor-lower-0').value='';
+assert.throws(()=>cstRequest(bh,bor,{geom:'revolution'},{prefix:'bor',operation:'bor-cst-coefficients'}),/finite/);

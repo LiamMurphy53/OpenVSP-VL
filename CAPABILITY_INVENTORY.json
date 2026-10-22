@@ -167,6 +167,19 @@
             ".workspace/evidence/tangent-sliders-20261022/verification.json"
           ],
           "scope": "Keyboard/pointer tangent edits match 536 parameters, 25 control points and 660 surface samples; drag Undo/Redo bytes exact, page offset/focus retained. Broader closure unproven."
+        },
+        {
+          "date": "2026-10-22",
+          "change": "Added native live CST coefficient sliders and response-driven profile redraw for bodies of revolution.",
+          "evidence": [
+            "web/cst-sliders.js",
+            "web/specialized-tools.js",
+            "tests/test_cst_sliders.mjs",
+            "tests/test_live_edit_history.py",
+            ".workspace/evidence/bor-cst-sliders-20261022/verification.json",
+            ".workspace/evidence/bor-cst-sliders-20261022/packaged-verification.json"
+          ],
+          "scope": "Eight degree-three browser controls; 202 parameter values/multiplicities, 101 profile samples and 153 surface points exact; single-step Undo/Redo bytes and page/focus retention. Nine packaged native regressions passed; broader closure unproven."
         }
       ]
     },
@@ -247,6 +260,19 @@
             ".workspace/evidence/geometry-catalogue-20261022/browser-verification.json"
           ],
           "scope": "Full parameter multiplicity and sampled native grids across advertised types, native routing constraints and degenerate placeholders; one browser Cobra edit matches 100 values/171 points. Supplemental to the frozen 755-test audit; broader closure remains unproven."
+        },
+        {
+          "date": "2026-10-22",
+          "change": "Added native live CST coefficient sliders and response-driven profile redraw for bodies of revolution.",
+          "evidence": [
+            "web/cst-sliders.js",
+            "web/specialized-tools.js",
+            "tests/test_cst_sliders.mjs",
+            "tests/test_live_edit_history.py",
+            ".workspace/evidence/bor-cst-sliders-20261022/verification.json",
+            ".workspace/evidence/bor-cst-sliders-20261022/packaged-verification.json"
+          ],
+          "scope": "Eight degree-three browser controls; 202 parameter values/multiplicities, 101 profile samples and 153 surface points exact; single-step Undo/Redo bytes and page/focus retention. Nine packaged native regressions passed; broader closure unproven."
         }
       ]
     },

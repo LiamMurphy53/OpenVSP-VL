@@ -54,6 +54,11 @@ function card(title,body,extra=''){return `<section class="tool-card ${extra}"><
 const toolRendering=visibleRenderer(renderVisibleTools);
 export function renderTools(){toolRendering.request();}
 export function refreshToolGeometry(){
+ if(active==='specialized'){
+  const root=$('#bor-profile-plot'),bor=data().bodiesOfRevolution.find(b=>b.id===geom()?.id);
+  if(root&&bor)root.innerHTML=plotSVG(bor.profile.map(p=>p[0]),bor.profile.map(p=>p[1]),'X','Y',true);
+  return;
+ }
  if(active!=='airfoils')return;
  const root=$('#section-plot'),c=geom(),s=c?.sections[sectionChoice];if(!root||!s)return;
  const wing=['wing','propeller','prop'].includes(c.type.toLowerCase());

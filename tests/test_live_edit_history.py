@@ -74,3 +74,21 @@ class LiveHistory(unittest.TestCase):
         final=self.model.read_bytes();self.assertNotEqual(before,final)
         service.undo(revision=service.REVISION);self.assertEqual(self.model.read_bytes(),before)
         service.undo(redo=True,revision=service.REVISION);self.assertEqual(self.model.read_bytes(),final)
+
+    def test_bor_cst_drag_is_one_native_undo_step(self):
+        v=self.v;v.ClearVSPModel();gid=v.AddGeom('BODYOFREVOLUTION')
+        v.ChangeBORXSecShape(gid,v.XS_FOUR_SERIES);v.FitBORAfCST(gid,3);v.Update()
+        v.WriteVSPFile(str(self.model),v.SET_ALL)
+        before=self.model.read_bytes();baseline=len(service.HISTORY)
+        upper=list(v.GetBORUpperCSTCoefs(gid));lower=list(v.GetBORLowerCSTCoefs(gid))
+        for delta in (.01,.02):
+            values=list(upper);values[1]+=delta
+            service.mutation(dict(operation='bor-cst-coefficients',geom=gid,upper=values,lower=lower,
+                editGesture='a'*32,revision=service.REVISION))
+        self.assertEqual(len(service.HISTORY),baseline+1)
+        v.ClearVSPModel();v.ReadVSPFile(str(self.model));v.Update()
+        self.assertEqual(list(v.GetBORUpperCSTCoefs(gid)),values)
+        self.assertEqual(list(v.GetBORLowerCSTCoefs(gid)),lower)
+        final=self.model.read_bytes();self.assertNotEqual(before,final)
+        service.undo(revision=service.REVISION);self.assertEqual(self.model.read_bytes(),before)
+        service.undo(redo=True,revision=service.REVISION);self.assertEqual(self.model.read_bytes(),final)
