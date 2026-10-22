@@ -22,3 +22,9 @@ export function validateExportDraft(draft,sets,components,data){
  if(draft.format==='BEM'&&!components.some(c=>c.id===draft.prop&&['PROP','PROPELLER'].includes(c.type.toUpperCase())))throw Error('Choose an available propeller for BEM export.');
  if(draft.format.endsWith('_STRUCTURE')&&!data.structures.some(s=>s.id===draft.structure))throw Error('Choose an available structure for CAD export.');
 }
+
+export function prepareExportSelection(draft,selection,sets){
+ const target=sets.find(s=>s.index===Number(selection.set));
+ if(!target)throw Error('Choose an available geometry set before reviewing export settings.');
+ return {...draft,format:selection.format,set:target.index,setIdentity:target.identity||'',thin:-1,thinIdentity:'',mode:'',prop:selection.geom||'',structure:selection.structure||''};
+}

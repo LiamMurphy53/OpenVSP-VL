@@ -887,6 +887,19 @@
             ".workspace/evidence/export-selection-20261022/packaged-verification.json"
           ],
           "scope": "One browser set move/STL exact-native export/Undo and removed-set blocking/restoration; missing mode/propeller/structure JavaScript checks; eight source/relocated native set tests. Broader W19 closure remains unproven."
+        },
+        {
+          "date": "2026-10-22",
+          "change": "Components export shortcut routes through the full reviewed native export form with explicit BEM/structural targets and cleared hidden selection overrides.",
+          "evidence": [
+            "web/component-tools.js",
+            "web/export-selection.js",
+            "tests/test_export_selection.mjs",
+            "ENGINEERING_UTILITY_AUDIT.md",
+            ".workspace/evidence/export-review-20261022/verification.json",
+            ".workspace/evidence/export-review-20261022/packaged-verification.json"
+          ],
+          "scope": "Browser BEM export from a working wing matches native bytes; structural STEP records match except generated timestamp. Two source/relocated native tests and 25 JavaScript modules pass. Broader W19 closure remains unproven."
         }
       ]
     },

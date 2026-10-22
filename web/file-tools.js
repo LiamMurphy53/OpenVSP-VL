@@ -1,8 +1,9 @@
-import {reconcileExportDraft,exportReferenceChoices,selectExportSet,validateExportDraft} from './export-selection.js?v=20261022';
+import {reconcileExportDraft,exportReferenceChoices,selectExportSet,validateExportDraft,prepareExportSelection} from './export-selection.js?v=20261022';
 // Files use the official importer/exporter; native companion files travel together.
 const importLabels={VSP3:'Insert project geometry (.vsp3)',CUSTOM_PACKAGE:'Custom component with companions (.zip)',CUSTOM_SCRIPT:'Custom OpenVSP component (.vsppart)',STL:'STL triangle mesh (.stl)',NASCART:'NASCART triangle mesh (.dat)',CART3D:'Cart3D triangle mesh (.tri)',XSEC_MESH:'Hermite triangle mesh (.hrm)',POINTS:'Point cloud (.pts)',VSP_V2:'Legacy OpenVSP v2 aircraft (.vsp)',BEM:'Propeller blade elements (.bem)',XSEC_WIRE:'Hermite wire geometry (.hrm)',PLOT3D_WIRE:'Plot3D wire geometry (.p3d)'};
 let importFormat='STL',importParent='';
 const exportDraft={format:'STL',set:0,thin:-1,mode:'',prop:'',structure:'',tags:true};
+export function prepareExportDraft(selection,sets){Object.assign(exportDraft,prepareExportSelection(exportDraft,selection,sets));}
 export async function downloadNative(request,app){
  const response=await fetch('/api/export-geometry',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...request,revision:app.model().revision})});
  if(!response.ok)throw Error((await response.json()).error||'Native export failed.');

@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {reconcileExportDraft,exportReferenceChoices,selectExportSet,validateExportDraft} from '../web/export-selection.js';
+import {reconcileExportDraft,exportReferenceChoices,selectExportSet,validateExportDraft,prepareExportSelection} from '../web/export-selection.js';
 const sets=[{index:0,identity:'all',name:'All'},{index:3,identity:'a',name:'Same'},{index:4,identity:'b',name:'Same'}];
 const draft={format:'STL',set:3,thin:-1,mode:'',prop:'',structure:''};
 assert.deepEqual(reconcileExportDraft(draft,sets),[]);assert.equal(draft.setIdentity,'a');
@@ -20,3 +20,9 @@ validateExportDraft(draft,moved,[{id:'gone',type:'Propeller'}],data);
 draft.format='STEP_STRUCTURE';draft.structure='old';assert.throws(()=>validateExportDraft(draft,moved,[],data),/structure/);
 validateExportDraft(draft,moved,[],{...data,structures:[{id:'old'}]});
 console.log('Export sets follow native identities through moves/Undo; missing sets, modes, propellers and structures require replacement.');
+
+const oldDraft={format:'STL',set:0,thin:3,thinIdentity:'old-thin',mode:'old-mode',tags:false};
+const prepared=prepareExportSelection(oldDraft,{format:'BEM',set:4,geom:'prop'},sets);
+assert.equal(prepared.format,'BEM');assert.equal(prepared.setIdentity,'b');assert.equal(prepared.prop,'prop');assert.equal(prepared.thin,-1);assert.equal(prepared.thinIdentity,'');assert.equal(prepared.mode,'');assert.equal(prepared.tags,false);
+assert.equal(oldDraft.mode,'old-mode','Preparing a review does not mutate its source draft');
+assert.throws(()=>prepareExportSelection(oldDraft,{format:'STL',set:99},sets),/available geometry set/);
