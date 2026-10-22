@@ -875,6 +875,18 @@
             ".workspace/evidence/global-setting-ownership-packaged.log"
           ],
           "scope": "Eight user-name collisions preserve all global values/geometry; imported custom Box uses the colliding name with exact original geometry and unchanged global units; selected real controls/wave arrays/bindings pass. Broad closure remains unproved."
+        },
+        {
+          "date": "2026-10-22",
+          "change": "Export drafts follow native set identity through reorder/history; missing sets, modes, propellers and structures require explicit replacement.",
+          "evidence": [
+            "web/export-selection.js",
+            "tests/test_export_selection.mjs",
+            "ENGINEERING_UTILITY_AUDIT.md",
+            ".workspace/evidence/export-selection-20261022/verification.json",
+            ".workspace/evidence/export-selection-20261022/packaged-verification.json"
+          ],
+          "scope": "One browser set move/STL exact-native export/Undo and removed-set blocking/restoration; missing mode/propeller/structure JavaScript checks; eight source/relocated native set tests. Broader W19 closure remains unproven."
         }
       ]
     },

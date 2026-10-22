@@ -21,7 +21,7 @@ import {mountStructuralPreview,disposeStructuralPreview} from './structural-prev
 import {renderComponents} from './component-tools.js?v=20261015-order';
 import {partEditor,bindPartEditor} from './part-editor.js?v=20261010-123';
 import {regionEditor,bindRegionEditor} from './region-editor.js?v=20261010-123';
-import {downloadNative} from './file-tools.js?v=20261010-123';
+import {downloadNative} from './file-tools.js?v=20261022-selection';
 import {renderAdvanced,chooseEngineeringSettings} from './advanced-tools.js?v=20261022-fit-report';
 import {mountTangentEditor} from './curve-tangent-editor.js?v=20261010-123';
 import {mountCurveEditor} from './curve-editor.js?v=20261010-123';
