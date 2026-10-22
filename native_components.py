@@ -26,6 +26,14 @@ def references(v):
                 selectors[p]=dict(key='parameter:'+p,id=p,value=int(v.GetParmVal(p)),
                     label=f'{v.GetContainerName(c)} · {v.GetParmDisplayGroupName(p)} · {v.GetParmName(p)}',
                     min=int(v.GetParmLowerLimit(p)),max=int(v.GetParmUpperLimit(p)))
+    # Flowpath extension references are owned by geometry, not a manager.
+    for g in v.FindGeoms():
+        if v.GetGeomTypeName(g).upper() not in ('FUSELAGE','STACK'):continue
+        p=v.FindParm(g,'AutoExtensionSet','EngineModel')
+        if p:
+            selectors[p]=dict(key='parameter:'+p,id=p,value=int(v.GetParmVal(p)),
+                label=f'{v.GetGeomName(g)} · Flowpath extension reference set',
+                min=int(v.GetParmLowerLimit(p)),max=int(v.GetParmUpperLimit(p)))
     refs=list(selectors.values())
     for g in v.GetVarPresetGroups():
         pids=list(v.GetVarPresetParmIDs(g))

@@ -1,8 +1,10 @@
+import {engineSetupMarkup,bindEngineSetup} from './engine-setup.js?v=20261022';
 import {mountMeshViewer} from './mesh-viewer.js?v=20261010-123';
 import {drawingMesh} from './structural-preview.js?v=20261010-123';
 let cleanup=null,generation=0;
 export function disposeFamilyWorkflows(){generation++;if(cleanup){cleanup();cleanup=null;}}
 export function familyWorkflowsMarkup(c,{esc:E}){
+ if(['FUSELAGE','STACK'].includes(c.type.toUpperCase()))return engineSetupMarkup(c,E);
  if(c.conformalSource){
   const s=c.conformalSource,options=[...s.choices];
   if(!options.some(o=>o.id===s.id))options.unshift({id:s.id,name:s.name,type:s.type||'Unavailable'});
@@ -12,6 +14,7 @@ export function familyWorkflowsMarkup(c,{esc:E}){
  return '';
 }
 export function bindFamilyWorkflows(c,root,app){
+ bindEngineSetup(root,c,app.mutate);
  if(c.conformalSource){
   const s=c.conformalSource,choice=root.querySelector('[data-conformal-source]'),button=root.querySelector('[data-conformal-apply]'),status=root.querySelector('[data-conformal-status]');
   choice.onchange=()=>{button.disabled=!s.detached||choice.value===s.id;status.textContent=button.disabled?'Source matches the saved aircraft.':'Apply to update the original native source surface.';};

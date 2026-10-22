@@ -41,7 +41,8 @@ def apply(v,gid,params):
     if kind not in SUPPORTED:return []
     ids=[p['id'] for p in params];activity=native_preview.parameter_activity(v,ids)
     fields={p['name']:p for p in params if p['rawGroup']==('Hinge' if kind=='HINGE' else 'WingGeom' if kind=='WING' else 'Design')}
-    groups=[]
+    import native_engine_controls
+    groups=native_engine_controls.groups(params) if kind in ('FUSELAGE','STACK') else []
     def lock(name,reason):
         p=fields.get(name)
         if p:p.update(displayReadOnly=True,readOnlyReason=reason)

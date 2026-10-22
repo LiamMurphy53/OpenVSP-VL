@@ -497,6 +497,8 @@ def prepare(v,req,model,errors):
         native_attachments.validate_parameter(v,item['id'])
         import native_family_controls
         native_family_controls.validate_parameter(v,item['id'])
+        import native_engine_controls
+        native_engine_controls.validate_parameter(v,item['id'],item['requested'])
         import native_case_studies
         native_case_studies.validate(v,item['id'])
         if native_family_studies.deferred_limits(v,item['id'],swept_ids) and not v.GetParmLowerLimit(item['id'])<=item['requested']<=v.GetParmUpperLimit(item['id']):

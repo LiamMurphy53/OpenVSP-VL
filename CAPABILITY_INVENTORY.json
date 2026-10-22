@@ -124,6 +124,20 @@
             ".workspace/evidence/visibility-ui-20261021/profile-drag-redo.png"
           ],
           "scope": "One desktop wing/point setup. Both native runs match independent SDK arrays; slider redo/history bytes exact. Broader and narrow-layout closure remains unproven."
+        },
+        {
+          "date": "2026-10-22",
+          "change": "Added named fuselage/stack GeomEngine choices, atomic flowpath setup, coincident-station guidance and extension-set reference lifetime tracking.",
+          "evidence": [
+            "native_engine_controls.py",
+            "web/engine-setup.js",
+            "tests/test_engine_choices.py",
+            "tests/test_engine_sets.py",
+            "tests/test_engine_setup.mjs",
+            ".workspace/evidence/numeric-choice-audit-20261022/browser-verification.json",
+            ".workspace/evidence/numeric-choice-audit-20261022/packaged-verification.json"
+          ],
+          "scope": "Ten source and ten relocated native methods pass; selected four-role/index/U cases exact; browser 1,011 values and 357 points exact with byte-level Undo/Redo/cold recovery. Original one-row sampling SIGSEGV remains a native limitation; broader representations/layout/study coverage unproven."
         }
       ]
     },
@@ -331,6 +345,20 @@
             ".workspace/evidence/set-selection-20261021/retained-set.png"
           ],
           "scope": "Source 20 related tests plus five final identity/recovery checks; packaged 21 related tests and 15 JS modules passed. Desktop duplicate-name wing/payload ordering, schema refresh, byte-exact Undo/Redo and original native CompGeom equality verified. Broader geometry/attachment, study and large-set browser coverage remains unproven."
+        },
+        {
+          "date": "2026-10-22",
+          "change": "Added named fuselage/stack GeomEngine choices, atomic flowpath setup, coincident-station guidance and extension-set reference lifetime tracking.",
+          "evidence": [
+            "native_engine_controls.py",
+            "web/engine-setup.js",
+            "tests/test_engine_choices.py",
+            "tests/test_engine_sets.py",
+            "tests/test_engine_setup.mjs",
+            ".workspace/evidence/numeric-choice-audit-20261022/browser-verification.json",
+            ".workspace/evidence/numeric-choice-audit-20261022/packaged-verification.json"
+          ],
+          "scope": "Ten source and ten relocated native methods pass; selected four-role/index/U cases exact; browser 1,011 values and 357 points exact with byte-level Undo/Redo/cold recovery. Original one-row sampling SIGSEGV remains a native limitation; broader representations/layout/study coverage unproven."
         }
       ]
     },
@@ -535,6 +563,20 @@
             ".workspace/evidence/global-choice-audit-20261021/packaged-final.log"
           ],
           "scope": "Six Vehicle-owned controls; native code/reset/roundtrip checks; two browser jobs match original numerical results. Full workflow closure remains unproven."
+        },
+        {
+          "date": "2026-10-22",
+          "change": "Added named fuselage/stack GeomEngine choices, atomic flowpath setup, coincident-station guidance and extension-set reference lifetime tracking.",
+          "evidence": [
+            "native_engine_controls.py",
+            "web/engine-setup.js",
+            "tests/test_engine_choices.py",
+            "tests/test_engine_sets.py",
+            "tests/test_engine_setup.mjs",
+            ".workspace/evidence/numeric-choice-audit-20261022/browser-verification.json",
+            ".workspace/evidence/numeric-choice-audit-20261022/packaged-verification.json"
+          ],
+          "scope": "Ten source and ten relocated native methods pass; selected four-role/index/U cases exact; browser 1,011 values and 357 points exact with byte-level Undo/Redo/cold recovery. Original one-row sampling SIGSEGV remains a native limitation; broader representations/layout/study coverage unproven."
         }
       ]
     },

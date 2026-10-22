@@ -79,6 +79,8 @@ def parameter(v, pid):
     native_scale_controls.annotate(v,field)
     import native_saved_analysis_controls
     native_saved_analysis_controls.annotate(v,field)
+    import native_engine_controls
+    native_engine_controls.annotate(v,field)
     import native_property_locks
     native_property_locks.annotate(v,field)
     return field
@@ -359,6 +361,9 @@ def mutate(v, req):
     elif action=='custom-index-step':
         import native_custom_scripts
         native_custom_scripts.index_step(v,gid,req.get('index'),req.get('delta'))
+    elif action=='engine-configure':
+        import native_engine_controls
+        native_engine_controls.configure(v,req)
     elif action=='parameter':
         pid=req['id']
         allowed={p for g in v.FindGeoms() for p in v.GetGeomParmIDs(g)} | native_tools.parameter_ids(v)
@@ -389,6 +394,8 @@ def mutate(v, req):
         native_gear_controls.validate_parameter(v,pid,req.get('value'))
         import native_family_controls
         native_family_controls.validate_parameter(v,pid)
+        import native_engine_controls
+        native_engine_controls.validate_parameter(v,pid,req.get('value'))
         import native_geometry_cases
         native_geometry_cases.validate_parameter(v,pid)
         import native_connection_controls
