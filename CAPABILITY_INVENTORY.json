@@ -762,6 +762,17 @@
             "MODELING_AUDIT.md"
           ],
           "scope": "Three native executions with exact result-entry parity, unchanged source files and packaged repetition. Broader geometry/plane families and browser closure remain unproven."
+        },
+        {
+          "date": "2026-10-22",
+          "change": "Saved geometry-check result summaries label verified native dimensions and weight-reaction fractions with context-dependent Result units.",
+          "evidence": [
+            "PROJECT_STATUS.md",
+            "web/geometry-case-units.js",
+            "tests/test_geometry_case_units.mjs",
+            ".workspace/evidence/geometry-case-units-20261022/"
+          ],
+          "scope": "All34 JavaScript modules, relocated module loading, original SDK saved-case regressions and exact browser/native projection pass. Broader unit families/reaction browser coverage and W12 closure remain Unproven."
         }
       ]
     },
