@@ -99,11 +99,11 @@ def annotate(v,name,inputs):
     native_limits={}
     if name in owners:
         owner,mapping=owners[name]
-        for c in v.FindContainers():
-            if v.GetContainerName(c)==owner:
-                by_name={v.GetParmName(p):p for p in v.FindContainerParmIDs(c)}
-                for key,pn in mapping.items():
-                    if pn in by_name:native_limits[key]=(v.GetParmLowerLimit(by_name[pn]),v.GetParmUpperLimit(by_name[pn]))
+        c=native_managers.manager(v,owner)
+        group={'MassProp':'MassProperties','PlanarSlice':'PSlice','WaveDrag':'WaveDrag','ParasiteDrag':'ParasiteDrag'}[name]
+        for key,pn in mapping.items():
+            pid=v.FindParm(c,pn,group)
+            if pid:native_limits[key]=(v.GetParmLowerLimit(pid),v.GetParmUpperLimit(pid))
     applicable={}
     def when(key,controller,values):applicable[key]=dict(input=controller,values=values)
     if name!='Projection':
