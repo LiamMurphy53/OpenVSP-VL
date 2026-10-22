@@ -356,6 +356,17 @@
             ".workspace/evidence/configuration-preview-20261022/packaged-verification.json"
           ],
           "scope": "Preset/mode/link/lock/no-op native checks; nine source/relocated tests and 26 JavaScript modules; one browser preview/apply/Undo sequence matches 15 values and 831 surface points. Broader W09 closure remains unproven."
+        },
+        {
+          "date": "2026-10-22",
+          "change": "Unsaved preset value edits clear old native previews and downloads, block preview until save/reversion, and reject late responses.",
+          "evidence": [
+            "web/configuration-preview.js",
+            "tests/test_configuration_preview.mjs",
+            "ENGINEERING_UTILITY_AUDIT.md",
+            ".workspace/evidence/configuration-preview-drafts-20261022/browser-verification.json"
+          ],
+          "scope": "Async draft validity checks and 26 JavaScript modules; one browser edit/save/preview/apply/Undo sequence matches 15 native values and 831 points, preserving preview model/history. Broader W09 closure remains unproven."
         }
       ]
     },
