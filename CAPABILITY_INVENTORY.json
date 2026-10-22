@@ -301,6 +301,19 @@
             ".workspace/evidence/bor-cst-sliders-20261022/packaged-verification.json"
           ],
           "scope": "Eight degree-three browser controls; 202 parameter values/multiplicities, 101 profile samples and 153 surface points exact; single-step Undo/Redo bytes and page/focus retention. Nine packaged native regressions passed; broader closure unproven."
+        },
+        {
+          "date": "2026-10-22",
+          "change": "External custom live sliders now preserve current script binding identity, native guards and per-control Undo gestures. Native custom device declaration/screen-source reconciliation retained.",
+          "evidence": [
+            "MODELING_AUDIT.md",
+            "tests/test_custom_slider_history.py",
+            "tests/test_custom_bound_sliders.mjs",
+            ".workspace/evidence/custom-bound-sliders-20261022/browser-verification.json",
+            ".workspace/evidence/custom-bound-sliders-20261022/packaged-verification.json",
+            ".workspace/evidence/custom-bound-sliders-20261022/native-device-audit.json"
+          ],
+          "scope": "Five focused native methods, twelve related regressions and one browser original-SDK replay; no broad closure. GDEV enumeration presence alone does not prove a native custom-screen implementation."
         }
       ]
     },

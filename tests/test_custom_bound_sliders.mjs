@@ -1,0 +1,20 @@
+import assert from 'node:assert/strict';
+import {externalSliderRequest,bindExternalCustomSliders} from '../web/custom-controls.js';
+const component={id:'script-child',customExternalControls:[1,2].map(index=>({index,parameter:{id:'parent-length',name:'Length',type:0,dimension:'length',value:5,min:0,max:100,customSlider:{key:'binding-'+index,range:1,adjustable:true}}}))};
+const requests=[];
+const units={displayValue:x=>x*1000,nativeValue:x=>x/1000,parameterDimension:p=>p.dimension,isBusy:()=>false,liveEdit:(key,slider,request,finished)=>requests.push({key,request,finished})};
+const nodes=component.customExternalControls.map(control=>{
+ const input={value:'5000'},slider={dataset:{customSlider:'field-'+control.index},value:'7500',disabled:false};
+ const range={dataset:{sliderKey:control.parameter.customSlider.key},querySelector:()=>slider,querySelectorAll:()=>[]};
+ return {dataset:{customExternalControl:String(control.index)},input,slider,querySelectorAll:()=>[range],querySelector:()=>input};
+});
+bindExternalCustomSliders({querySelectorAll:()=>nodes},component,units);
+nodes[0].slider.oninput();nodes[0].slider.onchange();nodes[0].slider.onpointerup();nodes[1].slider.oninput();
+assert.equal(requests.length,3);
+assert.deepEqual(requests[0].request,{operation:'custom-control-parameter',geom:'script-child',index:1,id:'parent-length',value:7.5});
+assert.equal(requests[0].finished,false);assert.equal(requests[1].finished,true);
+assert.notEqual(requests[0].key,requests[2].key,'Two controls for one native parameter keep separate gesture identities');
+assert.equal(nodes[0].input.value,'7500');
+for(const patch of [{userLocked:true},{displayReadOnly:true},{active:false}])assert.equal(externalSliderRequest(component,{...component.customExternalControls[0],parameter:{...component.customExternalControls[0].parameter,...patch}},10,units),null);
+assert.equal(externalSliderRequest(component,component.customExternalControls[0],NaN,units),null);
+console.log('External custom slider events preserve binding identity, native units, locks and separate gesture keys.');
