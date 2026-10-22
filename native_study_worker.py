@@ -141,6 +141,7 @@ def schema(v,parameter):
             item['studyNote']='Controller axes are applied before dependent values. Include compatible controller choices; cases where OpenVSP keeps the field calculated stop before analysis. Joint limits are checked after this case’s limit controls are applied.'
             if v.GetParmContainer(p) in v.FindGeoms() and v.GetGeomTypeName(v.GetParmContainer(p)).upper() in ('PROP','PROPELLER'):
                 item['studyNote']='Spacing, pitch and folding modes are applied before their blade values. Uniform spacing and the final two balanced blade angles remain calculated. Blade-count changes can remove native fields; choose a saved aircraft containing the blades to sweep.'
+            if family_dependencies[p].get('stackPosition'):item['studyNote']='Stack section ordering and coordinate basis apply before positions and rotations. Relative inputs use the previous profile’s frame; absolute inputs use component axes before component placement. Lengths use native model units and angles use native degrees. Loop closure and the other coordinate representation remain calculated.'
             if family_dependencies[p].get('wingBlend'):item['studyNote']='The profile’s blend mode applies before this value, regardless of axis order. Angles require Set sweep and dihedral; strengths require a constrained mode. Automatic, matched angles and absent-neighbor outputs stop before analysis. Angles use native degrees; strength is dimensionless.'
             if item['rawGroup']=='EngineModel':item['studyNote']='Flowpath role, representation and station axes are applied together, regardless of axis order. Include compatible role and location-basis controllers; unused or calculated fields stop that case before analysis. Section indices are native integers; U values are normalized fractions. Distances use native model length units.'
             if p in case_metadata:
@@ -511,7 +512,7 @@ def prepare(v,req,model,errors):
         import native_wing_controls
         native_wing_controls.validate_parameter(v,item['id'],item['requested'])
         import native_body_controls
-        native_body_controls.validate_parameter(v,item['id'])
+        native_body_controls.validate_parameter(v,item['id'],item['requested'])
         import native_skinning_controls
         native_skinning_controls.validate_parameter(v,item['id'])
         import native_attachments
@@ -557,6 +558,8 @@ def prepare(v,req,model,errors):
         require_case_parameter(item)
         import native_wing_blending
         native_wing_blending.validate_parameter(v,item['id'],item['requested'])
+        import native_stack_positions
+        native_stack_positions.validate_parameter(v,item['id'],item['requested'])
         item['effective']=v.GetParmVal(item['id'])
     native_property_locks.require_unchanged(v,locked)
     native_ngon.write(v,model);errors(v)

@@ -62,6 +62,8 @@ def metadata(v):
     out.update(native_engine_controls.study_metadata(v))
     import native_wing_blending
     out.update(native_wing_blending.study_metadata(v))
+    import native_stack_positions
+    out.update(native_stack_positions.study_metadata(v))
     import native_case_studies
     out.update(native_case_studies.metadata(v))
     import native_connection_controls
@@ -114,6 +116,9 @@ def deferred_limits(v,pid,swept):
 
 
 def priority(v,pid):
+    import native_stack_positions
+    position=native_stack_positions.study_priority(v,pid)
+    if position is not None:return position
     import native_wing_blending
     blend=native_wing_blending.study_priority(v,pid)
     if blend is not None:return blend

@@ -42,16 +42,22 @@ def enrich(v,gid,params,entries):
         names=['XLocPercent','YLocPercent','ZLocPercent'] if kind=='FUSELAGE' else ['XDelta','YDelta','ZDelta']
         labels=[axis+' position (body length fraction)' for axis in 'XYZ'] if kind=='FUSELAGE' else [axis+' offset from previous section' for axis in 'XYZ']
         names+=['XRotate','YRotate','ZRotate'];labels+=[axis+' section rotation' for axis in 'XYZ']
+        if kind=='STACK':
+            relative=v.GetParmVal(v.GetXSecParm(xid,'XSAbsRelFlag'))==v.REL
+            names=['XSAbsRelFlag']+names if relative else ['XSAbsRelFlag','XAbs','YAbs','ZAbs','XRotateAbs','YRotateAbs','ZRotateAbs']
+            labels=['Coordinate basis']+[axis+' offset from previous section' for axis in 'XYZ']+[axis+' rotation from previous section' for axis in 'XYZ'] if relative else ['Coordinate basis']+[axis+' position in component axes' for axis in 'XYZ']+[axis+' absolute section rotation' for axis in 'XYZ']
         pids=list(v.GetXSecParmIDs(xid))
         section['bodyPositionControls']=[dict(parameter=pid,label=label) for name,label in zip(names,labels) for pid in pids if v.GetParmName(pid)==name and v.GetParmGroupName(pid)=='XSec']
         for item in section['bodyPositionControls']:
             p=by_id[item['parameter']]
             if p['name'].endswith('Rotate'):p['dimension']='angle'
-            elif kind=='STACK':p['dimension']='length'
+            elif p['name'].endswith('RotateAbs'):p['dimension']='angle'
+            elif kind=='STACK' and p['name']!='XSAbsRelFlag':p['dimension']='length'
 
 
 def read_only_reasons(v):
-    result={}
+    import native_stack_positions
+    result=native_stack_positions.read_only_reasons(v)
     for gid in v.FindGeoms():
         for surface,index,xid in sections(v,gid):
             for pid in point_outputs(v,xid):result[pid]='Point profile dimensions are fixed by OpenVSP.'
@@ -62,7 +68,9 @@ def read_only_reasons(v):
     return result
 
 
-def validate_parameter(v,pid):
+def validate_parameter(v,pid,value=None):
+    import native_stack_positions
+    native_stack_positions.validate_parameter(v,pid,value)
     owner=next((g for g in v.FindGeoms() if v.GetGeomTypeName(g).upper() in ('FUSELAGE','STACK') and pid in v.GetGeomParmIDs(g)),None)
     if not owner:return
     for surface,index,xid in sections(v,owner):
