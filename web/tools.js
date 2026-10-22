@@ -23,7 +23,7 @@ import {partEditor,bindPartEditor} from './part-editor.js?v=20261010-123';
 import {regionEditor,bindRegionEditor} from './region-editor.js?v=20261010-123';
 import {downloadNative,prepareExportDraft} from './file-tools.js?v=20261022-review';
 import {renderAdvanced,chooseEngineeringSettings} from './advanced-tools.js?v=20261022-fit-report';
-import {mountTangentEditor} from './curve-tangent-editor.js?v=20261010-123';
+import {mountTangentEditor} from './curve-tangent-editor.js?v=20261022-sliders';
 import {mountCurveEditor} from './curve-editor.js?v=20261010-123';
 // Dedicated editors use native IDs and submit undoable OpenVSP operations.
 let linkSourceChoice='',linkTargetChoice='';
@@ -93,7 +93,7 @@ function airfoils(){
  bindCstSliders(root,c,s,common,{liveEdit:app.liveEdit,mutate,toast:app.toast,isBusy:()=>app.isBusy?.()||false});
  document.querySelectorAll('[data-cst-degree]').forEach(b=>b.onclick=()=>mutate({...common,operation:'cst-degree',side:b.dataset.cstDegree,direction:b.dataset.direction}));
  bind('convert-curve',async()=>{capture();await mutate({...common,operation:'curve-convert'});});
- if(s.controlPoints){bindCurvePointList(root,common,mutate,app.toast);bind('init-curve',()=>mutate({...common,operation:'curve-init',shape:val('curve-init-shape')}));mountCurveEditor($('#curve-handle-editor'),s,(point,xyz)=>mutate({...common,operation:'curve-point',point,xyz}),E);mountTangentEditor($('#curve-tangent-editor'),s,request=>mutate({...common,...request}),E);bind('apply-curve-type',()=>mutate({...common,operation:'curve-type',type:val('curve-type')}));bind('split-curve',()=>mutate({...common,operation:'curve-split',u:num('curve-split-u')}));bind('space-curve',()=>mutate({...common,operation:'curve-reparameterize'}));}
+ if(s.controlPoints){bindCurvePointList(root,common,mutate,app.toast);bind('init-curve',()=>mutate({...common,operation:'curve-init',shape:val('curve-init-shape')}));mountCurveEditor($('#curve-handle-editor'),s,(point,xyz)=>mutate({...common,operation:'curve-point',point,xyz}),E);mountTangentEditor($('#curve-tangent-editor'),s,request=>mutate({...common,...request}),E,{liveEdit:app.liveEdit?(key,slider,request,finished)=>app.liveEdit(key,slider,{...common,...request},finished):undefined,isBusy:()=>app.isBusy?.()||false,toast:app.toast});bind('apply-curve-type',()=>mutate({...common,operation:'curve-type',type:val('curve-type')}));bind('split-curve',()=>mutate({...common,operation:'curve-split',u:num('curve-split-u')}));bind('space-curve',()=>mutate({...common,operation:'curve-reparameterize'}));}
  document.querySelectorAll('[data-smooth-point]').forEach(el=>el.onchange=()=>mutate({...common,operation:'curve-smooth',point:Number(el.dataset.smoothPoint),smooth:el.checked}));
  document.querySelectorAll('[data-point]').forEach(b=>b.onclick=()=>{const i=Number(b.dataset.point),xyz=[0,1].map(k=>Number(document.querySelector(`[data-coordinate="${i}-${k}"]`).value));mutate({...common,operation:'curve-point',point:i,xyz:[...xyz,s.controlPoints[i][2]]});});
  document.querySelectorAll('[data-delete-point]').forEach(b=>b.onclick=()=>mutate({...common,operation:'curve-delete',point:Number(b.dataset.deletePoint)}));document.querySelectorAll('[data-fixed-point]').forEach(el=>el.onchange=()=>mutate({...common,operation:'curve-fixed',point:Number(el.dataset.fixedPoint),fixed:el.checked}));

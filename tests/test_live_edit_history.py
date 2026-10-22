@@ -55,3 +55,22 @@ class LiveHistory(unittest.TestCase):
         final=self.model.read_bytes()
         service.undo(revision=service.REVISION);self.assertEqual(self.model.read_bytes(),before)
         service.undo(redo=True,revision=service.REVISION);self.assertEqual(self.model.read_bytes(),final)
+
+    def test_tangent_drag_is_one_native_undo_step(self):
+        v=self.v
+        v.ConvertXSecToEdit(self.gid,1);v.Update()
+        v.WriteVSPFile(str(self.model),v.SET_ALL)
+        state=service.state()
+        section=next(s for c in state['components'] if c['id']==self.gid for s in c['sections'] if s['index']==1)
+        control=next(c for c in section['tangentControls'] if any(any(p['active'] for p in h['parameters']) for h in c['handles'].values()))
+        side,handle=next((s,h) for s,h in control['handles'].items() if any(p['active'] for p in h['parameters']))
+        axis=next(i for i,p in enumerate(handle['parameters']) if p['active'])
+        before=self.model.read_bytes();baseline=len(service.HISTORY)
+        for delta in (.01,.02):
+            xyz=list(handle['coordinates']);xyz[axis]+=delta
+            service.mutation(dict(operation='curve-tangent',geom=self.gid,surface=0,index=1,
+                anchor=control['anchor'],side=side,xyz=xyz,editGesture='f'*32,revision=service.REVISION))
+        self.assertEqual(len(service.HISTORY),baseline+1)
+        final=self.model.read_bytes();self.assertNotEqual(before,final)
+        service.undo(revision=service.REVISION);self.assertEqual(self.model.read_bytes(),before)
+        service.undo(redo=True,revision=service.REVISION);self.assertEqual(self.model.read_bytes(),final)
