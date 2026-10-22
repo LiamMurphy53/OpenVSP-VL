@@ -745,6 +745,18 @@
             ".workspace/evidence/boundary-targets-20261021/browser-verification.json"
           ],
           "scope": "One original unassigned-input mis-selection, active/disabled/native ownership checks, late assembly-member validation and one desktop failed-run/repair/native-deck workflow. Broader constraint and browser families and broad workflow closure remain unproven."
+        },
+        {
+          "date": "2026-10-21",
+          "change": "Laminate layer removal protects five native parameter consumer types; original reorder/delete results and saved IDs verified.",
+          "evidence": [
+            "tests/test_laminate_references.py",
+            "ENGINEERING_UTILITY_AUDIT.md",
+            ".workspace/evidence/laminate-layer-lifetime-20261021/source.log",
+            ".workspace/evidence/laminate-layer-lifetime-20261021/packaged-verification.json",
+            ".workspace/evidence/laminate-layer-lifetime-20261021/protected-layer.png"
+          ],
+          "scope": "Five consumer guards, four reorder directions, two valid deletions, last-layer rejection, existing unit/deck parity; one browser attribute rejection/reorder/Undo. Broader W17 closure remains unproven."
         }
       ]
     },

@@ -192,6 +192,8 @@ def mutate(v,r):
             l=one(r['id'],v.GetFeaLayerIDVec(m))
             if op=='layer-delete':
                 if v.NumFeaLayers(m)<=1:raise ValueError('Keep at least one layer in a laminate.')
+                from native_editable_curves import guard_parameter_replacement
+                guard_parameter_replacement(v,set(v.FindContainerParmIDs(l)),'laminate layer parameter IDs',action='Removing this layer')
                 v.DeleteFeaLayer(m,l)
             else:v.ReorderFeaLayer(m,l,getattr(v,one(r['direction'],enums(v,['REORDER_MOVE_UP','REORDER_MOVE_DOWN','REORDER_MOVE_TOP','REORDER_MOVE_BOTTOM']))))
     elif op=='layer-material':
