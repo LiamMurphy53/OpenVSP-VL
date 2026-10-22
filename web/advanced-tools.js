@@ -12,7 +12,7 @@ import {renderDataTools} from './data-tools.js?v=20261010-123';
 import {renderSpecialized} from './specialized-tools.js?v=20261010-123';
 import {renderMeasurements} from './measurement-tools.js?v=20261022-report';
 import {renderFiles} from './file-tools.js?v=20261022-review';
-import {renderConfigurations} from './configuration-tools.js?v=20261010-123';
+import {renderConfigurations} from './configuration-tools.js?v=20261022-preview';
 import {intersectionSettings,bindIntersectionSettings,intersectionSelection,bindIntersectionSelection} from './intersection-settings.js?v=20261010-123';
 import {intersectionDefaults,bindIntersectionDefaults} from './intersection-defaults.js?v=20261010-123';
 // Guided editors for additional native engineering workflows.

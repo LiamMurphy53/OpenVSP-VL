@@ -518,6 +518,17 @@ def query(req):
     with LOCK:
         check_revision(req.get('revision'))
         identifier=uuid.uuid4().hex;folder=WORK/'queries'/identifier
+        if req.get('operation')=='configuration-preview':
+            operation=req.get('configuration')
+            if operation not in ('preset','mode'):raise ValueError('Choose a saved preset or mode to preview.')
+            body=dict(operation='preset-apply',group=req.get('group'),setting=req.get('setting')) if operation=='preset' else dict(operation='mode-apply',id=req.get('id'))
+            value_request=dict(action='query',operation='configuration-values',configuration=operation,group=req.get('group'),setting=req.get('setting'),id=req.get('id'))
+            before=invoke(value_request,MODEL,folder/'before')
+            candidate=folder/'candidate'/'aircraft.vsp3';candidate.parent.mkdir();shutil.copy2(MODEL,candidate)
+            invoke(dict(body,action='mutate'),candidate,candidate.parent)
+            after=invoke(value_request,candidate,folder/'after')
+            from native_configuration_preview import difference
+            return dict(revision=REVISION,configuration=operation,changes=difference(before,after),saved=False)
         data=invoke(dict(req,action='query'),MODEL,folder)
         if req.get('operation')=='cloud-fit-plane':
             record=dict(operation=req['operation'],revision=REVISION,engineVersion=data['engineVersion'],request=req,data=data)

@@ -343,6 +343,19 @@
             ".workspace/evidence/preset-membership-browser/verification.json"
           ],
           "scope": "Two-setting native vectors, empty groups, mode application geometry, invalid requests and packaged browser add/remove/history/reload verified. W09 remains unproven."
+        },
+        {
+          "date": "2026-10-22",
+          "change": "Read-only native preset/mode previews expose direct and dependent changes through the ordinary isolated Apply transaction, with full JSON download.",
+          "evidence": [
+            "native_configuration_preview.py",
+            "tests/test_configuration_preview.py",
+            "tests/test_configuration_preview.mjs",
+            "ENGINEERING_UTILITY_AUDIT.md",
+            ".workspace/evidence/configuration-preview-20261022/browser-verification.json",
+            ".workspace/evidence/configuration-preview-20261022/packaged-verification.json"
+          ],
+          "scope": "Preset/mode/link/lock/no-op native checks; nine source/relocated tests and 26 JavaScript modules; one browser preview/apply/Undo sequence matches 15 values and 831 surface points. Broader W09 closure remains unproven."
         }
       ]
     },
