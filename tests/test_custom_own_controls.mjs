@@ -1,0 +1,23 @@
+import assert from 'node:assert/strict';
+import {customControlRows,customActionsMarkup,bindExternalCustomSliders} from '../web/custom-controls.js';
+import {geometryControlGroups} from '../web/geometry-controls.js';
+const parameter={id:'length',name:'Length',rawGroup:'Design',type:0,value:5,min:0,max:15};
+const own=[{index:2,owned:true,tab:'Main',tabIndex:0,owner:'My component',parameter:{...parameter,label:'Length',customSlider:{key:'main',range:10}}},{index:8,owned:true,tab:'Fine',tabIndex:6,owner:'My component',parameter:{...parameter,label:'Fine length',customSlider:{key:'fine',range:.1}}}];
+const external={index:5,tab:'Parent',tabIndex:4,owner:'Parent aircraft',parameter:{...parameter,id:'parent-length'}};
+const c={id:'custom',type:'Box',params:[parameter],customOwnControls:own,customExternalControls:[external]};
+assert.deepEqual(customControlRows(c).map(r=>r.index),[2,5,8]);
+const html=customActionsMarkup(c,String,p=>`<input id="parm-${p.id}" data-parm="${p.id}">`);
+assert.equal((html.match(/data-custom-external-control=/g)||[]).length,3);
+assert.match(html,/external-custom-2/);assert.match(html,/external-custom-8/);assert.match(html,/Parent aircraft/);assert.doesNotMatch(html,/<p>My component<\/p>/);
+assert.ok(geometryControlGroups(c).every(g=>g.parameters.every(p=>p.id!=='length')),'Bound own inputs appear in their script tabs instead of duplicate Size & shape controls');
+const requests=[];
+const wrappers=own.map(control=>{const slider={dataset:{customSlider:'input-'+control.index},value:'6',disabled:false};const input={value:'5'};const range={dataset:{sliderKey:control.parameter.customSlider.key},querySelector:()=>slider,querySelectorAll:()=>[]};return {dataset:{customExternalControl:String(control.index)},slider,querySelectorAll:()=>[range],querySelector:()=>input};});
+bindExternalCustomSliders({querySelectorAll:()=>wrappers},c,{displayValue:x=>x,nativeValue:x=>x,parameterDimension:()=>null,isBusy:()=>false,liveEdit:(key,slider,request,finished)=>requests.push({key,request,finished})});
+for(const wrapper of wrappers){wrapper.slider.oninput();wrapper.slider.onchange();}
+assert.deepEqual(requests.map(r=>r.request.index),[2,2,8,8]);assert.ok(requests.every(r=>r.request.operation==='custom-control-parameter'));assert.notEqual(requests[0].key,requests[2].key);
+console.log('Repeated own widgets retain native tabs, unique DOM/binding identity and guarded live routes without duplicate raw controls.');
+const onlyFine=customActionsMarkup(c,String,p=>`<input aria-label="${p.label}" data-parm="${p.id}">`,'fine length');
+assert.equal((onlyFine.match(/data-custom-external-control=/g)||[]).length,1);
+assert.match(onlyFine,/aria-label="Fine length"/);assert.doesNotMatch(onlyFine,/aria-label="Length"/);
+assert.equal(customActionsMarkup(c,String,()=>'', 'absent widget'),'');
+console.log('Custom widget search retains individual labels and guarded binding wrappers.');

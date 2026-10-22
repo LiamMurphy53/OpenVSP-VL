@@ -27,6 +27,9 @@ def enrich(v,gid,params):
     bindings={u['index']:u['parameterId'] for u in updates}
     previous={u['index']:u['parameterId'] for u in updates if u['parameterId']}
     bound_ids={pid for pid in bindings.values() if pid}
+    from native_custom_bindings import control_types
+    editable_types=control_types(v)-{v.GDEV_OUTPUT,v.GDEV_PARM_BUTTON}
+    editable_ids={bindings.get(d['index']) for d in definitions if d['type'] in editable_types and bindings.get(d['index'])}
     by_id={p['id']:p for p in params}
     by_key={(p['rawGroup'],p['name']):p for p in params}
     choice=None
@@ -70,7 +73,7 @@ def enrich(v,gid,params):
         if kind in (v.GDEV_SLIDER_INPUT,v.GDEV_SLIDER_ADJ_RANGE_INPUT):
             p['customSlider']=dict(range=definition.get('range'),adjustable=kind==v.GDEV_SLIDER_ADJ_RANGE_INPUT,
                                    key=f'{gid}:{definition["index"]}:{p["id"]}')
-        if kind==v.GDEV_OUTPUT:p.update(displayReadOnly=True,readOnlyReason='Calculated output from the custom script.')
+        if kind==v.GDEV_OUTPUT and p['id'] not in editable_ids:p.update(displayReadOnly=True,readOnlyReason='Calculated output from the custom script.')
         if kind==v.GDEV_TRIGGER_BUTTON:
             p['trigger']=True
             p['triggerLabel']=p.get('label') or definition['label'] or 'Apply'

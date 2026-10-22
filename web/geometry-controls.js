@@ -20,7 +20,8 @@ export function geometryControlGroups(component){
   ['Design','Diameter','Diameter'],['Design','NumBlade','Number of blades'],['Design','UseBeta34Flag','Pitch driver',[[1,'Pitch at ¾ radius'],[0,'Feather angle']]],component.params.find(p=>p.rawGroup==='Design'&&p.name==='UseBeta34Flag')?.value===0?['Design','Feather','Feather angle']:['Design','Beta34','Pitch at ¾ radius']
  ]:[];
  const library=['CUSTOM','BOX','BOXGROUP','DUCT','DISK','CONE','TRANSPORTFUSE','ONOFFEXAMPLE'].includes(kind)||kind.startsWith('STUDIOPART_');
- const size=library?component.params.filter(p=>p.rawGroup==='Design'||p.customControl):fields.map(args=>find(...args)).filter(Boolean);
+ const bound=new Set((component.customOwnControls||[]).map(c=>c.parameter.id));
+ const size=library?component.params.filter(p=>(p.rawGroup==='Design'||p.customControl)&&!bound.has(p.id)):fields.map(args=>find(...args)).filter(Boolean);
  if(kind==='POD'){const ratio=size.find(p=>p.name==='FineRatio');if(ratio)ratio.description='OpenVSP 3.52.2 uses length / radius here. For length / diameter, use half this value.';}
  const mode=find('XForm','Abs_Or_Relitive_flag','Coordinate reference',[[0,'Global coordinates'],[1,'Relative to attachment']]);
  if(mode)mode.description='Choose how position and orientation are specified.';

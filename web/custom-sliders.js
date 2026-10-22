@@ -10,7 +10,7 @@ export function sliderParameter(p){
  // native setter (for example, circumferential tessellation counts).
  if(![0,1,3,4].includes(p.type)||p.choices||p.trigger||![p.value,p.min,p.max].every(Number.isFinite)||p.min>=p.max)return p;
  const span=p.max-p.min,range=span<=360?span:Math.max(Math.abs(p.value)*.5,integer(p)?10:1);
- return {...p,customSlider:{key:'native:'+p.id,range,adjustable:true}};
+ return {...p,customSlider:{key:p.customSliderKey||'native:'+p.id,range,adjustable:true}};
 }
 export function sliderWindow(p,previous){
  const range=p.customSlider?.range;

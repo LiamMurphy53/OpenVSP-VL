@@ -327,6 +327,17 @@
             ".workspace/evidence/custom-dividers-20261022/packaged-verification-final.json"
           ],
           "scope": "Three focused native methods, selected related regressions and two browser original-SDK states; wider layouts and full custom runtime remain unproven."
+        },
+        {
+          "date": "2026-10-22",
+          "change": "Per-widget own custom controls retain independent native slider labels/ranges and guarded edit/history identity in both modes.",
+          "evidence": [
+            "CUSTOM_CONTROL_AUDIT.md",
+            "tests/test_custom_own_controls.py",
+            "tests/test_custom_own_controls.mjs",
+            ".workspace/evidence/custom-own-controls-20261022/"
+          ],
+          "scope": "Selected native and browser geometry, repeated-widget history, saved locks and relocated package pass. Experimental generated-profile persistence failed browser reopening and was removed; such fields stay read-only. W05 remains Unproven."
         }
       ]
     },

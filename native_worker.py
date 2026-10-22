@@ -228,7 +228,10 @@ def snapshot(v):
                                parent=v.GetGeomParent(gid), shown=v.GetSetFlag(gid,v.SET_SHOWN), mainSurfaceCount=v.GetNumMainSurfs(gid), surfaces=surfaces, referenceDrawings=reference_drawings,featureLines=features, paths=paths, points=isolated_points, wireSettings=wire_settings, mesh=mesh, sections=sections))
     import native_custom_bindings
     binding_parameters={p['id']:{**p,'bindingOwner':c['name']} for c in components for p in c['params']}
-    for c in components:c['customExternalControls']=native_custom_bindings.external_controls(v,c,binding_parameters)
+    for c in components:
+        controls=native_custom_bindings.external_controls(v,c,binding_parameters,include_own=True)
+        c['customOwnControls']=[row for row in controls if row.get('owned')]
+        c['customExternalControls']=[row for row in controls if not row.get('owned')]
     tools=native_tools.snapshot(v,parameter)
     import native_property_locks
     tools['propertyLocks']=native_property_locks.snapshot(v)
