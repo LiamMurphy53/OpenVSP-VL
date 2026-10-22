@@ -1,0 +1,15 @@
+import assert from 'node:assert/strict';
+import {fitReportMarkup,fitReportDownload} from '../web/fit-report.js';
+const esc=x=>String(x).replaceAll('&','&amp;').replaceAll('<','&lt;');
+assert.equal(fitReportMarkup(null,esc),'');
+const old={message:'Tolerance reached',code:1,before:1,after:.1};
+assert.match(fitReportMarkup(old,esc),/Download optimization report/);
+assert.doesNotMatch(fitReportMarkup(old,esc),/Fitted parameter changes/);
+const report={...old,variables:[{id:'p',label:'<Pod> / Length',before:8,after:12,unit:'model length units'}],targets:Array.from({length:23},(_,i)=>({index:i,before:i,after:i/10,beforeUW:[.2,.3],afterUW:[.4,.5]}))};
+const html=fitReportMarkup(report,esc);
+assert.match(html,/&lt;Pod>/);assert.match(html,/Current geometry and targets may have changed/);
+assert.match(html,/First 20 targets/);assert.match(html,/Saved target residuals \(23\)/);
+assert.doesNotMatch(html,/<td>21<\/td>/);
+const before=JSON.stringify(report),download=JSON.parse(fitReportDownload(report));
+assert.equal(download.targets.length,23);assert.deepEqual(download.variables,report.variables);assert.equal(JSON.stringify(report),before);
+console.log('Historical native fit receipt, legacy reports, escaped labels and complete precision-preserving export passed.');

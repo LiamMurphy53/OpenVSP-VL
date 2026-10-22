@@ -202,12 +202,15 @@ def mutate(v,r):
             from native_fit_variables import validate
             validate(v,v.GetFitModelVarVec())
             if 3*v.GetNumFitModelTargetPts()<v.GetNumFitModelOptVars():raise ValueError('The fit needs at least as many point-coordinate residuals as degrees of freedom. Add more points or fix U/W coordinates.')
-            before=v.UpdateFitModelDist();code=v.OptimizeFitModel()
+            before=v.UpdateFitModelDist()
+            import native_fit_report
+            receipt=native_fit_report.capture(v)
+            code=v.OptimizeFitModel()
             if code==0:raise ValueError('The native optimizer rejected the fit. Choose independent variables that move the target surfaces.')
             coll=v.GetChildCollection(v.GetVehicleID())
             for a in v.FindAttributesInCollection(coll):
                 if v.GetAttributeName(a)==REPORT:v.DeleteAttribute(a)
-            v.AddAttributeString(coll,REPORT,json.dumps(dict(code=code,message=TERMINATION.get(code,'Native optimizer terminated.'),before=before,after=v.UpdateFitModelDist(),converged=code in [1,2,3,4])))
+            v.AddAttributeString(coll,REPORT,json.dumps(dict(code=code,message=TERMINATION.get(code,'Native optimizer terminated.'),before=before,after=v.UpdateFitModelDist(),converged=code in [1,2,3,4],**native_fit_report.finish(v,receipt))))
         else:return False,None
         save(v)
     elif op=='clearance-snap':

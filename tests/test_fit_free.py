@@ -30,7 +30,12 @@ class FreeCoordinateFit(unittest.TestCase):
                 v.AddFitModelVar(length)
                 self.assertEqual(v.GetNumFitModelOptVars(),start['degreesOfFreedom'])
                 self.assertEqual(v.UpdateFitModelDist(),start['distance'])
+                before_distances=[v.GetFitModelTargetPtDist(i) for i in range(len(points))]
+                before_length=v.GetParmVal(length)
+                before_surface_points=[[p.x(),p.y(),p.z()] for p in [v.GetFitModelTargetPtSurfPt(i) for i in range(len(points))]]
                 code=v.OptimizeFitModel();distance=v.UpdateFitModelDist();expected_length=v.GetParmVal(length)
+                after_distances=[v.GetFitModelTargetPtDist(i) for i in range(len(points))]
+                after_surface_points=[[p.x(),p.y(),p.z()] for p in [v.GetFitModelTargetPtSurfPt(i) for i in range(len(points))]]
                 expected_uw=[[v.GetFitModelTargetPtU(i),v.GetFitModelTargetPtW(i)] for i in range(len(points))]
                 self.assertIn(code,[1,2,3,4]);self.assertLess(distance,1e-7)
                 self.assertAlmostEqual(expected_length,12,places=7)
@@ -43,9 +48,20 @@ class FreeCoordinateFit(unittest.TestCase):
                 for data in (state,cold):
                     fit=data['tools']['fit'];component=next(c for c in data['components'] if c['id']==g)
                     self.assertEqual(fit['report']['code'],code);self.assertEqual(fit['distance'],distance)
+                    receipt=fit['report'];self.assertEqual(receipt['engineVersion'],v.GetVSPVersion());self.assertEqual(receipt['variables'][0]['unit'],'model length units')
+                    self.assertEqual([(p['before'],p['after']) for p in receipt['variables']],[(before_length,expected_length)])
+                    self.assertEqual([t['before'] for t in receipt['targets']],before_distances)
+                    self.assertEqual([t['after'] for t in receipt['targets']],after_distances)
+                    self.assertEqual([t['beforeUW'] for t in receipt['targets']],seeds)
+                    self.assertEqual([t['afterUW'] for t in receipt['targets']],expected_uw)
+                    self.assertEqual([t['point'] for t in receipt['targets']],points)
+                    self.assertEqual([t['beforeSurfacePoint'] for t in receipt['targets']],before_surface_points)
+                    self.assertEqual([t['afterSurfacePoint'] for t in receipt['targets']],after_surface_points)
                     self.assertEqual([[t['u'],t['w']] for t in fit['targets']],expected_uw)
                     self.assertEqual(next(p['value'] for p in component['params'] if p['id']==length),expected_length)
                     self.assertEqual([s['points'] for s in component['surfaces']],expected)
+                changed,_=self.worker(dict(action='mutate',operation='parameter',id=length,value=9.),output)
+                self.assertEqual(changed['tools']['fit']['report'],state['tools']['fit']['report'],'The saved optimization receipt is historical after later geometry edits')
                 v.SaveFitModelFile(str(self.path/'direct.fit'))
                 expected_file=(self.path/'direct.fit').read_bytes()
                 exported,artifact=self.worker(dict(action='export-geometry',kind='fit'),output)

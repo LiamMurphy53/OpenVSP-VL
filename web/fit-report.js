@@ -1,0 +1,11 @@
+// A saved optimization receipt; values are never recomputed from current geometry.
+export function fitReportMarkup(report,esc){
+ if(!report)return '';
+ const value=x=>x==null?'Undefined':typeof x==='number'?Number(x.toPrecision(9)):x;
+ return `<section class="fit-report"><p role="status"><b>Last optimization:</b> ${esc(report.message)} Native stopping code ${esc(report.code)}; RMS ${esc(value(report.before))} → ${esc(value(report.after))} (model length units). Check the residuals before accepting the fit. Undo restores the previous model.</p><p class="native-tip">Saved snapshot of the last optimization. Current geometry and targets may have changed since this run.</p>${report.variables?.length?`<details><summary>Fitted parameter changes (${report.variables.length})</summary><div class="curve-table"><table class="result-table"><thead><tr><th>Parameter</th><th>Before</th><th>After</th><th>Units</th></tr></thead><tbody>${report.variables.map(p=>`<tr><td>${esc(p.label)}</td><td>${esc(value(p.before))}</td><td>${esc(value(p.after))}</td><td>${esc(p.unit)}</td></tr>`).join('')}</tbody></table></div></details>`:''}${report.targets?.length?`<details><summary>Saved target residuals (${report.targets.length})</summary><p>First ${Math.min(20,report.targets.length)} targets in native order. Distances use model length units. The download contains every target and its before/after U/W.</p><div class="curve-table"><table class="result-table"><thead><tr><th>Target</th><th>Before</th><th>After</th></tr></thead><tbody>${report.targets.slice(0,20).map(t=>`<tr><td>${t.index+1}</td><td>${esc(value(t.before))}</td><td>${esc(value(t.after))}</td></tr>`).join('')}</tbody></table></div></details>`:''}<button id="fit-report-download">Download optimization report</button></section>`;
+}
+export function fitReportDownload(report){return JSON.stringify({source:'Official OpenVSP native fit optimizer',...report},null,2);}
+export function bindFitReport(host,report){
+ const button=host.querySelector('#fit-report-download');if(!button)return;
+ button.onclick=()=>{const url=URL.createObjectURL(new Blob([fitReportDownload(report)],{type:'application/json'})),link=document.createElement('a');link.href=url;link.download='fit-optimization.json';link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);};
+}

@@ -949,6 +949,20 @@
             ".workspace/evidence/free-fit-browser/optimized-fit.png"
           ],
           "scope": "Exact original optimizer outputs/full geometry for three POD fitting modes; exact native .fit export and import; fixed-target surface metadata across POD/WING/BOR. Broader fitting combinations, identifiability/performance and full closure remain unproved."
+        },
+        {
+          "date": "2026-10-22",
+          "change": "Saved native fitting before/after receipts, modern parameter/residual tables and full JSON download.",
+          "evidence": [
+            "native_fit_report.py",
+            "web/fit-report.js",
+            "tests/test_fit_free.py",
+            "tests/test_fit_report.mjs",
+            "MODELING_AUDIT.md",
+            ".workspace/evidence/fit-receipts-20261022/browser-verification.json",
+            ".workspace/evidence/fit-receipts-20261022/packaged-verification.json"
+          ],
+          "scope": "Three native coordinate-mode receipts/cold/history checks; nine relocated fitting/measurement tests; one browser fixed-coordinate optimization, exact native report/171-point geometry, Undo and exercised download. Full W21 closure remains unproven."
         }
       ]
     },
