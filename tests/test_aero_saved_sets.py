@@ -96,3 +96,28 @@ class SavedAeroSets(unittest.TestCase):
         self.assertEqual(actual,expected)
         self.assertTrue(list(run.parent.glob('*.adb')))
         self.assertEqual(path.read_bytes(),saved);self.assertEqual(self.model.read_bytes(),before)
+
+    def test_explicit_cg_normal_and_degenerate_sets_match_original_setup_files(self):
+        import native_solver_setup,native_worker
+        v=self.v;body=v.AddGeom('POD');v.SetParmValUpdate(body,'X_Rel_Location','XForm',20)
+        for index,geom in [(3,self.gid),(4,body)]:
+            v.SetSetName(index,'CG wing' if index==3 else 'CG body')
+            for g in v.FindGeoms():v.SetSetFlag(g,index,g==geom)
+        v.Update();v.WriteVSPFile(str(self.model),v.SET_ALL);before=self.model.read_bytes()
+        for normal,degen in [(3,4),(4,3)]:
+            with self.subTest(normal=normal,degen=degen):
+                values=dict(StopBeforeRun=1,NCPU=1,UseModeFlag=0,GeomSet=-1,ThinGeomSet=3,UseCGModeFlag=0,CGGeomSet=normal,CGDegenSet=degen,RefFlag=0,Sref=1.,bref=10.,cref=1.)
+                actual,path=self.worker(dict(action='analysis',name='VSPAEROSweep',inputs=[dict(name=k,values=[value]) for k,value in values.items()]))
+                self.assertEqual(actual['executionMode'],'setup-only');self.assertFalse(actual['solverExecuted'])
+                fields={e['name']:e['values'] for e in actual['inputs']};self.assertEqual(fields['CGGeomSet'],[normal]);self.assertEqual(fields['CGDegenSet'],[degen])
+                folder=self.path/f'original-cg-{normal}-{degen}';folder.mkdir()
+                v.ClearVSPModel();v.ReadVSPFile(str(self.model));v.Update();v.SetVSP3FileName(str(folder/'aircraft.vsp3'))
+                v.SetAnalysisInputDefaults('VSPAEROComputeGeometry');v.SetIntAnalysisInput('VSPAEROComputeGeometry','GeomSet',[-1]);v.SetIntAnalysisInput('VSPAEROComputeGeometry','ThinGeomSet',[3]);self.assertTrue(v.ExecAnalysis('VSPAEROComputeGeometry'));native_worker.errors(v)
+                v.SetAnalysisInputDefaults('VSPAEROSweep')
+                for key,value in values.items():
+                    setter=v.SetIntAnalysisInput if v.GetAnalysisInputType('VSPAEROSweep',key)==v.INT_DATA else v.SetDoubleAnalysisInput
+                    setter('VSPAEROSweep',key,[value])
+                self.assertFalse(v.ExecAnalysis('VSPAEROSweep'));native_worker.errors(v)
+                self.assertEqual(actual['solverSetup'],native_solver_setup.read(folder))
+                self.assertEqual((path.parent/'aircraft.vspgeom').read_bytes(),(folder/'aircraft.vspgeom').read_bytes())
+                self.assertEqual(path.read_bytes(),before);self.assertEqual(self.model.read_bytes(),before)

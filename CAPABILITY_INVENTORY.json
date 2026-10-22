@@ -864,6 +864,16 @@
             ".workspace/evidence/cg-set-identity-20261022/"
           ],
           "scope": "Previous-source JS failure;34 JS modules,3 source/3 strict relocated study methods, browser pending selectors and35 original MassProp numeric fields per target verified. No new VSPAERO solve/degenerate CG/browser saved-run claim; workflow closure stays Unproven."
+        },
+        {
+          "date": "2026-10-22",
+          "change": "Verified explicit CG set setup against original files and browser saved-run missing-set replacement/cold recovery.",
+          "evidence": [
+            "PROJECT_STATUS.md",
+            "tests/test_aero_saved_sets.py",
+            ".workspace/evidence/cg-set-reuse-20261022/"
+          ],
+          "scope": "Source and strict relocated native setup comparison; browser removed/recreated targets block job creation until explicit replacement, then match original setup/geometry and retain missing prompts after reload. Setup-only; no new aerodynamic solve/convergence or broad closure claim."
         }
       ]
     },
@@ -1652,6 +1662,16 @@
             ".workspace/evidence/full-native-audit-20261022/reviewed-summary.json"
           ],
           "scope": "753 passes, one expected failure, one failure; all 605 archived source hashes unchanged. Outcome-classification fixtures cover six real unittest result types. Overall closure remains unproven."
+        },
+        {
+          "date": "2026-10-22",
+          "change": "Verified explicit CG set setup against original files and browser saved-run missing-set replacement/cold recovery.",
+          "evidence": [
+            "PROJECT_STATUS.md",
+            "tests/test_aero_saved_sets.py",
+            ".workspace/evidence/cg-set-reuse-20261022/"
+          ],
+          "scope": "Source and strict relocated native setup comparison; browser removed/recreated targets block job creation until explicit replacement, then match original setup/geometry and retain missing prompts after reload. Setup-only; no new aerodynamic solve/convergence or broad closure claim."
         }
       ]
     }
