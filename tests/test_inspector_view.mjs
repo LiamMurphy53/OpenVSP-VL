@@ -9,13 +9,15 @@ function range(key,owner,disabled=false){
  wrapper.querySelector=()=>input;return {wrapper,input};
 }
 const detail=(name,open)=>({id:name,dataset:{},open});
+let nested=[{dataset:{scrollKey:'prop-points-Chord'},scrollTop:320,scrollLeft:0}];
 let details=[detail('advanced',true)],ranges=[range('native:width','section')];
 const scroller={scrollTop:240,scrollLeft:7};
-const host={dataset:{viewContext:'wing/sections'},closest:()=>scroller,contains:el=>ranges.some(r=>r.input===el),querySelectorAll:selector=>selector==='details'?details:ranges.map(r=>r.wrapper)};
+const host={dataset:{viewContext:'wing/sections'},closest:()=>scroller,contains:el=>ranges.some(r=>r.input===el),querySelectorAll:selector=>selector==='details'?details:selector==='[data-scroll-key]'?nested:ranges.map(r=>r.wrapper)};
 globalThis.document={activeElement:ranges[0].input};
 let restore=preserveInspectorView(host,'wing/sections');
 details=[detail('advanced',false)];ranges=[range('native:width','other'),range('native:width','section')];scroller.scrollTop=0;scroller.scrollLeft=0;
-restore();assert.equal(details[0].open,true);assert.equal(document.activeElement,ranges[1].input);assert.deepEqual(ranges[1].input.focusOptions,{preventScroll:true});assert.equal(scroller.scrollTop,240);assert.equal(scroller.scrollLeft,7);
+nested=[{dataset:{scrollKey:'prop-points-Chord'},scrollTop:0,scrollLeft:0}];
+restore();assert.equal(nested[0].scrollTop,320);assert.equal(details[0].open,true);assert.equal(document.activeElement,ranges[1].input);assert.deepEqual(ranges[1].input.focusOptions,{preventScroll:true});assert.equal(scroller.scrollTop,240);assert.equal(scroller.scrollLeft,7);
 restore=preserveInspectorView(host,'wing/sections');ranges=[range('native:width','section',true)];const oldFocus=document.activeElement;restore();assert.equal(document.activeElement,oldFocus,'Do not focus a newly computed/locked field');
 restore=preserveInspectorView(host,'other-wing/sections');details=[detail('advanced',false)];scroller.scrollTop=0;restore();assert.equal(details[0].open,false);assert.equal(scroller.scrollTop,0);assert.equal(host.dataset.viewContext,'other-wing/sections');
 // Tool panels have no parameter-group wrapper; stable native IDs still restore.

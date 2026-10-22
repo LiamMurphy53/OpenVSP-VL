@@ -882,3 +882,12 @@ Nine source checks passed in16.372s and nine packaged implementation/interpreter
 In the isolated browser, the review showed swept cm/ft versus fixed ft. Froze all25step inputs, used the repair, and verified all24other inputs remained byte-for-byte equal in the definition. Returned CAD units to explicit editing, saved, restored inheritance, saved and ran. The two repaired cases exported cm/ft files exactly matching independent original STEP exports except the native timestamp. The original aircraft stayed byte-exact. Browser reopening retained inheritance, the disabled field, explicit-edit action and completed cases. Evidence, source/package harnesses and comparison script: `.workspace/evidence/study-default-overrides-20261021/`.
 
 This review uses declared public input-to-parameter bindings; it does not infer every conditional update made inside the native engine. Per-member assembly review, actual geometry-preparation inheritance execution and wider native override combinations remain unproven. Broad W24 closure remains Unproven.
+
+
+## 2026-10-21 — live propeller point editor browser delivery
+
+An isolated two-component browser fixture exposed horizontal clipping in the new propeller distribution sliders. Control points now stack radius and distribution fields within the Properties panel. Each keeps exact entry, original native activity locks and adjustable slider windows. Nested curve-list scroll positions now survive parameter rerenders within the same component/view; changed views retain their existing isolation.
+
+A real mouse drag changed chord control point 1 from .15 to .19252575292915. One browser Undo/Redo restored the exact pre/post aircraft bytes. A later keyboard slider edit changed control point 3 to .202 while retaining inner scrollTop 1134.6666259765625. The rendered editor measured clientWidth=scrollWidth=289, with no horizontal overflow. Independent original SetPCurve evaluation reproduced all 816 propeller surface points exactly (maximum coordinate difference 0). This is the specific chord-distribution browser case, not a claim of all curve-family browser coverage or general narrow-layout completion. All 23 JavaScript test modules passed.
+
+Evidence: `.workspace/evidence/live-prop-slider-browser-20261021/compare.py`, `verification.json`, before/pre-drag/post-drag aircraft receipts and `stacked-controls.png`. Aircraft fixtures and diagnostic evidence remain excluded from commits.

@@ -84,3 +84,12 @@
 .custom-slider-range>small{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.custom-slider-range>div{flex-shrink:0}
 
 #mesh-host{scroll-margin-top:4rem}
+
+/* Distribution controls fit the narrow Properties panel without sideways scrolling. */
+.curve-table .prop-point-table{width:100%;min-width:0;table-layout:fixed}
+.prop-point-table thead{display:none}
+.prop-point-table tbody,.prop-point-table tr,.prop-point-table td{display:block;width:100%;min-width:0;box-sizing:border-box}
+.prop-point-table tr{padding:.5rem 0;border-bottom:1px solid var(--line,#dce3d8)}
+.prop-point-table td{border:0;padding:.35rem .2rem}
+.prop-point-table td[data-point-label]::before{content:attr(data-point-label);display:block;margin-bottom:.3rem;font-size:.85rem}
+.prop-point-table input[type=number]{width:100%;min-width:0;box-sizing:border-box}

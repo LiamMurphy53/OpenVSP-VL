@@ -12,6 +12,7 @@ export function preserveInspectorView(host,context){
   key:active.closest('[data-slider-key]')?.dataset.sliderKey,
   group:active.closest('[data-group]')?.dataset.group||''
  }:null;
+ const nested=new Map(same?[...host.querySelectorAll('[data-scroll-key]')].map(el=>[el.dataset.scrollKey,{top:el.scrollTop,left:el.scrollLeft}]):[]);
  const opened=new Map(same?keys().map(([el,key])=>[key,el.open]):[]);
  return ()=>{
   if(same){
@@ -21,6 +22,7 @@ export function preserveInspectorView(host,context){
     const input=wrapper?.querySelector('[data-custom-slider]');
     if(input&&!input.disabled)input.focus({preventScroll:true});
    }
+   for(const el of host.querySelectorAll('[data-scroll-key]')){const saved=nested.get(el.dataset.scrollKey);if(saved){el.scrollTop=saved.top;el.scrollLeft=saved.left;}}
    scroller.scrollTop=top;scroller.scrollLeft=left;
   }
   host.dataset.viewContext=context;
