@@ -138,6 +138,20 @@
             ".workspace/evidence/numeric-choice-audit-20261022/packaged-verification.json"
           ],
           "scope": "Ten source and ten relocated native methods pass; selected four-role/index/U cases exact; browser 1,011 values and 357 points exact with byte-level Undo/Redo/cold recovery. Original one-row sampling SIGSEGV remains a native limitation; broader representations/layout/study coverage unproven."
+        },
+        {
+          "date": "2026-10-22",
+          "change": "Enabled dependent flowpath study axes from inactive baselines, grouped native per-body preparation, and pre-analysis state checks.",
+          "evidence": [
+            "native_engine_controls.py",
+            "native_family_studies.py",
+            "native_study_worker.py",
+            "tests/test_engine_studies.py",
+            ".workspace/evidence/flowpath-studies-20261022/before.log",
+            ".workspace/evidence/flowpath-studies-20261022/browser-verification.json",
+            ".workspace/evidence/flowpath-studies-20261022/packaged-verification.json"
+          ],
+          "scope": "Five source/relocated methods and six shared regressions pass; six SDK geometry/result cases; browser two-case native equality, actual CSV and saved reopening. Broader representations/couplings/layouts remain unproven."
         }
       ]
     },
@@ -1329,6 +1343,20 @@
             ".workspace/evidence/global-choice-audit-20261021/packaged-final.log"
           ],
           "scope": "Six Vehicle-owned controls; native code/reset/roundtrip checks; two browser jobs match original numerical results. Full workflow closure remains unproven."
+        },
+        {
+          "date": "2026-10-22",
+          "change": "Enabled dependent flowpath study axes from inactive baselines, grouped native per-body preparation, and pre-analysis state checks.",
+          "evidence": [
+            "native_engine_controls.py",
+            "native_family_studies.py",
+            "native_study_worker.py",
+            "tests/test_engine_studies.py",
+            ".workspace/evidence/flowpath-studies-20261022/before.log",
+            ".workspace/evidence/flowpath-studies-20261022/browser-verification.json",
+            ".workspace/evidence/flowpath-studies-20261022/packaged-verification.json"
+          ],
+          "scope": "Five source/relocated methods and six shared regressions pass; six SDK geometry/result cases; browser two-case native equality, actual CSV and saved reopening. Broader representations/couplings/layouts remain unproven."
         }
       ]
     },

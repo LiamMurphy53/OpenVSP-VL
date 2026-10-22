@@ -136,6 +136,7 @@ def schema(v,parameter):
             item['studyNote']='Controller axes are applied before dependent values. Include compatible controller choices; cases where OpenVSP keeps the field calculated stop before analysis. Joint limits are checked after this case’s limit controls are applied.'
             if v.GetParmContainer(p) in v.FindGeoms() and v.GetGeomTypeName(v.GetParmContainer(p)).upper() in ('PROP','PROPELLER'):
                 item['studyNote']='Spacing, pitch and folding modes are applied before their blade values. Uniform spacing and the final two balanced blade angles remain calculated. Blade-count changes can remove native fields; choose a saved aircraft containing the blades to sweep.'
+            if item['rawGroup']=='EngineModel':item['studyNote']='Flowpath role, representation and station axes are applied together, regardless of axis order. Include compatible role and location-basis controllers; unused or calculated fields stop that case before analysis. Section indices are native integers; U values are normalized fractions. Distances use native model length units.'
             if p in case_metadata:
                 item['studyNote']='Case calculation, projection direction, symmetric rotation and automatic bounds are applied before dependent values. Include compatible controller choices; cases where OpenVSP calculates the field stop before analysis. Values use native model units and degrees.'
             if item['rawGroup']=='Connection':item['studyNote']='The connection mode is applied before its custom degrees of freedom. Include Custom in a mode axis to sweep these constraints; preset-mode cases keep their original calculated mask and stop before manual assignment.'
@@ -450,8 +451,22 @@ def prepare(v,req,model,errors):
         v.GetNumUnsteadyGroups();v.GetNumActuatorDisks()
         if not v.ValidParm(item['id']):
             raise ValueError('A swept parameter became unavailable after native geometry changes in this case. Propeller representation changes can regenerate rotor groups. Split representation and rotor-speed sweeps into separate studies using their own saved aircraft.')
+    import native_engine_controls
+    flowpath_groups={}
+    for item in ordered:
+        owner=native_engine_controls.owner(v,item['id'])
+        if owner:flowpath_groups.setdefault(owner,[]).append(item)
+    applied_flowpaths=set()
     for item in ordered:
         require_case_parameter(item)
+        owner=native_engine_controls.owner(v,item['id'])
+        if owner and owner not in applied_flowpaths:
+            members=flowpath_groups[owner]
+            for member in members:require_case_parameter(member)
+            native_engine_controls.configure(v,dict(geom=owner,settings={v.GetParmName(member['id']):member['requested'] for member in members}))
+            v.Update();errors(v)
+            applied_flowpaths.add(owner)
+            require_case_parameter(item)
         import native_scale_controls
         native_scale_controls.validate_parameter(v,item['id'])
         import native_connection_controls
@@ -496,7 +511,10 @@ def prepare(v,req,model,errors):
         import native_attachments
         native_attachments.validate_parameter(v,item['id'])
         import native_family_controls
-        native_family_controls.validate_parameter(v,item['id'])
+        try:native_family_controls.validate_parameter(v,item['id'])
+        except ValueError as error:
+            if owner:raise ValueError(native_engine_controls.LABELS.get(v.GetParmName(item['id']),v.GetParmName(item['id']))+': '+str(error)) from None
+            raise
         import native_engine_controls
         native_engine_controls.validate_parameter(v,item['id'],item['requested'])
         import native_case_studies
@@ -509,7 +527,7 @@ def prepare(v,req,model,errors):
         native_gear_controls.validate_parameter(v,item['id'],item['requested'])
         if native_gear_controls.cg_range_controller(v,item['id']) and not v.GetParmLowerLimit(item['id'])<=item['requested']<=v.GetParmUpperLimit(item['id']):
             raise ValueError('The requested '+native_gear_controls.LABELS[v.GetParmName(item['id'])]+' is outside the native range limits after applying this case’s nominal CG. Choose a minimum at or below nominal and a maximum at or above nominal.')
-        if not native_parasite_controls.set_parameter(v,item['id'],item['requested']):v.SetParmValUpdate(item['id'],item['requested'])
+        if not owner and not native_parasite_controls.set_parameter(v,item['id'],item['requested']):v.SetParmValUpdate(item['id'],item['requested'])
         native_parasite_controls.refresh(v)
         native_wave_controls.refresh(v)
         native_case_studies.refresh(v,item['id']);errors(v)
@@ -527,6 +545,8 @@ def prepare(v,req,model,errors):
     import native_measurements
     native_measurements.refresh(v)
     errors(v)
+    for owner in applied_flowpaths:
+        native_engine_controls.require_distinct_stations(v,owner,{})
     for item in records:
         require_case_parameter(item)
         item['effective']=v.GetParmVal(item['id'])

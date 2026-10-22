@@ -58,6 +58,8 @@ def metadata(v):
                         [condition('BladeAzimuthMode',[v.PROP_AZI_BALANCED]),frame,count(max(4,blade+2))]],limitControllers=[])
             out[ids['BladeAzimuthDeltaFlag']]=dict(alternatives=[[condition('BladeAzimuthMode',[v.PROP_AZI_FREE])],
                 [condition('BladeAzimuthMode',[v.PROP_AZI_BALANCED]),count(4)]],limitControllers=[])
+    import native_engine_controls
+    out.update(native_engine_controls.study_metadata(v))
     import native_case_studies
     out.update(native_case_studies.metadata(v))
     import native_connection_controls
@@ -110,6 +112,8 @@ def deferred_limits(v,pid,swept):
 
 
 def priority(v,pid):
+    import native_engine_controls
+    if native_engine_controls.owner(v,pid):return -5
     import native_wave_controls
     wave=native_wave_controls.study_priority(v,pid)
     if wave is not None:return wave

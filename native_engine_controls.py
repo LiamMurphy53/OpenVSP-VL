@@ -119,3 +119,41 @@ def configure(v,request):
  # Stage the native parameters before the existing transaction's single Update.
  # Inactive station inputs can become active when the role/basis changes.
  for pid,value in updates:v.SetParmVal(pid,value)
+
+
+def study_metadata(v):
+ """Plan controller eligibility; final native activity still decides each case."""
+ out={}
+ for gid in v.FindGeoms():
+  if v.GetGeomTypeName(gid).upper() not in ('FUSELAGE','STACK'):continue
+  ids={v.GetParmName(p):p for p in v.GetGeomParmIDs(gid) if v.GetParmGroupName(p)=='EngineModel'}
+  def condition(name,values):return dict(parameter=ids[name],values=values,label=LABELS.get(name,name))
+  def add(name,branches):
+   out[ids[name]]=dict(alternatives=branches,limitControllers=[],atomicFlowpath=True)
+  inlet=[condition('GeomIOType',[v.ENGINE_GEOM_INLET,v.ENGINE_GEOM_INLET_OUTLET])]
+  outlet=[condition('GeomIOType',[v.ENGINE_GEOM_OUTLET,v.ENGINE_GEOM_INLET_OUTLET])]
+  add('GeomInType',[inlet]);add('InletModeType',[inlet])
+  add('GeomOutType',[[condition('GeomIOType',[v.ENGINE_GEOM_OUTLET])],
+      [condition('GeomIOType',[v.ENGINE_GEOM_INLET_OUTLET]),
+       condition('GeomInType',[v.ENGINE_GEOM_TO_LIP,v.ENGINE_GEOM_TO_FACE])]])
+  add('OutletModeType',[outlet+[condition('InletModeType',
+      [v.ENGINE_MODE_TO_LIP,v.ENGINE_MODE_TO_FACE,v.ENGINE_MODE_TO_FACE_NEG,
+       v.ENGINE_MODE_TO_FACE_NEG_ONLY,v.ENGINE_MODE_EXTEND])]])
+  for end in ('Inlet','Outlet'):
+   lip=[inlet if end=='Inlet' else outlet]
+   if end=='Inlet':
+    face=[inlet+[condition('GeomInType',[v.ENGINE_GEOM_FLOWTHROUGH,v.ENGINE_GEOM_FLOWPATH,v.ENGINE_GEOM_TO_FACE])]]
+   else:
+    face=[outlet+[condition('GeomOutType',[v.ENGINE_GEOM_FLOWTHROUGH,v.ENGINE_GEOM_FLOWPATH,v.ENGINE_GEOM_TO_FACE])],
+          [condition('GeomIOType',[v.ENGINE_GEOM_INLET_OUTLET]),condition('GeomInType',[v.ENGINE_GEOM_FLOWTHROUGH])]]
+   for location,branches in [('Lip',lip),('Face',face)]:
+    base=end+location
+    add(base+'Mode',branches)
+    for suffix,mode in [('Index',v.ENGINE_LOC_INDEX),('U',v.ENGINE_LOC_U)]:
+     add(base+suffix,[branch+[condition(base+'Mode',[mode])] for branch in branches])
+  extensions=[inlet+[condition('InletModeType',[v.ENGINE_MODE_EXTEND])],
+              outlet+[condition('OutletModeType',[v.ENGINE_MODE_EXTEND])]]
+  for name in ('RotExtensionFlag','AutoExtensionFlag'):add(name,extensions)
+  add('AutoExtensionSet',[branch+[condition('AutoExtensionFlag',[1])] for branch in extensions])
+  add('ExtensionDistance',[branch+[condition('AutoExtensionFlag',[0])] for branch in extensions])
+ return out
