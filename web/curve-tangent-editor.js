@@ -5,8 +5,8 @@ export function tangentSliderParameters(section,control,side){
  return handle.parameters.map((p,i)=>({...p,id:`tangent-${i}`,name:`Tangent handle ${'XYZ'[i]}`,type:0,value:handle.coordinates[i],customSlider:{key:`tangent:${section.id}:${control.anchor}:${side}:${i}`,range:Math.max(.1,Math.abs(handle.coordinates[i])*.5),adjustable:true}}));
 }
 export function tangentCoordinates(inputs,handle){
- const xyz=inputs.map((input,i)=>input.disabled?handle.coordinates[i]:Number(input.value));
- if(inputs.some((input,i)=>!input.disabled&&(!input.value.trim()||!Number.isFinite(xyz[i])||xyz[i]<handle.parameters[i].min||xyz[i]>handle.parameters[i].max)))throw Error('Enter finite coordinates within the native limits.');
+ const xyz=inputs.map((input,i)=>!handle.parameters[i].active?handle.coordinates[i]:Number(input.value));
+ if(inputs.some((input,i)=>handle.parameters[i].active&&(!input.value.trim()||!Number.isFinite(xyz[i])||xyz[i]<handle.parameters[i].min||xyz[i]>handle.parameters[i].max)))throw Error('Enter finite coordinates within the native limits.');
  return xyz;
 }
 // The chosen native handle drives the tangent; no curve equations run here.
@@ -26,8 +26,8 @@ export function mountTangentEditor(host,section,mutate,esc,{liveEdit,isBusy=()=>
   host.querySelector('[aria-label="Driving tangent"]').onchange=e=>{saved.side=e.target.value;render(true);};
   host.querySelector('[aria-label="Smooth selected tangent"]').onchange=e=>mutate({operation:'curve-smooth',point:control.anchor,smooth:e.target.checked});
   const inputs=[...host.querySelectorAll('[data-tangent-axis]')],button=host.querySelector('[data-apply-tangent]'),status=host.querySelector('[data-tangent-status]');
-  function values(){return inputs.map((input,i)=>input.disabled?handle.coordinates[i]:Number(input.value));}
-  function validate(){const xyz=values(),invalid=inputs.some((input,i)=>!input.disabled&&(!input.value.trim()||!Number.isFinite(xyz[i])||xyz[i]<handle.parameters[i].min||xyz[i]>handle.parameters[i].max));button.disabled=invalid||xyz.every((v,i)=>v===handle.coordinates[i]);status.textContent=invalid?'Enter finite coordinates within the native limits.':`Point ${handle.point} drives the ${saved.side} tangent at anchor ${control.anchor}. Coordinates are normalized to the section dimensions.`;return !invalid;}
+  function values(){return inputs.map((input,i)=>!handle.parameters[i].active?handle.coordinates[i]:Number(input.value));}
+  function validate(){const xyz=values(),invalid=inputs.some((input,i)=>handle.parameters[i].active&&(!input.value.trim()||!Number.isFinite(xyz[i])||xyz[i]<handle.parameters[i].min||xyz[i]>handle.parameters[i].max));button.disabled=invalid||xyz.every((v,i)=>v===handle.coordinates[i]);status.textContent=invalid?'Enter finite coordinates within the native limits.':`Point ${handle.point} drives the ${saved.side} tangent at anchor ${control.anchor}. Coordinates are normalized to the section dimensions.`;return !invalid;}
   inputs.forEach(input=>{input.oninput=validate;input.onkeydown=e=>{if(e.key==='Enter'&&!button.disabled){e.preventDefault();button.click();}};});
   bindCustomSliders(host,sliderParameters,{...units,isBusy,liveEdit:(p,slider,value,finished)=>{
    try{

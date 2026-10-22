@@ -19,8 +19,10 @@ assert.match(host.innerHTML,/Tangent handle Z slider"[^>]*disabled/);
 slider.oninput();
 assert.deepEqual(calls[0][2],{operation:'curve-tangent',anchor:3,side:'outgoing',xyz:[.45,.3,0]});
 assert.equal(calls[0][3],false);
+inputs.forEach(input=>input.disabled=true); // Application locks numeric fields during live native work.
 slider.onpointerup();slider.onchange();
 assert.equal(calls.length,2);assert.equal(calls[1][3],true);
+assert.deepEqual(calls[1][2].xyz,[.45,.3,0],'Busy fields must retain the final slider value');
 inputs[1].value='';assert.throws(()=>tangentCoordinates(inputs,handle),/finite/);
 inputs[1].value='3';assert.throws(()=>tangentCoordinates(inputs,handle),/limits/);
 inputs[1].value='.3';inputs[2].value='99';

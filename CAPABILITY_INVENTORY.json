@@ -155,6 +155,18 @@
             ".workspace/evidence/cst-sliders-20261021/coefficient-sliders.png"
           ],
           "scope": "Desktop WING section: browser slider, range adjustment, saved reopening and byte-exact Undo/Redo verified; 201 profile points and both coefficient arrays match independent original SDK setters exactly. Broader family, lock/error and narrow-layout browser coverage remains unproven. W03 closure unchanged."
+        },
+        {
+          "date": "2026-10-22",
+          "change": "Live editable-profile tangent sliders verified in relocated browser; fixed final-request stale coordinates and outer-page scroll clamping.",
+          "evidence": [
+            "web/curve-tangent-editor.js",
+            "web/inspector-view.js",
+            "tests/test_tangent_sliders.mjs",
+            "tests/test_live_edit_history.py",
+            ".workspace/evidence/tangent-sliders-20261022/verification.json"
+          ],
+          "scope": "Keyboard/pointer tangent edits match 536 parameters, 25 control points and 660 surface samples; drag Undo/Redo bytes exact, page offset/focus retained. Broader closure unproven."
         }
       ]
     },
@@ -1370,6 +1382,18 @@
             ".workspace/evidence/structural-unit-sequence-20261021/packaged.log"
           ],
           "scope": "Source four-case sequence passes; relocated sequence has one MPa mismatch. Seventy-two original-only fresh exports reproduce both exact decks (70/2). Engine internal cause and full numerical closure remain unresolved; equality remains strict."
+        },
+        {
+          "date": "2026-10-22",
+          "change": "Live editable-profile tangent sliders verified in relocated browser; fixed final-request stale coordinates and outer-page scroll clamping.",
+          "evidence": [
+            "web/curve-tangent-editor.js",
+            "web/inspector-view.js",
+            "tests/test_tangent_sliders.mjs",
+            "tests/test_live_edit_history.py",
+            ".workspace/evidence/tangent-sliders-20261022/verification.json"
+          ],
+          "scope": "Keyboard/pointer tangent edits match 536 parameters, 25 control points and 660 surface samples; drag Undo/Redo bytes exact, page offset/focus retained. Broader closure unproven."
         }
       ]
     }

@@ -928,3 +928,13 @@ In an isolated desktop browser, Cobra creation used the normal Add geometry menu
 Added adjustable-range sliders for normalized X/Y/Z tangent-handle coordinates in Modeling tools → Section profile → Editable curve. Each update uses the existing native curve-tangent transaction; locked axes remain disabled, companion coordinates are retained, and one drag groups into one Undo step. Exact numeric entry and Apply remain available.
 
 Validation: all JavaScript test modules passed, including live tangent dispatch, locked-axis preservation, finite/bounds validation and single release. Six native live-history tests passed (9.526 s), including tangent drag Undo/Redo byte restoration; four existing tangent/native-coordinate equality tests passed (30.113 s). Browser interaction was not independently exercised for this addition. These checks do not establish overall geometry parity.
+
+### Tangent live-edit completion and outer page scroll — 2026-10-22
+
+Relocated-app browser verification caught a missing busy-state case in the first slider implementation: while a native request was running, numeric fields were temporarily disabled and the final tangent request incorrectly restored their original coordinates. Tangent editing now checks native coordinate activity rather than temporary DOM disabled state. The regression explicitly disables all numeric fields between input and release and requires the final request to retain the new value and unchanged companion axes.
+
+The same browser workflow exposed outer-document scroll clamping when replacing a tall Modeling tools editor. View preservation now captures outer scroll offsets and restores them after dock toolbar reattachment, within the same editor context. Existing inspector/inner-list restoration is retained. JavaScript coverage includes document scroll, dock reattachment and context-change guards.
+
+Relocated-app browser keyboard and pointer edits match independent original MoveEditXSecPnt output exactly: all 536 geometry parameters, 25 control points and 660 sampled surface points. One Undo restores the pre-drag file byte-for-byte and one Redo restores the final drag file. Two later Y edits retain page scroll at 2616 px and focus on the Y slider. Evidence: .workspace/evidence/tangent-sliders-20261022/verification.json, compare.py and sliders.png. All JavaScript modules pass. Broader W03 and W25 closure remain unproven.
+
+Strict relocated-package verification also passed all 10 native live-history/tangent regressions (production imports, interpreter and distribution constrained to the moved bundle); see .workspace/evidence/tangent-sliders-20261022/packaged.log and packaged-verification.json.

@@ -24,3 +24,12 @@ restore=preserveInspectorView(host,'other-wing/sections');details=[detail('advan
 ranges=[range('native:width','')];document.activeElement=ranges[0].input;
 restore=preserveInspectorView(host,'other-wing/sections');ranges=[range('native:width','')];restore();assert.equal(document.activeElement,ranges[0].input);
 console.log('Replacement slider focus, disabled guards, disclosure/scroll and component/tab isolation passed.');
+
+// The tall tools editor scrolls its outer document, which clamps when replaced.
+const page={scrollTop:1800,scrollLeft:12};
+document.scrollingElement=page;host.parentElement=page;
+restore=preserveInspectorView(host,'other-wing/sections');page.scrollTop=0;page.scrollLeft=0;
+restore();assert.equal(page.scrollTop,1800);assert.equal(page.scrollLeft,12);
+page.scrollTop=300;await Promise.resolve();assert.equal(page.scrollTop,1800,'Restore after dock toolbar observer');
+restore=preserveInspectorView(host,'other-wing/sections');restore();page.scrollTop=0;host.dataset.viewContext='different-tool';
+await Promise.resolve();assert.equal(page.scrollTop,0,'Never restore an old page after context changes');

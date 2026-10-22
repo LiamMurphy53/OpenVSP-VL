@@ -2,7 +2,7 @@ import {plotSVG} from './plot-svg.js?v=20261021';
 export {plotSVG};
 import {cstSliderParameters,cstSliderMarkup,bindCstSliders,cstRequest} from './cst-sliders.js?v=20261021';
 import {sectionProfileParameters} from './section-profile-parameters.js?v=20261020-editable';
-import {preserveInspectorView} from './inspector-view.js?v=20261020-focus';
+import {preserveInspectorView} from './inspector-view.js?v=20261022-outer';
 import {customSliderMarkup,bindCustomSliders} from './custom-sliders.js?v=20261021-more';
 import {visibleRenderer} from './visible-renderer.js?v=20261015';
 import {renderFlowPlanes,disposeFlowPlanePreview} from './flow-plane-tools.js?v=20261015';
