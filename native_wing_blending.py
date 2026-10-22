@@ -87,3 +87,36 @@ def read_only_reasons(v):
                 _,reason=policy(v,v.GetParmName(pid),*found)
                 if reason:result[pid]=reason
     return result
+
+
+def study_metadata(v):
+    out={}
+    for gid in v.FindGeoms():
+        if v.GetGeomTypeName(gid).upper()!='WING':continue
+        surf=v.GetXSecSurf(gid,0);count=v.GetNumXSec(surf)
+        for index in range(count):
+            xid=v.GetXSec(surf,index)
+            for edge,label in EDGES:
+                if (index==0 and edge.startswith('In')) or (index==count-1 and edge.startswith('Out')):continue
+                mode=v.GetXSecParm(xid,edge+'Mode')
+                for suffix in ('Sweep','Dihedral','Strength'):
+                    allowed=[v.BLEND_ANGLES] if suffix!='Strength' else [getattr(v,e) for e,_ in MODES if e!='BLEND_FREE']
+                    out[v.GetXSecParm(xid,edge+suffix)]=dict(conditions=[dict(parameter=mode,values=allowed,label=label+' blend')],limitControllers=[],wingBlend=True)
+    return out
+
+
+def study_choices(v,pid):
+    found=context(v,pid)
+    if found is None or not v.GetParmName(pid).endswith('Mode'):return None
+    index,count,_=found
+    # Cross-axis controller values can activate matching modes. Expose original
+    # structurally valid choices, then validate each case after ordered modes.
+    allowed,_=policy(v,v.GetParmName(pid),index,count,{edge:v.BLEND_ANGLES for edge,_ in EDGES})
+    return [dict(value=getattr(v,enum),label=label) for enum,label in MODES if getattr(v,enum) in allowed]
+
+
+def study_priority(v,pid):
+    if v.GetParmName(pid) not in NAMES:return None
+    if context(v,pid) is None:return None
+    name=v.GetParmName(pid)
+    return {'InLEMode':-14,'InTEMode':-13,'OutLEMode':-12,'OutTEMode':-11}.get(name)

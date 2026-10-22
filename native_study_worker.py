@@ -122,6 +122,11 @@ def schema(v,parameter):
             owner=native_material_controls.owner_label(v,p) or owner
         if item['rawGroup'] in ('FeaLayer','FeaMaterial'):
             item['studyNote']='Material models and declared input units are applied before property and layer values. Values use each case’s declared native units; workspace display conversion is not applied. Prepare a baseline laminate containing every layer to sweep; calculated solver properties remain outputs.'
+        import native_wing_blending
+        blend_choices=native_wing_blending.study_choices(v,p)
+        if blend_choices is not None:
+            item['choices']=blend_choices
+            item['studyNote']='Wing blend modes apply before angles and strengths, regardless of axis order. Matching modes require compatible driving modes in that case. Values use native degrees and dimensionless tangent strength.'
         named=cap_choices.get(p)
         title=named['label']+' ('+item['name']+')' if named else item.get('label',item['name'])
         item['label']=item.get('studyLabel') or ' / '.join(([geometry[p]] if p in geometry and geometry[p]!=owner else [])+[owner,item['group'],title])
@@ -136,6 +141,7 @@ def schema(v,parameter):
             item['studyNote']='Controller axes are applied before dependent values. Include compatible controller choices; cases where OpenVSP keeps the field calculated stop before analysis. Joint limits are checked after this case’s limit controls are applied.'
             if v.GetParmContainer(p) in v.FindGeoms() and v.GetGeomTypeName(v.GetParmContainer(p)).upper() in ('PROP','PROPELLER'):
                 item['studyNote']='Spacing, pitch and folding modes are applied before their blade values. Uniform spacing and the final two balanced blade angles remain calculated. Blade-count changes can remove native fields; choose a saved aircraft containing the blades to sweep.'
+            if family_dependencies[p].get('wingBlend'):item['studyNote']='The profile’s blend mode applies before this value, regardless of axis order. Angles require Set sweep and dihedral; strengths require a constrained mode. Automatic, matched angles and absent-neighbor outputs stop before analysis. Angles use native degrees; strength is dimensionless.'
             if item['rawGroup']=='EngineModel':item['studyNote']='Flowpath role, representation and station axes are applied together, regardless of axis order. Include compatible role and location-basis controllers; unused or calculated fields stop that case before analysis. Section indices are native integers; U values are normalized fractions. Distances use native model length units.'
             if p in case_metadata:
                 item['studyNote']='Case calculation, projection direction, symmetric rotation and automatic bounds are applied before dependent values. Include compatible controller choices; cases where OpenVSP calculates the field stop before analysis. Values use native model units and degrees.'
@@ -549,6 +555,8 @@ def prepare(v,req,model,errors):
         native_engine_controls.require_distinct_stations(v,owner,{})
     for item in records:
         require_case_parameter(item)
+        import native_wing_blending
+        native_wing_blending.validate_parameter(v,item['id'],item['requested'])
         item['effective']=v.GetParmVal(item['id'])
     native_property_locks.require_unchanged(v,locked)
     native_ngon.write(v,model);errors(v)

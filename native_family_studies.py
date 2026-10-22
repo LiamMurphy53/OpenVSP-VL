@@ -60,6 +60,8 @@ def metadata(v):
                 [condition('BladeAzimuthMode',[v.PROP_AZI_BALANCED]),count(4)]],limitControllers=[])
     import native_engine_controls
     out.update(native_engine_controls.study_metadata(v))
+    import native_wing_blending
+    out.update(native_wing_blending.study_metadata(v))
     import native_case_studies
     out.update(native_case_studies.metadata(v))
     import native_connection_controls
@@ -112,6 +114,9 @@ def deferred_limits(v,pid,swept):
 
 
 def priority(v,pid):
+    import native_wing_blending
+    blend=native_wing_blending.study_priority(v,pid)
+    if blend is not None:return blend
     import native_engine_controls
     if native_engine_controls.owner(v,pid):return -5
     import native_wave_controls
