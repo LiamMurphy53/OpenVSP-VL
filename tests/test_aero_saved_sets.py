@@ -121,3 +121,20 @@ class SavedAeroSets(unittest.TestCase):
                 self.assertEqual(actual['solverSetup'],native_solver_setup.read(folder))
                 self.assertEqual((path.parent/'aircraft.vspgeom').read_bytes(),(folder/'aircraft.vspgeom').read_bytes())
                 self.assertEqual(path.read_bytes(),before);self.assertEqual(self.model.read_bytes(),before)
+
+    def test_cg_mode_setup_matches_original_without_inactive_set_overrides(self):
+        import native_solver_setup,native_worker
+        v=self.v
+        for geom in v.FindGeoms():v.SetSetFlag(geom,3,geom==self.gid)
+        mode=v.CreateAndAddMode('CG mode',3,-1);v.Update();v.WriteVSPFile(str(self.model),v.SET_ALL);before=self.model.read_bytes()
+        values=dict(StopBeforeRun=1,NCPU=1,UseModeFlag=0,GeomSet=-1,ThinGeomSet=3,UseCGModeFlag=1,CGModeID=mode,RefFlag=0,Sref=1.,bref=10.,cref=1.)
+        actual,path=self.worker(dict(action='analysis',name='VSPAEROSweep',inputs=[dict(name=k,values=[value]) for k,value in values.items()]))
+        self.assertEqual(actual['executionMode'],'setup-only');self.assertFalse(actual['solverExecuted'])
+        effective={e['name']:e['values'] for e in actual['inputs']};self.assertEqual(effective['UseCGModeFlag'],[1]);self.assertEqual(effective['CGModeID'],[mode])
+        folder=self.path/'original-cg-mode';folder.mkdir();v.ClearVSPModel();v.ReadVSPFile(str(self.model));v.Update();v.SetVSP3FileName(str(folder/'aircraft.vsp3'))
+        v.SetAnalysisInputDefaults('VSPAEROComputeGeometry');v.SetIntAnalysisInput('VSPAEROComputeGeometry','GeomSet',[-1]);v.SetIntAnalysisInput('VSPAEROComputeGeometry','ThinGeomSet',[3]);self.assertTrue(v.ExecAnalysis('VSPAEROComputeGeometry'));native_worker.errors(v)
+        v.SetAnalysisInputDefaults('VSPAEROSweep')
+        for key,value in values.items():
+            setter={v.INT_DATA:v.SetIntAnalysisInput,v.DOUBLE_DATA:v.SetDoubleAnalysisInput,v.STRING_DATA:v.SetStringAnalysisInput}[v.GetAnalysisInputType('VSPAEROSweep',key)];setter('VSPAEROSweep',key,[value])
+        self.assertFalse(v.ExecAnalysis('VSPAEROSweep'));native_worker.errors(v)
+        self.assertEqual(actual['solverSetup'],native_solver_setup.read(folder));self.assertEqual((path.parent/'aircraft.vspgeom').read_bytes(),(folder/'aircraft.vspgeom').read_bytes());self.assertEqual(path.read_bytes(),before);self.assertEqual(self.model.read_bytes(),before)

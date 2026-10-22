@@ -649,6 +649,18 @@
             ".workspace/evidence/numeric-choice-audit-20261022/packaged-verification.json"
           ],
           "scope": "Ten source and ten relocated native methods pass; selected four-role/index/U cases exact; browser 1,011 values and 357 points exact with byte-level Undo/Redo/cold recovery. Original one-row sampling SIGSEGV remains a native limitation; broader representations/layout/study coverage unproven."
+        },
+        {
+          "date": "2026-10-22",
+          "change": "Shared guide/request applicability prevents hidden stale inputs from blocking valid alternative configurations.",
+          "evidence": [
+            "PROJECT_STATUS.md",
+            "web/analysis-input-state.js",
+            "tests/test_analysis_input_state.mjs",
+            "tests/test_aero_saved_sets.py",
+            ".workspace/evidence/inactive-analysis-inputs-20261022/"
+          ],
+          "scope": "Before-browser reproduction;35 JS modules, source/strict relocated native CG-mode setup and browser original-file comparisons pass. Active missing-target guards remain; broader dependencies and workflow closure remain Unproven."
         }
       ]
     },
@@ -874,6 +886,18 @@
             ".workspace/evidence/cg-set-reuse-20261022/"
           ],
           "scope": "Source and strict relocated native setup comparison; browser removed/recreated targets block job creation until explicit replacement, then match original setup/geometry and retain missing prompts after reload. Setup-only; no new aerodynamic solve/convergence or broad closure claim."
+        },
+        {
+          "date": "2026-10-22",
+          "change": "Shared guide/request applicability prevents hidden stale inputs from blocking valid alternative configurations.",
+          "evidence": [
+            "PROJECT_STATUS.md",
+            "web/analysis-input-state.js",
+            "tests/test_analysis_input_state.mjs",
+            "tests/test_aero_saved_sets.py",
+            ".workspace/evidence/inactive-analysis-inputs-20261022/"
+          ],
+          "scope": "Before-browser reproduction;35 JS modules, source/strict relocated native CG-mode setup and browser original-file comparisons pass. Active missing-target guards remain; broader dependencies and workflow closure remain Unproven."
         }
       ]
     },
@@ -1672,6 +1696,18 @@
             ".workspace/evidence/cg-set-reuse-20261022/"
           ],
           "scope": "Source and strict relocated native setup comparison; browser removed/recreated targets block job creation until explicit replacement, then match original setup/geometry and retain missing prompts after reload. Setup-only; no new aerodynamic solve/convergence or broad closure claim."
+        },
+        {
+          "date": "2026-10-22",
+          "change": "Shared guide/request applicability prevents hidden stale inputs from blocking valid alternative configurations.",
+          "evidence": [
+            "PROJECT_STATUS.md",
+            "web/analysis-input-state.js",
+            "tests/test_analysis_input_state.mjs",
+            "tests/test_aero_saved_sets.py",
+            ".workspace/evidence/inactive-analysis-inputs-20261022/"
+          ],
+          "scope": "Before-browser reproduction;35 JS modules, source/strict relocated native CG-mode setup and browser original-file comparisons pass. Active missing-target guards remain; broader dependencies and workflow closure remain Unproven."
         }
       ]
     }

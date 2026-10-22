@@ -1,3 +1,4 @@
+import {analysisInputApplies} from './analysis-input-state.js?v=20261022';
 import {projectionOptionInputs} from './projection-defaults.js?v=20261021';
 import {waveAreaResults,bindWaveAreaResults} from './wave-area-results.js?v=20261015';
 import {parasiteFlightResults} from './parasite-flight-results.js?v=20261012-1';
@@ -27,7 +28,7 @@ export function refreshGuideFields(spec,prefix='analysis'){
  for(const e of spec?.inputs||[]){
   const field=document.getElementById(`${prefix}-${e.name}-${e.index}`)?.closest('.analysis-input');
   if(field?.closest('.guide-fields'))groups.add(field.closest('.guide-fields'));
-  const applies=rule=>rule.any?rule.any.some(applies):rule.all?rule.all.every(applies):(()=>{const controller=document.getElementById(`${prefix}-${rule.input}-0`);return controller&&rule.values.some(v=>String(v)===controller.value);})();
+  const applies=rule=>analysisInputApplies(rule,prefix,document);
   if(field&&e.applicableWhen)field.hidden=!applies(e.applicableWhen);
   if(e.minWhen){const input=document.getElementById(`${prefix}-${e.name}-${e.index}`);if(input)input.min=String(applies(e.minWhen)?e.minWhen.value:e.min);}
  }

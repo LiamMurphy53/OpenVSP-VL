@@ -1,0 +1,16 @@
+import assert from 'node:assert/strict';
+import {analysisInputApplies as applies,editableAnalysisInputs as editable} from '../web/analysis-input-state.js';
+const values={'analysis-UseCGModeFlag-0':{value:'1'},'analysis-UseModeFlag-0':{value:'0'},'analysis-PropBladesMode-0':{value:'1'},'analysis-AutoTimeStepFlag-0':{value:'0'}};
+const host={getElementById:id=>values[id]};
+const mode={input:'UseCGModeFlag',values:[1]},sets={input:'UseCGModeFlag',values:[0]};
+const fields=[{name:'UseCGModeFlag',editable:true},{name:'CGModeID',editable:true,applicableWhen:mode},{name:'CGGeomSet',editable:true,applicableWhen:sets},{name:'CGDegenSet',editable:true,applicableWhen:sets},{name:'NativeReadout',editable:false}];
+const spec={inputs:fields},before=JSON.stringify(spec);
+assert.deepEqual(editable(spec,'analysis',host).map(e=>e.name),['UseCGModeFlag','CGModeID'],'Stale hidden set fields do not block a mode-based request');
+values['analysis-UseCGModeFlag-0'].value='0';
+assert.deepEqual(editable(spec,'analysis',host).map(e=>e.name),['UseCGModeFlag','CGGeomSet','CGDegenSet'],'Returning to set selection restores validation of both required targets');
+const nested={all:[{input:'PropBladesMode',values:[1,2]},{input:'AutoTimeStepFlag',values:[0]}]};
+assert.equal(applies(nested,'analysis',host),true);values['analysis-AutoTimeStepFlag-0'].value='1';assert.equal(applies(nested,'analysis',host),false);
+assert.equal(applies({any:[mode,nested]},'analysis',host),false);values['analysis-UseCGModeFlag-0'].value='1';assert.equal(applies({any:[mode,nested]},'analysis',host),true);
+assert.equal(applies({input:'Missing',values:[0]},'analysis',host),false);assert.deepEqual(editable(null,'analysis',host),[]);assert.equal(JSON.stringify(spec),before);
+assert.equal(applies(mode,'geometry',host),false,'Separate preparation inputs never use flight controller values');
+console.log('Guide applicability and request collection share native controller rules, including CG mode recovery, nested dependencies and prefix isolation.');

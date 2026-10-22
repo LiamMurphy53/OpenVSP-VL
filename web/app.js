@@ -1,3 +1,4 @@
+import {editableAnalysisInputs} from './analysis-input-state.js?v=20261022';
 import {bindPodSliders} from './pod-sliders.js?v=20261021';
 import {runInputDraft} from './run-input-draft.js?v=20261021';
 import {refreshSetSelections,restoreSetSelection,setInputNames} from './set-selection.js?v=20261022-cg';
@@ -28,7 +29,7 @@ import {geometryControlGroups,geometryTypeLabel,podDiameterMarkup} from './geome
 import {needsSavedSolution,savedSolutionMarkup,savedSolutionSource,restoreSavedSolution} from './saved-solutions.js?v=20261010-123';
 import {wireEditor,bindWireEditor} from './wire-editor.js?v=20261010-123';
 import {installRegionOverlays,refreshRegionOverlays,drawRegionOverlays,focusRegionBoundary} from './region-overlay.js?v=20261010-123';
-import {setupGuide,bindSetupGuide,guidedResults,bindGuidedResults,hasGuide,refreshGuideFields,bindGuideFields,bindAeroGeometryCopy} from './analysis-guides.js?v=20261021-projection-options';
+import {setupGuide,bindSetupGuide,guidedResults,bindGuidedResults,hasGuide,refreshGuideFields,bindGuideFields,bindAeroGeometryCopy} from './analysis-guides.js?v=20261022-applicability';
 import {installRunWorkspace,refreshHistory,renderRunWorkspace,clearRunWorkspace} from './run-workspace.js?v=20261021-cfd-focus';
 import {installTools,renderTools,refreshToolGeometry,setToolsVisible,renderPlots,plotSVG,openEngineeringSettings,openGeometryCases,openFlowPlanes,openParameterLinks} from './tools.js?v=20261022-tangent-sliders';
 import {installStudies,showStudies} from './studies.js?v=20261021-members';
@@ -241,7 +242,7 @@ async function loadSchema(){if($('#analysis-select').value==='VSPAERODegenGeom')
 $('#analysis-select').onchange=loadSchema;$('#reset-analysis').onclick=loadSchema;$('#analysis-structure').onchange=loadSchema;
 function editedInputs(spec,prefix,all=false){
  if(!spec)return[];
- return spec.inputs.filter(e=>e.editable).map(e=>{
+ return editableAnalysisInputs(spec,prefix,document).map(e=>{
   const el=document.getElementById(`${prefix}-${e.name}-${e.index}`);let values;
   if(el.dataset.numericList==='true'){const text=el.value.trim();values=text?text.split(/[,\s]+/).map(x=>{const value=Number(x);if(!Number.isFinite(value))throw Error(`${e.label||e.name}: enter finite positions separated by commas or spaces.`);return value;}):[];}
   else if(el.dataset.choiceList==='true'){values=[...el.selectedOptions].map(o=>o.value);}
