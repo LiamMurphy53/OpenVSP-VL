@@ -62,6 +62,18 @@
             ".workspace/evidence/manager-name-collisions-20261021/browser-verification.json"
           ],
           "scope": "Seven colliding component/mode names, native load/edit/cold behavior, source/package owner/CAD checks and browser CAD edit/byte-exact Undo/Redo/reopen verified. Four engineering regressions preserve exact original outputs. Manager identities match original serialized records and 200 native geometry samples are unchanged. Broader naming, large-model and portable coverage remains unproven."
+        },
+        {
+          "date": "2026-10-22",
+          "change": "Installed 25-type creation/valid transform/native grid/cold reopen catalogue regression; Cobra browser shape editing and Undo verified.",
+          "evidence": [
+            "tests/test_geometry_catalogue.py",
+            "MODELING_AUDIT.md",
+            ".workspace/evidence/geometry-catalogue-20261022/source-final.log",
+            ".workspace/evidence/geometry-catalogue-20261022/packaged-verification.json",
+            ".workspace/evidence/geometry-catalogue-20261022/browser-verification.json"
+          ],
+          "scope": "Full parameter multiplicity and sampled native grids across advertised types, native routing constraints and degenerate placeholders; one browser Cobra edit matches 100 values/171 points. Supplemental to the frozen 755-test audit; broader closure remains unproven."
         }
       ]
     },
@@ -211,6 +223,18 @@
             ".workspace/evidence/global-setting-ownership-packaged.log"
           ],
           "scope": "Eight user-name collisions preserve all global values/geometry; imported custom Box uses the colliding name with exact original geometry and unchanged global units; selected real controls/wave arrays/bindings pass. Broad closure remains unproved."
+        },
+        {
+          "date": "2026-10-22",
+          "change": "Installed 25-type creation/valid transform/native grid/cold reopen catalogue regression; Cobra browser shape editing and Undo verified.",
+          "evidence": [
+            "tests/test_geometry_catalogue.py",
+            "MODELING_AUDIT.md",
+            ".workspace/evidence/geometry-catalogue-20261022/source-final.log",
+            ".workspace/evidence/geometry-catalogue-20261022/packaged-verification.json",
+            ".workspace/evidence/geometry-catalogue-20261022/browser-verification.json"
+          ],
+          "scope": "Full parameter multiplicity and sampled native grids across advertised types, native routing constraints and degenerate placeholders; one browser Cobra edit matches 100 values/171 points. Supplemental to the frozen 755-test audit; broader closure remains unproven."
         }
       ]
     },
