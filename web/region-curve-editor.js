@@ -1,6 +1,6 @@
 import {curvePointListMarkup,bindCurvePointList} from './curve-point-list.js?v=20261013-1';
 import {profileSources} from './profile-sources.js?v=20261012-1';
-import {mountCurveEditor} from './curve-editor.js?v=20261010-123';
+import {mountCurveEditor} from './curve-editor.js?v=20261022-point-sliders';
 const renderedCurves=new Map(),tangentSides=new Map();
 // Curve shapes and dimensions are changed by the native engine.
 export function regionCurveEditor(region,data,h){
