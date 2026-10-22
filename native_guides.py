@@ -148,6 +148,9 @@ def annotate(v,name,inputs):
     if name=='WaveDrag':
         cid=native_managers.manager(v,'WaveDragSettings');pid=v.FindParm(cid,'Sref','WaveDrag');ref=v.FindParm(cid,'RefFlag','WaveDrag')
         guide['reference']=dict(parameter=pid,value=v.GetParmVal(pid),source=int(v.GetParmVal(ref)),min=v.GetParmLowerLimit(pid),max=v.GetParmUpperLimit(pid),wings=[dict(id=g,name=v.GetGeomName(g),area=v.GetParmVal(v.FindParm(g,'TotalArea','WingGeom'))) for g in v.FindGeoms() if v.GetGeomTypeName(g).upper()=='WING'])
+    if name=='Projection':
+        from native_saved_analysis_controls import projection_options
+        guide['savedProjectionOptions']=projection_options(v)
     if name=='MassProp':
         guide['massComponents']=[dict(id=g,name=v.GetGeomName(g),settings=[dict(id=p,name=v.GetParmName(p),value=v.GetParmVal(p)) for p in v.GetGeomParmIDs(g) if v.GetParmGroupName(p)=='Mass_Props']) for g in v.FindGeoms()]
     return dict(guide=guide)

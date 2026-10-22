@@ -77,6 +77,8 @@ def parameter(v, pid):
     native_cfd_density.annotate(v,field)
     import native_scale_controls
     native_scale_controls.annotate(v,field)
+    import native_saved_analysis_controls
+    native_saved_analysis_controls.annotate(v,field)
     import native_property_locks
     native_property_locks.annotate(v,field)
     return field
@@ -270,7 +272,10 @@ def analysis_schema(v, name, reset=True):
     errors(v)
     if name=='CfdMeshAnalysis':inputs.append(dict(name='UseSavedSizing',index=0,type=v.INT_DATA,values=[getattr(v,'_studio_cfd_saved_sizing',0)],editable=True,description='Studio run policy: preserve original saved sizing bases/values, or apply entered absolute run lengths. All density calculations remain native.'))
     import native_guides
-    return dict(name=name, description=v.GetAnalysisDoc(name), inputs=inputs,**native_guides.annotate(v,name,inputs))
+    guidance=native_guides.annotate(v,name,inputs)
+    import native_saved_analysis_controls
+    native_saved_analysis_controls.bind_inputs(v,name,inputs)
+    return dict(name=name, description=v.GetAnalysisDoc(name), inputs=inputs,**guidance)
 
 
 def set_inputs(v, name, entries, validate_guides=True, prepared_single_geom=''):

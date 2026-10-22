@@ -437,6 +437,18 @@
             ".workspace/evidence/cad-study-choices-20261021/named-choices.png"
           ],
           "scope": "Five source/package native checks and 16 JS modules passed. Four cm/ft \u00d7 Shell/BREP source cases and four in/ft \u00d7 Shell/BREP browser cases match independent original STEP and IGES records, excluding timestamps only. Saved controls reopen with named values. Broader CAD geometry, override combinations, settings and study closure remain unproven."
+        },
+        {
+          "date": "2026-10-21",
+          "change": "Named saved engineering enum controls and explicit saved Projection option copy, retaining original standard reset behavior.",
+          "evidence": [
+            "ENGINEERING_UTILITY_AUDIT.md",
+            "tests/test_saved_analysis_choices.py",
+            "tests/test_projection_defaults.mjs",
+            ".workspace/evidence/global-choice-audit-20261021/browser-verification.json",
+            ".workspace/evidence/global-choice-audit-20261021/packaged-final.log"
+          ],
+          "scope": "Six Vehicle-owned controls; native code/reset/roundtrip checks; two browser jobs match original numerical results. Full workflow closure remains unproven."
         }
       ]
     },
@@ -478,6 +490,18 @@
             ".workspace/evidence/aero-saved-setup-packaged.log"
           ],
           "scope": "Exact complete parsed setup, geometry file bytes and all floating-point polar columns for one saved wing-only case; original input files preserved. Broader native analysis closure remains unproved."
+        },
+        {
+          "date": "2026-10-21",
+          "change": "Named saved engineering enum controls and explicit saved Projection option copy, retaining original standard reset behavior.",
+          "evidence": [
+            "ENGINEERING_UTILITY_AUDIT.md",
+            "tests/test_saved_analysis_choices.py",
+            "tests/test_projection_defaults.mjs",
+            ".workspace/evidence/global-choice-audit-20261021/browser-verification.json",
+            ".workspace/evidence/global-choice-audit-20261021/packaged-final.log"
+          ],
+          "scope": "Six Vehicle-owned controls; native code/reset/roundtrip checks; two browser jobs match original numerical results. Full workflow closure remains unproven."
         }
       ]
     },
@@ -1094,6 +1118,18 @@
             ".workspace/evidence/restarted-job-stop-20261021/browser-verification.json"
           ],
           "scope": "Two-process control fixture plus native study/server-exit regression in source/relocated package and browser recovery followed by original21-field CompGeom equality. Broad recovery closure remains Unproven."
+        },
+        {
+          "date": "2026-10-21",
+          "change": "Named saved engineering enum controls and explicit saved Projection option copy, retaining original standard reset behavior.",
+          "evidence": [
+            "ENGINEERING_UTILITY_AUDIT.md",
+            "tests/test_saved_analysis_choices.py",
+            "tests/test_projection_defaults.mjs",
+            ".workspace/evidence/global-choice-audit-20261021/browser-verification.json",
+            ".workspace/evidence/global-choice-audit-20261021/packaged-final.log"
+          ],
+          "scope": "Six Vehicle-owned controls; native code/reset/roundtrip checks; two browser jobs match original numerical results. Full workflow closure remains unproven."
         }
       ]
     },
