@@ -43,3 +43,15 @@ class LiveHistory(unittest.TestCase):
         final=self.model.read_bytes()
         service.undo(revision=service.REVISION);self.assertEqual(self.model.read_bytes(),before)
         service.undo(redo=True,revision=service.REVISION);self.assertEqual(self.model.read_bytes(),final)
+
+    def test_prop_curve_drag_is_one_native_undo_step(self):
+        self.v.ClearVSPModel();gid=self.v.AddGeom('PROP');self.v.Update();self.v.WriteVSPFile(str(self.model),self.v.SET_ALL)
+        data=service.state();prop=data['tools']['propellers'][0];curve=prop['curves'][0]
+        before=self.model.read_bytes();baseline=len(service.HISTORY)
+        for scale in (1.05,1.1):
+            service.mutation(dict(operation='prop-curve-set',geom=gid,curve=curve['name'],stations=curve['stations'],
+                values=[v*scale for v in curve['values']],editGesture='e'*32,revision=service.REVISION))
+        self.assertEqual(len(service.HISTORY),baseline+1)
+        final=self.model.read_bytes()
+        service.undo(revision=service.REVISION);self.assertEqual(self.model.read_bytes(),before)
+        service.undo(redo=True,revision=service.REVISION);self.assertEqual(self.model.read_bytes(),final)

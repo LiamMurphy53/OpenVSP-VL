@@ -8,7 +8,7 @@ import {propertyLocksMarkup,bindPropertyLocks} from './property-locks.js?v=20261
 import {preserveInspectorView} from './inspector-view.js?v=20261020-focus';
 import {createSurfaceShader} from './surface-shader.js?v=20261014';
 import {customActionsMarkup,bindCustomActions} from './custom-controls.js?v=20261012';
-import {designAssistMarkup,bindDesignAssist,wingMountMarkup,bindWingMount} from './design-assist.js?v=20261021-more';
+import {designAssistMarkup,bindDesignAssist,wingMountMarkup,bindWingMount} from './design-assist.js?v=20261021-mount-slider';
 import {propertiesMode,propertiesModeMarkup,bindPropertiesMode,applyPropertiesMode} from './properties-mode.js?v=20261012-1';
 import {familyWorkflowsMarkup,bindFamilyWorkflows,disposeFamilyWorkflows} from './family-workflows.js?v=20261010-123';
 import {crewToolsEnabled,humanPromotedIDs,humanControlsMarkup,bindHumanControls,disposeHumanInspection} from './human-controls.js?v=20261010-123';
@@ -16,7 +16,7 @@ import {assemblySizingMarkup,bindAssemblySizing,assemblySizingRequest,restoreAss
 import {profilePromotedIDs,profileControlsMarkup,setProfilePreviewPlane} from './profile-controls.js?v=20261010-123';
 import {endCapPromotedIDs,endCapControlsMarkup} from './end-cap-controls.js?v=20261010-123';
 import {bindSkinning} from './skinning-controls.js?v=20261010-123';
-import {propPromotedIDs,propControlsMarkup} from './prop-controls.js?v=20261010-123';
+import {propPromotedIDs,propControlsMarkup} from './prop-controls.js?v=20261021-sliders';
 import {attachmentPromotedIDs,attachmentControlsMarkup,drawAttachmentFrame} from './attachment-controls.js?v=20261010-123';
 import {bodyPromotedIDs,bodyControlsMarkup} from './body-controls.js?v=20261010-123';
 import {wingSection,wingPromotedIDs,wingControlsMarkup} from './wing-controls.js?v=20261010-123';
@@ -122,6 +122,15 @@ function renderPropControls(){
  const validate=()=>{const {stations,values}=points(),inputs=[...document.querySelectorAll('[data-design-prop-radius],[data-design-prop-value]')],valid=inputs.every(el=>el.value.trim()&&Number.isFinite(Number(el.value)))&&stations.every((v,i)=>v>=0&&v<=1&&(!i||v>stations[i-1])),changed=JSON.stringify(stations)!==JSON.stringify(curve.stations)||values.some((v,i)=>v!==curve.values[i]);$('#design-prop-apply').disabled=!valid||!changed;$('#design-prop-curve-status').textContent=!valid?'Use finite values and increasing radius fractions between zero and one.':changed?'Apply to update the native blade curve.':'Control points match the saved native curve.';};
  document.querySelectorAll('[data-design-prop-radius],[data-design-prop-value]').forEach(el=>el.oninput=validate);validate();
  $('#design-prop-apply').onclick=()=>mutate({operation:'prop-curve-set',...points()});
+ const curveSliders=curve.pointControls.flatMap((control,i)=>[['station',`prop-radius-${i}`,null,control.stationActive],['value',`prop-value-${i}`,curve.dimension,control.valueActive]].map(([kind,field,dimension,active])=>{const p=c.params.find(p=>p.id===control[kind]);return p?{...p,dimension,active:p.active!==false&&active,customSlider:{key:'prop-point:'+field,range:Math.min(p.max-p.min,Math.max(Math.abs(p.value)*.5,dimension==='angle'?10:.1)),adjustable:true}}:null;}).filter(Boolean));
+ let lastCurveEdit=null;
+ bindCustomSliders(host,curveSliders,{displayValue,parameterDimension:p=>p.dimension,isBusy:()=>busy,liveEdit:(p,slider,value,finished)=>{
+  validate();const data=points();
+  if(data.stations.some((v,i)=>!Number.isFinite(v)||v<0||v>1||(i&&v<=data.stations[i-1]))||data.values.some(v=>!Number.isFinite(v))){if(finished&&lastCurveEdit)return liveRequestEdit(`prop-curve:${c.id}:${curve.name}`,slider,lastCurveEdit,true);return;}
+  lastCurveEdit={operation:'prop-curve-set',geom:c.id,curve:curve.name,...data};
+  return liveRequestEdit(`prop-curve:${c.id}:${curve.name}`,slider,{operation:'prop-curve-set',geom:c.id,curve:curve.name,...data},finished);
+ }});
+
  $('#design-prop-split').onclick=()=>{const el=$('#design-prop-insert'),station=Number(el.value);if(!el.value.trim()||!Number.isFinite(station)){toast('Enter a finite radius fraction.');return;}mutate({operation:'prop-curve-split',station});};
  document.querySelectorAll('[data-design-prop-remove]').forEach(el=>el.onclick=()=>mutate({operation:'prop-curve-delete',index:Number(el.dataset.designPropRemove)}));
  $('#design-prop-approximate').onclick=()=>mutate({operation:'prop-approximate'});$('#design-prop-thickness').onclick=()=>mutate({operation:'prop-reset-thickness'});

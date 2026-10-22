@@ -1,0 +1,17 @@
+import assert from 'node:assert/strict';
+import {propControlsMarkup} from '../web/prop-controls.js';
+import {wingMountMarkup,bindWingMount} from '../web/design-assist.js';
+const p={id:'radius',name:'r_0',type:0,value:.3,min:0,max:1,active:true};
+const c={id:'prop',type:'PROP',params:[p,{...p,id:'chord',value:.2}],sections:[]};
+const curve={name:'Chord',label:'Chord ratio',dimension:null,type:0,stations:[.3],values:[.2],sampleStations:[.3],sampleValues:[.2],pointControls:[{station:'radius',value:'chord',stationActive:false,valueActive:true}]};
+const html=propControlsMarkup(c,0,{curves:[curve]},{esc:String,parameterField:()=>'',plotSVG:()=>'',displayValue:x=>x,unitSuffix:()=>'',curveTypes:{LINEAR:0,PCHIP:1,CEDIT:2}});
+assert.match(html,/aria-label="Blade radius fraction 0 slider"[^>]*disabled/);
+assert.match(html,/aria-label="Chord ratio 0 slider"[^>]*value="0.2"/);
+assert.match(html,/id="prop-value-0"/);
+assert.match(wingMountMarkup(c,[{id:'wing',type:'WING',name:'Wing'}],String),/Mount span position slider/);
+const span={value:'50'},slider={value:'50'},button={},parent={value:'wing'},follow={checked:true};let request;
+const fields={'[data-mount-span]':span,'[data-mount-slider]':slider,'[data-mount-apply]':button,'[data-mount-parent]':parent,'[data-mount-follow]':follow};
+bindWingMount({querySelector:s=>fields[s]},c,{mutate:r=>request=r,toast:()=>{}});
+slider.value='65';slider.oninput();assert.equal(span.value,'65');button.onclick();assert.equal(request.value,65);
+span.value='25';span.oninput();assert.equal(slider.value,'25');
+console.log('Propeller point sliders preserve native locks; wing mount slider and exact entry stay synchronized.');
