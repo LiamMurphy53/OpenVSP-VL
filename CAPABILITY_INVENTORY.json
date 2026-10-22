@@ -764,6 +764,15 @@
             "FEATURE_STATUS.md"
           ],
           "scope": "Three driver pairs, single/assembly contexts, mixed-member browser failure/recovery and exact cold original mesh/decks. Warm replay mismatch retained; broad closure remains Unproven."
+        },
+        {
+          "date": "2026-10-22",
+          "change": "Relocated browser structural-region airfoil file import, malformed retry, Undo/Redo and cold reopening verified against original native import/paste.",
+          "evidence": [
+            ".workspace/evidence/region-file-browser-20261022/structural-verification.json",
+            ".workspace/evidence/region-file-browser-20261022/compare_structural.py"
+          ],
+          "scope": "One Selig file and structural region; complete original preview equality, including 20,992 region drawing points; malformed file and undo/redo byte preservation. Other stated family/layout requirements remain open."
         }
       ]
     },
@@ -1420,6 +1429,18 @@
             ".workspace/evidence/tangent-sliders-20261022/verification.json"
           ],
           "scope": "Keyboard/pointer tangent edits match 536 parameters, 25 control points and 660 surface samples; drag Undo/Redo bytes exact, page offset/focus retained. Broader closure unproven."
+        },
+        {
+          "date": "2026-10-22",
+          "change": "Completed frozen 755-case native audit; corrected runner accounting so expected failures and skips cannot be reported as passes.",
+          "evidence": [
+            "tests/run_native_suite.py",
+            "tests/native_case_runner.py",
+            "tests/test_native_suite_runner.py",
+            "PROJECT_STATUS.md",
+            ".workspace/evidence/full-native-audit-20261022/reviewed-summary.json"
+          ],
+          "scope": "753 passes, one expected failure, one failure; all 605 archived source hashes unchanged. Outcome-classification fixtures cover six real unittest result types. Overall closure remains unproven."
         }
       ]
     }
@@ -1622,5 +1643,19 @@
     ],
     "evidence": ".workspace/evidence/full-native-audit-20261020/interpretation-final.json",
     "scope": "Isolated regression evidence only. All 25 broad workflow closures remain unproven."
+  },
+  "fullNativeAudit20261022": {
+    "sourceCommit": "a658ef0c3e11eff2bdf56073505c53dc6b0bed41",
+    "testCases": 755,
+    "passed": 753,
+    "expectedFailures": 1,
+    "failures": 1,
+    "skipped": 0,
+    "crashes": 0,
+    "timeouts": 0,
+    "frozenSourceFiles": 605,
+    "frozenSourceFilesUnchanged": true,
+    "evidence": ".workspace/evidence/full-native-audit-20261022/reviewed-summary.json",
+    "scope": "Frozen a658ef0 build, full existing isolated native test catalogue. Raw runner successful exits include one expected failure; reviewed outcome distinguishes it. Later source/UI work is supplemental. Does not establish W01\u2013W25 closure."
   }
 }
