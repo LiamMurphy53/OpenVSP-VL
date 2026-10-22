@@ -1,0 +1,13 @@
+import assert from 'node:assert/strict';
+import {geometryResultUnit as unit,geometryResultLabel as label} from '../web/geometry-result-units.js';
+import {guidedResults} from '../web/analysis-guides.js';
+assert.equal(unit('Slice','Slice_Loc'),'model length');assert.equal(unit('Slice','Slice_Area'),'model length²');assert.equal(unit('Slice','Slice_Area_Center'),'model length');
+for(const axis of ['xx','yy','zz','xy','xz','yz'])assert.equal(unit('Mass_Properties','Comp_I'+axis),'model mass × model length²');
+assert.equal(unit('Mass_Properties','Total_Mass'),'model mass');assert.equal(unit('Mass_Properties','Total_Volume'),'model length³');
+assert.equal(unit('Projection','Comp_Areas'),'model length²');assert.equal(unit('Projection','Direction'),'dimensionless');
+assert.equal(unit('Comp_Geom','SubSurf_Wet_Area'),'model length²');assert.equal(unit('Comp_Geom','Wet_Vol'),'model length³');assert.equal(unit('Unknown','Area'),'');assert.equal(label('Slice','Num_Slices','Count'),'Count');
+const entry=(name,values)=>({name,index:0,values});
+const r={name:'Slice',entries:[entry('Num_Slices',[2]),entry('Axis_Vector',[[1,0,0]]),entry('Slice_Loc',[0,1]),entry('Slice_Area',[2,3]),entry('Slice_Area_Center',[[0,0,0],[1,0,0]])]};
+const original=JSON.stringify(r),plots=[];const html=guidedResults([r],String,(...args)=>{plots.push(args);return '<svg></svg>';},null);
+assert.match(html,/Area \(model length²\)/);assert.match(html,/Area centroid \(X, Y, Z\) \(model length\)/);assert.match(plots[0][2],/model length/);assert.match(plots[0][3],/model length²/);assert.deepEqual(plots[0][0],[0,1]);assert.deepEqual(plots[0][1],[2,3]);assert.equal(JSON.stringify(r),original);
+console.log('Geometry summary/table/plot labels distinguish length, area, volume, mass and inertia without changing native arrays.');

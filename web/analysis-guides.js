@@ -1,3 +1,4 @@
+import {geometryResultLabel} from './geometry-result-units.js?v=20261022';
 import {analysisInputApplies} from './analysis-input-state.js?v=20261022';
 import {projectionOptionInputs} from './projection-defaults.js?v=20261021';
 import {waveAreaResults,bindWaveAreaResults} from './wave-area-results.js?v=20261015';
@@ -76,8 +77,8 @@ export function guidedResults(results,esc,plotSVG,settings,inputs=[],analysisDat
  const aero=aeroResults(results,esc,plotSVG);if(aero)return aero;
  const r=results.find(r=>['Mass_Properties','Slice','Projection','WaveDrag','Parasite_Drag','Comp_Geom'].includes(r.name));if(!r)return'';
  const values=(key,index=0)=>r.entries.find(e=>e.name===key&&e.index===index)?.values||[],one=key=>values(key)[0];
- const metrics=keys=>`<div class="result-highlights">${keys.map(([key,label])=>values(key).length?`<div><span>${esc(label)}</span><strong>${esc(display(one(key)))}</strong></div>`:'').join('')}</div>`;
- const table=(title,columns,count)=>`<section class="guide-result-table"><h3>${esc(title)}</h3><div class="guide-table-scroll"><table><thead><tr>${columns.map(([key,label])=>`<th>${esc(label)}</th>`).join('')}</tr></thead><tbody>${Array.from({length:count},(_,i)=>`<tr>${columns.map(([key])=>`<td>${esc(display(values(key)[i]))}</td>`).join('')}</tr>`).join('')}</tbody></table></div></section>`;
+ const metrics=keys=>`<div class="result-highlights">${keys.map(([key,label])=>values(key).length?`<div><span>${esc(geometryResultLabel(r.name,key,label))}</span><strong>${esc(display(one(key)))}</strong></div>`:'').join('')}</div>`;
+ const table=(title,columns,count)=>`<section class="guide-result-table"><h3>${esc(title)}</h3><div class="guide-table-scroll"><table><thead><tr>${columns.map(([key,label])=>`<th>${esc(geometryResultLabel(r.name,key,label))}</th>`).join('')}</tr></thead><tbody>${Array.from({length:count},(_,i)=>`<tr>${columns.map(([key])=>`<td>${esc(display(values(key)[i]))}</td>`).join('')}</tr>`).join('')}</tbody></table></div></section>`;
  const diagnosticKeys=['Num_Open_Meshes_Merged','Num_Open_Meshes_Removed','Num_Degen_Triangles_Removed','Num_Degen_Tris_Removed','Ambiguous_Subsurf_Flag'];
  const diagnostics=r.entries.filter(e=>diagnosticKeys.includes(e.name)&&e.values.some(x=>Number.isFinite(x)&&x!==0));
  const diagnostic=diagnostics.length?`<details class="guide-diagnostics" open><summary>Native geometry diagnostics</summary><ul>${diagnostics.map(e=>`<li>${esc(e.description||e.name)}: ${esc(display(e.values))}</li>`).join('')}</ul><p>Review the reported geometry handling and compare resolution before relying on this run.</p></details>`:'';
@@ -93,7 +94,7 @@ export function guidedResults(results,esc,plotSVG,settings,inputs=[],analysisDat
  if(r.name==='Slice'){
   html=metrics([['Num_Slices','Native slices'],['Axis_Vector','Native slice direction']])+table('Native slice samples',[['Slice_Loc','Native slice location'],['Slice_Area','Area'],['Slice_Area_Center','Area centroid (X, Y, Z)']],values('Slice_Area').length);
   const locations=values('Slice_Loc'),areas=values('Slice_Area');
-  if(locations.every(Number.isFinite)&&locations.length===areas.length)html+=`<section class="guide-slice-plots"><h3>Native cross-sectional area distribution</h3>${plotSVG(locations,areas,'Native slice location','Native slice area')}<p class="native-tip">Locations and areas are the exact native samples along the reported slice direction.</p></section>`;
+  if(locations.every(Number.isFinite)&&locations.length===areas.length)html+=`<section class="guide-slice-plots"><h3>Native cross-sectional area distribution</h3>${plotSVG(locations,areas,geometryResultLabel(r.name,'Slice_Loc','Native slice location'),geometryResultLabel(r.name,'Slice_Area','Native slice area'))}<p class="native-tip">Locations and areas are the exact native samples along the reported slice direction.</p></section>`;
  }
  if(r.name==='Projection')html=metrics([['Area','Combined projected area'],['Direction','Native direction']])+table('Native component projection',[['Comp_Names','Component'],['Comp_Areas','Projected area']],values('Comp_Names').length)+'<p class="native-tip">Component projections can overlap. The combined area above is OpenVSP’s union or clipped result. The outline viewer shows its native boundary paths.</p>';
  if(r.name==='WaveDrag'){

@@ -29,7 +29,7 @@ import {geometryControlGroups,geometryTypeLabel,podDiameterMarkup} from './geome
 import {needsSavedSolution,savedSolutionMarkup,savedSolutionSource,restoreSavedSolution} from './saved-solutions.js?v=20261010-123';
 import {wireEditor,bindWireEditor} from './wire-editor.js?v=20261010-123';
 import {installRegionOverlays,refreshRegionOverlays,drawRegionOverlays,focusRegionBoundary} from './region-overlay.js?v=20261010-123';
-import {setupGuide,bindSetupGuide,guidedResults,bindGuidedResults,hasGuide,refreshGuideFields,bindGuideFields,bindAeroGeometryCopy} from './analysis-guides.js?v=20261022-applicability';
+import {setupGuide,bindSetupGuide,guidedResults,bindGuidedResults,hasGuide,refreshGuideFields,bindGuideFields,bindAeroGeometryCopy} from './analysis-guides.js?v=20261022-result-units';
 import {installRunWorkspace,refreshHistory,renderRunWorkspace,clearRunWorkspace} from './run-workspace.js?v=20261021-cfd-focus';
 import {installTools,renderTools,refreshToolGeometry,setToolsVisible,renderPlots,plotSVG,openEngineeringSettings,openGeometryCases,openFlowPlanes,openParameterLinks} from './tools.js?v=20261022-tangent-sliders';
 import {installStudies,showStudies} from './studies.js?v=20261021-members';

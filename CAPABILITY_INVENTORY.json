@@ -724,6 +724,17 @@
             ".workspace/evidence/analysis-dependency-recovery-20261022/"
           ],
           "scope": "35 JS modules and2 source/2 strict relocated guide methods pass. Actual browser requests omit inactive fields, match5 projection/11 slice numeric native fields and retain active-field rejection. Broader dependencies and workflow closure remain Unproven."
+        },
+        {
+          "date": "2026-10-22",
+          "change": "Guided geometry summary/table and slice plot labels distinguish native length/area/volume/mass/inertia dimensions.",
+          "evidence": [
+            "PROJECT_STATUS.md",
+            "web/geometry-result-units.js",
+            "tests/test_geometry_result_units.mjs",
+            ".workspace/evidence/geometry-result-units-20261022/"
+          ],
+          "scope": "36 JS modules, relocated module loading, browser native slice table/plot and actual SVG unit labels verified;5 native receipts and aircraft unchanged. Broader families/mass-browser/responsive coverage and workflow closure stay Unproven."
         }
       ]
     },
@@ -1728,6 +1739,17 @@
             ".workspace/evidence/analysis-dependency-recovery-20261022/"
           ],
           "scope": "35 JS modules and2 source/2 strict relocated guide methods pass. Actual browser requests omit inactive fields, match5 projection/11 slice numeric native fields and retain active-field rejection. Broader dependencies and workflow closure remain Unproven."
+        },
+        {
+          "date": "2026-10-22",
+          "change": "Guided geometry summary/table and slice plot labels distinguish native length/area/volume/mass/inertia dimensions.",
+          "evidence": [
+            "PROJECT_STATUS.md",
+            "web/geometry-result-units.js",
+            "tests/test_geometry_result_units.mjs",
+            ".workspace/evidence/geometry-result-units-20261022/"
+          ],
+          "scope": "36 JS modules, relocated module loading, browser native slice table/plot and actual SVG unit labels verified;5 native receipts and aircraft unchanged. Broader families/mass-browser/responsive coverage and workflow closure stay Unproven."
         }
       ]
     }
