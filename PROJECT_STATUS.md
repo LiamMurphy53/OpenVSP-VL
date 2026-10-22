@@ -11,6 +11,8 @@ This is a status view of the existing capability plan, not a new scope or a repl
 | Reliability/delivery | Complete standalone workflow delivery, remaining portability/recovery work and documentation. | Full cold-start UI, relocation, responsive layout, cancellation/recovery and portable end-to-end checks. Current package checks cover selected workflows only, including 18 recent geometry regressions through the bundled worker and engine. |
 | Completion audit | Reconcile every explicit plan requirement and installed capability to authoritative evidence. | No broad row is closed by a narrow passing case. Close only after every requirement is proved and known failures are resolved. |
 
+Custom script inputs now retain native named divider sections and declaration order in both Properties modes, including external and disconnected controls. Selected source, relocated-package and browser geometry checks pass; broader script/layout combinations remain unproven. See CUSTOM_CONTROL_AUDIT.md.
+
 Engineering plots now export their own font/namespace styling and wrap full axis labels without clipping. All 31 JavaScript modules and the relocated plot check pass; a browser-downloaded study SVG retains exact saved native samples and renders outside Studio. Wider result/export/layout coverage remains unproven.
 
 External custom sliders now validate their current native script binding on every live edit and retain a separate Undo gesture per control. Source, relocated-package and browser native-geometry comparisons pass; broader custom script behavior remains unproven. The native device-source audit corrects the earlier assumption that every declared GDEV type is implemented by OpenVSP’s custom screen.

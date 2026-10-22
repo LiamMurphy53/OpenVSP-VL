@@ -314,6 +314,19 @@
             ".workspace/evidence/custom-bound-sliders-20261022/native-device-audit.json"
           ],
           "scope": "Five focused native methods, twelve related regressions and one browser original-SDK replay; no broad closure. GDEV enumeration presence alone does not prove a native custom-screen implementation."
+        },
+        {
+          "date": "2026-10-22",
+          "change": "Native custom script divider sections, control order and merged tab headings retained in Properties; external and disconnected controls keep their own script layout.",
+          "evidence": [
+            "CUSTOM_CONTROL_AUDIT.md",
+            "tests/test_custom_dividers.py",
+            "tests/test_custom_dividers.mjs",
+            ".workspace/evidence/custom-dividers-20261022/browser-verification.json",
+            ".workspace/evidence/custom-dividers-20261022/cube-verification.json",
+            ".workspace/evidence/custom-dividers-20261022/packaged-verification-final.json"
+          ],
+          "scope": "Three focused native methods, selected related regressions and two browser original-SDK states; wider layouts and full custom runtime remain unproven."
         }
       ]
     },

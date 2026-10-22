@@ -1,0 +1,16 @@
+import assert from 'node:assert/strict';
+import {customFieldsMarkup,customActionsMarkup} from '../web/custom-controls.js';
+const E=s=>String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;');
+const p=(name,order,divider,tab=0)=>({id:name,name,customControlOrder:order,customDivider:divider,customTabIndex:tab,customTab:tab?'Coupling':'Design'});
+const a={index:1,label:'Size <limits>'},b={index:4,label:'Size <limits>'};
+const fields=[p('width',3,a),p('length',2,a),p('couple',7,b,6)];
+const html=customFieldsMarkup(fields,E,p=>`<input name="${p.name}">`);
+assert.ok(html.indexOf('name="length"')<html.indexOf('name="width"'));
+assert.equal((html.match(/custom-control-divider/g)||[]).length,2,'Same-named native dividers remain separate by identity');
+assert.equal((html.match(/custom-control-tab/g)||[]).length,2);
+assert.match(html,/Size &lt;limits&gt;/);assert.doesNotMatch(html,/<limits>/);
+assert.doesNotMatch(customFieldsMarkup(fields.slice(0,2),E,p=>p.name),/custom-control-tab/,'Pro group does not repeat its sole tab title');
+assert.equal(customFieldsMarkup([{name:'Z'},{name:'X'}],E,p=>p.name),'ZX','Ordinary field order stays unchanged');
+const external=customActionsMarkup({id:'child',customExternalControls:fields.map((parameter,index)=>({parameter,index,tab:'External',tabIndex:0,owner:'Parent'}))},E,p=>`<input id="parm-${p.id}" data-parm="${p.id}">`);
+assert.match(external,/data-custom-external-control="0"/);assert.match(external,/data-custom-external="width"/);assert.equal((external.match(/custom-control-divider/g)||[]).length,2);
+console.log('Custom divider identity, declaration order, tab transitions, escaping and external binding wrappers passed.');

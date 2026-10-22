@@ -31,6 +31,8 @@ def external_controls(v,component,parameters):
     from native_worker import parameter
     from native_preview import parameter_activity
     definitions,bindings=definitions_and_bindings(v,component['id']);own={p['id'] for p in component['params']};rows=[];last_choice=None
+    import native_custom_layout
+    layout=native_custom_layout.contexts(v,definitions)
     tab=None
     tab_index=None
     for d in definitions:
@@ -46,6 +48,7 @@ def external_controls(v,component,parameters):
         if d['type'] not in control_types(v) or not pid or pid in own or not v.ValidParm(pid):continue
         item=copy.deepcopy(parameters.get(pid) or parameter(v,pid))
         for key in ('customIndexSelector','customParmButton','customSlider','trigger','triggerLabel'):item.pop(key,None)
+        native_custom_layout.annotate(item,d,layout)
         item['label']=d['label'].rstrip(':') or item.get('label') or item['name']
         item['active']=parameter_activity(v,[pid])[pid]
         if d['type']==v.GDEV_OUTPUT:item.update(displayReadOnly=True,readOnlyReason='Calculated output from the custom script.')

@@ -21,6 +21,8 @@ def enrich(v,gid,params):
 
     from native_custom_scripts import gui_definitions,gui_updates
     definitions=gui_definitions(v,gid)
+    import native_custom_layout
+    layout=native_custom_layout.contexts(v,definitions)
     updates=gui_updates(v,gid)
     bindings={u['index']:u['parameterId'] for u in updates}
     previous={u['index']:u['parameterId'] for u in updates if u['parameterId']}
@@ -43,6 +45,8 @@ def enrich(v,gid,params):
         mapped=by_id.get(bindings.get(definition['index'])) if definition['index'] in bindings else original
         if mapped is None and original:
             original['customControl']=True
+            native_custom_layout.annotate(original,definition,layout)
+            if tab:original.update(customTab=tab,customTabIndex=tab_index,group=tab)
             if original['name'] in LABELS:original['label']=LABELS[original['name']]
             if original['name'] in LENGTHS:original['dimension']='length'
             if original['description'] in ('Default Description','Custom Descript'):original['description']=''
@@ -55,6 +59,7 @@ def enrich(v,gid,params):
         p=mapped
         if p is None:continue
         p['customControl']=True
+        native_custom_layout.annotate(p,definition,layout)
         if tab:p.update(customTab=tab,customTabIndex=tab_index,group=tab)
         if p['name'] in LABELS:p['label']=LABELS[p['name']]
         if p['name'] in LENGTHS:p['dimension']='length'

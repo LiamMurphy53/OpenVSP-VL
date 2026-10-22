@@ -93,3 +93,4 @@
 .prop-point-table td{border:0;padding:.35rem .2rem}
 .prop-point-table td[data-point-label]::before{content:attr(data-point-label);display:block;margin-bottom:.3rem;font-size:.85rem}
 .prop-point-table input[type=number]{width:100%;min-width:0;box-sizing:border-box}
+.custom-control-divider{font-size:12px;font-weight:600;margin:18px 0 8px;padding-top:12px;border-top:1px solid var(--border);overflow-wrap:anywhere}.custom-control-tab{font-size:13px;margin:22px 0 10px;overflow-wrap:anywhere}

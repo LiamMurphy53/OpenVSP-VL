@@ -6,7 +6,7 @@ export function customActionsMarkup(c,E,parameterField){
   if(!groups.has(key))groups.set(key,{title:control.tab||'Component controls',controls:[]});
   groups.get(key).controls.push(control);
  }
- const external=[...groups].map(([key,group])=>`<details class="parameter-group geometry-primary" data-group="custom-external-${E(String(key))}" open><summary>${E(group.title)}</summary>${group.controls.map(control=>`<div data-custom-external-control="${control.index}"><p>${E(control.owner)}</p>${parameterField(control.parameter).replaceAll(`parm-${control.parameter.id}`,`external-${c.id}-${control.index}`).replaceAll('data-parm="','data-custom-external="').replaceAll('data-parm-trigger="','data-custom-external-trigger="')}</div>`).join('')}</details>`).join('');
+ const external=[...groups].map(([key,group])=>`<details class="parameter-group geometry-primary" data-group="custom-external-${E(String(key))}" open><summary>${E(group.title)}</summary>${customFieldsMarkup(group.controls.map(control=>({...control.parameter,_customRow:control})),E,p=>{const control=p._customRow;return `<div data-custom-external-control="${control.index}"><p>${E(control.owner)}</p>${parameterField(control.parameter).replaceAll(`parm-${control.parameter.id}`,`external-${c.id}-${control.index}`).replaceAll('data-parm="','data-custom-external="').replaceAll('data-parm-trigger="','data-custom-external-trigger="')}</div>`;})}</details>`).join('');
  return external+(c.customActions?.length?`<details class="parameter-group geometry-primary" data-group="custom-actions" open><summary>Component actions</summary>${c.customActions.map(a=>`<button type="button" data-custom-action="${a.index}">${E(a.label)}</button>`).join('')}</details>`:'');
 }
 
@@ -26,4 +26,11 @@ export function bindExternalCustomSliders(host,c,units){
     return units.liveEdit?units.liveEdit(`custom-control:${c.id}:${control.index}:${p.id}`,slider,request,finished):finished?wrapper.querySelector('[data-custom-external]')?.onchange?.():undefined;
    }});
  }
+}
+
+export function customFieldsMarkup(parameters,E,parameterField){
+ const fields=[...parameters];
+ if(fields.some(p=>Number.isInteger(p.customControlOrder)))fields.sort((a,b)=>(a.customControlOrder??Infinity)-(b.customControlOrder??Infinity));
+ const multipleTabs=new Set(fields.filter(p=>Number.isInteger(p.customTabIndex)).map(p=>p.customTabIndex)).size>1;let previous=null,previousTab=null;
+ return fields.map(p=>{const tab=multipleTabs&&p.customTabIndex!==previousTab&&p.customTab?`<h3 class="custom-control-tab">${E(p.customTab)}</h3>`:'';previousTab=p.customTabIndex;const divider=p.customDivider,key=divider?.index??null,heading=key!==previous&&divider?.label?`<h4 class="custom-control-divider">${E(divider.label)}</h4>`:'';previous=key;return tab+heading+parameterField(p);}).join('');
 }
