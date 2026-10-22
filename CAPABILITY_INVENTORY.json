@@ -420,6 +420,17 @@
             ".workspace/evidence/numeric-choice-audit-20261022/packaged-verification.json"
           ],
           "scope": "Ten source and ten relocated native methods pass; selected four-role/index/U cases exact; browser 1,011 values and 357 points exact with byte-level Undo/Redo/cold recovery. Original one-row sampling SIGSEGV remains a native limitation; broader representations/layout/study coverage unproven."
+        },
+        {
+          "date": "2026-10-22",
+          "change": "Saved geometry-check primary/secondary set selectors and preset values now participate in content moves and guarded slot removal.",
+          "evidence": [
+            "PROJECT_STATUS.md",
+            "native_components.py",
+            "tests/test_case_set_references.py",
+            ".workspace/evidence/case-set-references-20261022/"
+          ],
+          "scope": "Before-source reproduction, source/relocated checks,11 related regressions, original numeric result equality and browser replacement/Undo/Redo pass. Broader owner/reference combinations and workflow closure remain Unproven."
         }
       ]
     },
@@ -796,6 +807,17 @@
             ".workspace/evidence/geometry-clearance-units-20261022/"
           ],
           "scope": "Overlap/separation original SDK comparisons in source and strict relocated package; all34 JS modules and10 original saved-browser fields verified. Specialist/containment/invalid/narrow coverage and W12 closure stay Unproven."
+        },
+        {
+          "date": "2026-10-22",
+          "change": "Saved geometry-check primary/secondary set selectors and preset values now participate in content moves and guarded slot removal.",
+          "evidence": [
+            "PROJECT_STATUS.md",
+            "native_components.py",
+            "tests/test_case_set_references.py",
+            ".workspace/evidence/case-set-references-20261022/"
+          ],
+          "scope": "Before-source reproduction, source/relocated checks,11 related regressions, original numeric result equality and browser replacement/Undo/Redo pass. Broader owner/reference combinations and workflow closure remain Unproven."
         }
       ]
     },

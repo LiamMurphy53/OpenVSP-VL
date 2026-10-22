@@ -5,7 +5,7 @@ import math
 # Native integer selectors in the model-global settings and Mode containers.
 # NumUserSets is a count, not a selector. Geometry set slots keep their indices.
 SET_SELECTORS={'SVGSet','Set','DegenSet','GeomSet','ThinGeomSet','ThickGeomSet',
-               'MassSet','MassDegenSet','SelSetIndex','NormalSet'}
+               'MassSet','MassDegenSet','SelSetIndex','NormalSet','PrimarySet','SecondarySet'}
 
 
 def integer(value,low,high):
@@ -20,7 +20,7 @@ def count_parameter(v):
 
 def references(v):
     selectors={}
-    for c in dict.fromkeys([*native_managers.ids(v),*v.GetAllModes()]):
+    for c in dict.fromkeys([*native_managers.ids(v),*v.GetAllModes(),*v.GetAllGeometryAnalysesIDVec()]):
         for p in v.FindContainerParmIDs(c):
             if v.GetParmType(p)==v.PARM_INT_TYPE and v.GetParmName(p) in SET_SELECTORS:
                 selectors[p]=dict(key='parameter:'+p,id=p,value=int(v.GetParmVal(p)),
