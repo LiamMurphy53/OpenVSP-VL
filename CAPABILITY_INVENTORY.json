@@ -784,6 +784,18 @@
             ".workspace/evidence/geometry-case-drawings-20261022/"
           ],
           "scope": "Complete native drawing records, separate saved files, original element coordinates, browser point download and cold reopening verified for selected five families. Broader specialist drawing/invalid/large/narrow coverage and W12 closure remain Unproven."
+        },
+        {
+          "date": "2026-10-22",
+          "change": "Promoted native clearance distance/volume/flags and distinguished mixed-convention constraint scores from physical distances.",
+          "evidence": [
+            "PROJECT_STATUS.md",
+            "web/geometry-case-units.js",
+            "tests/test_geometry_cases.py",
+            "tests/test_geometry_case_units.mjs",
+            ".workspace/evidence/geometry-clearance-units-20261022/"
+          ],
+          "scope": "Overlap/separation original SDK comparisons in source and strict relocated package; all34 JS modules and10 original saved-browser fields verified. Specialist/containment/invalid/narrow coverage and W12 closure stay Unproven."
         }
       ]
     },

@@ -18,3 +18,13 @@ const data={inputs:[{name:'CaseID',values:['ALL']}],geometryCases:[{id:'case',na
 const before=JSON.stringify(data),html=geometryCaseResults(data,String);
 assert.match(html,/<th>Units<\/th>/);assert.match(html,/fraction of total weight/);assert.match(html,/not force values/);assert.match(html,/model length²/);assert.equal(JSON.stringify(data),before);
 console.log('Geometry check units follow native result context; reaction fractions are explicit and original arrays remain unchanged.');
+
+for(const n of ['Min_Dist','Max_Dist','MaxMin_Dist'])assert.equal(unit('External_Interference',n),'model length');
+for(const n of ['InterferenceVol','Vol_Primary','Vol_Secondary'])assert.equal(unit('External_Interference',n),'model length³');
+for(const n of ['Interference','Intersection','Primary_In_Secondary','Secondary_In_Primary'])assert.equal(unit('External_Interference',n),'flag · 0/1');
+for(const r of ['External_Interference','Packaging_Interference','External_Self_Interference','Static_Plane_Distance_Interference','Carrier_Composite_Envelope_Interference','Linear_Swept_Volume_Interference'])assert.equal(unit(r,'Result'),'native constraint score');
+const clearance={inputs:[{name:'CaseID',values:['case']}],geometryCases:[{id:'case',name:'Clearance'}],results:[{name:'External_Interference',entries:[entry('Result',[.006]),entry('Min_Dist',[0]),entry('InterferenceVol',[.05]),entry('Intersection',[1]),entry('Primary_In_Secondary',[0])]}]};
+const original=JSON.stringify(clearance),summary=geometryCaseResults(clearance,String);
+for(const text of ['combined constraint score','native constraint score','Min_Dist','InterferenceVol','Intersection','Primary_In_Secondary','model length³','flag · 0/1'])assert.ok(summary.includes(text),text);
+assert.equal(JSON.stringify(clearance),original);assert.equal(unit('Plane_2pt_Angle_Interference','Result'),'deg');
+console.log('Interference summaries expose original distance/volume/flags and distinguish the mixed native constraint score.');

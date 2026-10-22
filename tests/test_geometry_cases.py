@@ -193,3 +193,21 @@ class NativeGeometryCases(unittest.TestCase):
                 self.assertTrue(data['results']);self.assertResults(expected,data['results']);self.assertEqual(path.read_bytes(),baseline)
                 saved=next(c for c in data['geometryCases'] if c['id']==cid)
                 if height is not None:self.assertEqual(next(p['value'] for p in saved['params'] if p['name']=='SecondaryZGround'),height)
+
+    def test_external_clearance_preserves_distance_volume_and_original_constraint_score(self):
+        self.fixture();v=self.v;cid=self.case('EXTERNAL_INTERFERENCE')
+        for x,overlap in [(3.,True),(30.,False)]:
+            with self.subTest(body_x=x):
+                v.SetParmValUpdate(self.pod,'X_Rel_Location','XForm',x);v.Update();v.WriteVSPFile(str(self.model),v.SET_ALL);before=self.model.read_bytes()
+                expected=self.direct('GeometryAnalysis',{'CaseID':[cid]})
+                data,path=self.worker(dict(action='analysis',name='GeometryAnalysis',inputs=[dict(name='CaseID',values=[cid])]))
+                self.assertResults(expected,data['results']);self.assertEqual(path.read_bytes(),before)
+                entries={e['name']:e['values'][0] for r in data['results'] if r['name']=='External_Interference' for e in r['entries']}
+                for name in ('Min_Dist','MaxMin_Dist','InterferenceVol','Vol_Primary','Vol_Secondary','Interference','Intersection','Result','Con_Val'):self.assertIn(name,entries)
+                self.assertEqual(entries['Result'],entries['Con_Val'])
+                self.assertEqual(bool(entries['Interference']),overlap)
+                if overlap:
+                    self.assertEqual(entries['Min_Dist'],0);self.assertGreater(entries['InterferenceVol'],0)
+                else:
+                    self.assertGreater(entries['Min_Dist'],0);self.assertEqual(entries['InterferenceVol'],0)
+                    self.assertEqual(entries['Result'],-entries['Min_Dist'])
