@@ -81,6 +81,8 @@ def parameter(v, pid):
     native_saved_analysis_controls.annotate(v,field)
     import native_engine_controls
     native_engine_controls.annotate(v,field)
+    import native_wing_blending
+    native_wing_blending.annotate(v,field)
     import native_property_locks
     native_property_locks.annotate(v,field)
     return field
@@ -379,7 +381,7 @@ def mutate(v, req):
         import native_prop_controls
         native_prop_controls.validate_parameter(v,pid)
         import native_wing_controls
-        native_wing_controls.validate_parameter(v,pid)
+        native_wing_controls.validate_parameter(v,pid,req.get('value'))
         import native_body_controls
         native_body_controls.validate_parameter(v,pid)
         import native_skinning_controls

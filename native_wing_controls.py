@@ -38,7 +38,9 @@ def enrich(v,gid,params,sections):
             section['shapeParameterIDs']=[p['id'] for p in params if p['rawGroup']=='XSec' and p['group']==group and p['name'] in ('Dihedral','Twist','Twist_Location')]
 
 
-def validate_parameter(v,pid):
+def validate_parameter(v,pid,value=None):
+    import native_wing_blending
+    native_wing_blending.validate_parameter(v,pid,value)
     owner=next((g for g in v.FindGeoms() if v.GetGeomTypeName(g).upper()=='WING' and pid in v.GetGeomParmIDs(g)),None)
     if not owner:return
     if v.GetParmGroupName(pid)=='WingGeom':
@@ -59,7 +61,8 @@ def validate_parameter(v,pid):
 
 def read_only_reasons(v):
     """Expose the same driver policy to frozen-aircraft parameter studies."""
-    result={}
+    import native_wing_blending
+    result=native_wing_blending.read_only_reasons(v)
     for gid in v.FindGeoms():
         if v.GetGeomTypeName(gid).upper()!='WING':continue
         pids=v.GetGeomParmIDs(gid)

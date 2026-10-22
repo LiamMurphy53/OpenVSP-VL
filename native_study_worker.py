@@ -503,7 +503,7 @@ def prepare(v,req,model,errors):
         import native_prop_controls
         native_prop_controls.validate_parameter(v,item['id'])
         import native_wing_controls
-        native_wing_controls.validate_parameter(v,item['id'])
+        native_wing_controls.validate_parameter(v,item['id'],item['requested'])
         import native_body_controls
         native_body_controls.validate_parameter(v,item['id'])
         import native_skinning_controls

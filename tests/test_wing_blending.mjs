@@ -1,0 +1,13 @@
+import assert from 'node:assert/strict';
+import {wingBlendIDs,wingBlendMarkup,bindWingBlend} from '../web/wing-controls.js';
+const component={id:'wing',type:'WING',sections:[{index:0,surface:0},{index:1,surface:0},{index:2,surface:0}],params:[0,1,2].flatMap(index=>['InLE','OutLE','InTE','OutTE'].flatMap(edge=>['Mode','Sweep','Dihedral','Strength'].map(suffix=>({id:`${index}-${edge}${suffix}`,name:edge+suffix,rawGroup:'XSec',group:`XSec_${index}`}))))};
+assert.equal(wingBlendIDs(component).length,48);
+const options={esc:String,parameterField:p=>`[${p.id}]`};
+let markup=wingBlendMarkup(component,options);
+assert.match(markup,/>Root</);assert.match(markup,/>Tip</);assert.match(markup,/\[0-InLEMode\]/);
+let rendered=0;const select={value:'2'};
+bindWingBlend({querySelector:()=>select},component,()=>rendered++);select.onchange();
+assert.equal(rendered,1);markup=wingBlendMarkup(component,options);
+assert.match(markup,/\[2-OutTEStrength\]/);assert.doesNotMatch(markup,/\[0-InLEMode\]/);
+assert.equal(wingBlendMarkup({...component,type:'FUSELAGE'},options),'');
+console.log('Wing blend profile selection includes root, interior and tip with all 16 native fields.');
