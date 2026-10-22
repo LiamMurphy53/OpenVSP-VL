@@ -773,6 +773,17 @@
             ".workspace/evidence/geometry-case-units-20261022/"
           ],
           "scope": "All34 JavaScript modules, relocated module loading, original SDK saved-case regressions and exact browser/native projection pass. Broader unit families/reaction browser coverage and W12 closure remain Unproven."
+        },
+        {
+          "date": "2026-10-22",
+          "change": "Independent original C++ drawing comparisons and browser end-to-end inspection for five native case families, individually and in ALL-case runs.",
+          "evidence": [
+            "PROJECT_STATUS.md",
+            "tests/test_geometry_case_drawings.py",
+            "tests/case_drawing_reference.cpp",
+            ".workspace/evidence/geometry-case-drawings-20261022/"
+          ],
+          "scope": "Complete native drawing records, separate saved files, original element coordinates, browser point download and cold reopening verified for selected five families. Broader specialist drawing/invalid/large/narrow coverage and W12 closure remain Unproven."
         }
       ]
     },
