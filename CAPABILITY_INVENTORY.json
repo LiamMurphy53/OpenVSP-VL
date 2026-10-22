@@ -338,6 +338,16 @@
             ".workspace/evidence/custom-own-controls-20261022/"
           ],
           "scope": "Selected native and browser geometry, repeated-widget history, saved locks and relocated package pass. Experimental generated-profile persistence failed browser reopening and was removed; such fields stay read-only. W05 remains Unproven."
+        },
+        {
+          "date": "2026-10-22",
+          "change": "Verified script-declared custom profile driver persistence against exact native serialization behavior and original SDK replay.",
+          "evidence": [
+            "CUSTOM_CONTROL_AUDIT.md",
+            "tests/test_custom_saved_profiles.py",
+            ".workspace/evidence/custom-profile-persistence-20261022/"
+          ],
+          "scope": "Two source and two strictly relocated native cases verify changed surfaces, every profile field, cold saved values, history and locks. Dedicated browser fixture and arbitrary generated bindings remain unproven. W05 stays Unproven."
         }
       ]
     },
