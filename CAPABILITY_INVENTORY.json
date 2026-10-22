@@ -1190,6 +1190,18 @@
             ".workspace/evidence/reference-workflows-20261021/atmosphere-reopened.png"
           ],
           "scope": "Nine desktop cases and 14 artifacts; both source and package suites pass 12 tests. Broader parameter/performance, narrow browser, recovery and study combinations are not established; broad W23 closure remains unproven."
+        },
+        {
+          "date": "2026-10-22",
+          "change": "Shared native result/study SVGs now include standalone styling and wrap complete engineering labels; scientific tick margins expand.",
+          "evidence": [
+            "ENGINEERING_UTILITY_AUDIT.md",
+            "tests/test_plot_svg.mjs",
+            ".workspace/evidence/plot-export-20261022/verification.json",
+            ".workspace/evidence/plot-export-20261022/export/native-study.svg",
+            ".workspace/evidence/plot-export-20261022/standalone-render.png"
+          ],
+          "scope": "31 JavaScript modules, relocated plot module and actual downloaded study SVG. Exact retained native samples and unchanged aircraft; no new native solver run or broad closure."
         }
       ]
     },

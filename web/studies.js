@@ -1,6 +1,6 @@
 import {memberPrefix,memberSpecs,separateMembers,shareFirstMember,memberMarkup,validateMemberSelection} from './study-members.js?v=20261021';
 import {stepInputOverrides,useSweptDefault,useAllSweptDefaults,omitFollowedDefaults,overridesMarkup,followingSpec} from './study-overrides.js?v=20261021-linked';
-import {plotSVG} from './plot-svg.js?v=20261021';
+import {plotSVG} from './plot-svg.js?v=20261022-export';
 import {structuredSweep,mountSweepValues} from './study-values.js?v=20261010-123';
 import {bindGuideFields,bindAeroGeometryCopy} from './analysis-guides.js?v=20261010-123';
 const $=s=>document.querySelector(s), clone=x=>structuredClone(x);
