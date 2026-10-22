@@ -714,6 +714,16 @@
             ".workspace/evidence/global-choice-audit-20261021/packaged-final.log"
           ],
           "scope": "Six Vehicle-owned controls; native code/reset/roundtrip checks; two browser jobs match original numerical results. Full workflow closure remains unproven."
+        },
+        {
+          "date": "2026-10-22",
+          "change": "Verified projection deleted-boundary and slicing blank-manual-limit alternative workflows using shared applicability.",
+          "evidence": [
+            "PROJECT_STATUS.md",
+            "tests/test_analysis_input_state.mjs",
+            ".workspace/evidence/analysis-dependency-recovery-20261022/"
+          ],
+          "scope": "35 JS modules and2 source/2 strict relocated guide methods pass. Actual browser requests omit inactive fields, match5 projection/11 slice numeric native fields and retain active-field rejection. Broader dependencies and workflow closure remain Unproven."
         }
       ]
     },
@@ -1708,6 +1718,16 @@
             ".workspace/evidence/inactive-analysis-inputs-20261022/"
           ],
           "scope": "Before-browser reproduction;35 JS modules, source/strict relocated native CG-mode setup and browser original-file comparisons pass. Active missing-target guards remain; broader dependencies and workflow closure remain Unproven."
+        },
+        {
+          "date": "2026-10-22",
+          "change": "Verified projection deleted-boundary and slicing blank-manual-limit alternative workflows using shared applicability.",
+          "evidence": [
+            "PROJECT_STATUS.md",
+            "tests/test_analysis_input_state.mjs",
+            ".workspace/evidence/analysis-dependency-recovery-20261022/"
+          ],
+          "scope": "35 JS modules and2 source/2 strict relocated guide methods pass. Actual browser requests omit inactive fields, match5 projection/11 slice numeric native fields and retain active-field rejection. Broader dependencies and workflow closure remain Unproven."
         }
       ]
     }

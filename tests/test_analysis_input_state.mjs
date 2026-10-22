@@ -14,3 +14,10 @@ assert.equal(applies({any:[mode,nested]},'analysis',host),false);values['analysi
 assert.equal(applies({input:'Missing',values:[0]},'analysis',host),false);assert.deepEqual(editable(null,'analysis',host),[]);assert.equal(JSON.stringify(spec),before);
 assert.equal(applies(mode,'geometry',host),false,'Separate preparation inputs never use flight controller values');
 console.log('Guide applicability and request collection share native controller rules, including CG mode recovery, nested dependencies and prefix isolation.');
+const projectionHost={getElementById:id=>({'analysis-TargetType-0':{value:'0'},'analysis-BoundaryType-0':{value:'0'},'analysis-DirectionType-0':{value:'2'}}[id])};
+const projection={inputs:[{name:'TargetSet',editable:true,applicableWhen:{input:'TargetType',values:[0]}},{name:'BoundarySet',editable:true,applicableWhen:{input:'BoundaryType',values:[1]}},{name:'BoundaryGeomID',editable:true,applicableWhen:{input:'BoundaryType',values:[2]}},{name:'Direction',editable:true,applicableWhen:{input:'DirectionType',values:[4]}}]};
+assert.deepEqual(editable(projection,'analysis',projectionHost).map(e=>e.name),['TargetSet'],'No-boundary fixed-axis projection omits stale boundary and manual-vector fields');
+const limits={'analysis-AutoBoundFlag-0':{value:'1'}};const sliceHost={getElementById:id=>limits[id]};
+const slicing={inputs:[{name:'AutoBoundFlag',editable:true},{name:'StartVal',editable:true,applicableWhen:{input:'AutoBoundFlag',values:[0]}},{name:'EndVal',editable:true,applicableWhen:{input:'AutoBoundFlag',values:[0]}}]};
+assert.deepEqual(editable(slicing,'analysis',sliceHost).map(e=>e.name),['AutoBoundFlag']);limits['analysis-AutoBoundFlag-0'].value='0';assert.deepEqual(editable(slicing,'analysis',sliceHost).map(e=>e.name),['AutoBoundFlag','StartVal','EndVal']);
+console.log('Projection boundary/direction and automatic/manual slice alternatives retain their native applicability.');
