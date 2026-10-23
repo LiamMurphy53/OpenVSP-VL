@@ -1,10 +1,10 @@
-"""Resolve native file receivers before relocating their open calls."""
+"""Resolve native file and directory receivers before relocating reads."""
 import re
 
 
 def replacements(text,tokens,helper):
     words=[t[0] for t in tokens];count=len(words)
-    primitives={'file','int','uint','double','float','bool','string','auto','array'}
+    primitives={'file','filesystem','int','uint','double','float','bool','string','auto','array'}
     pairs={}
     # Balance call, index and block scopes independently of comparison operators.
     for opening,closing in [('(',')'),('[',']'),('{','}')]:
@@ -134,7 +134,7 @@ def replacements(text,tokens,helper):
                                     bindings[words[n]]=kind
                                     if owner:fields.setdefault(owner,{})[words[n]]=kind
                             k+=1
-        if word=='open' and i>=2 and i+1<count and words[i-1]=='.' and words[i+1]=='(':
+        if word in ('open','changeCurrentPath') and i>=2 and i+1<count and words[i-1]=='.' and words[i+1]=='(':
             end=pairs.get(i+1)
             if end is not None:calls.append((i,end,[(c,dict(s)) for c,s in scopes]))
     def bounds(end):
@@ -206,18 +206,25 @@ def replacements(text,tokens,helper):
     result=[]
     for i,end,context in calls:
         start=bounds(i-2)
-        if resolve(start,i-2,context)!='file':continue
+        method=words[i];kind='file' if method=='open' else 'filesystem'
+        if resolve(start,i-2,context)!=kind:continue
         commas=0;j=i+2
         while j<end:
             if words[j]==',':commas+=1
             if words[j] in ('(','[') and j in pairs:j=pairs[j]
             j+=1
-        if commas!=1:continue
+        if commas!=(1 if method=='open' else 0) or end==i+2:continue
         receiver=text[tokens[start].start():tokens[i-1].start()]
-        result.append((tokens[start].start(),tokens[i+1].end(),helper+'_open(@('+receiver+'),'))
+        result.append((tokens[start].start(),tokens[i+1].end(),helper+'_'+method+'(@('+receiver+'),'))
     return result
 
 
-def helper_code(helper,cases):
+def helper_code(helper,cases,directory_cases=''):
     return ('\nstring '+helper+'_filePath(const string &in filename){string normalized=filename;while(normalized.length()>=2 && normalized.substr(0,2)=="./")normalized=normalized.substr(2);'+cases+'return filename;}\n'
-            '\nint '+helper+'_open(file@ target,const string &in filename,const string &in mode){int status=target.open(filename,mode);if(status!=0 && (mode=="r" || mode=="rb")){string path='+helper+'_filePath(filename);if(path!=filename)return target.open(path,mode);}return status;}\n')
+            '\nint '+helper+'_open(file@ target,const string &in filename,const string &in mode){int status=target.open(filename,mode);if(status!=0 && (mode=="r" || mode=="rb")){string path='+helper+'_filePath(filename);if(path!=filename)return target.open(path,mode);}return status;}\n'
+            '\nstring '+helper+'_directoryPath(const string &in filename){string normalized=filename;while(normalized.length()>=2 && normalized.substr(0,2)=="./")normalized=normalized.substr(2);while(normalized.length()>1 && normalized.substr(normalized.length()-1)=="/")normalized=normalized.substr(0,normalized.length()-1);'+directory_cases+'return filename;}\n'
+            # Keep successful native navigation and missing-path status. Only
+            # an initial lookup from the worker directory can use a companion.
+            # A fresh native object supplies the current job's absolute root;
+            # saved scripts contain no paths to an earlier worker directory.
+            '\nbool '+helper+'_changeCurrentPath(filesystem@ target,const string &in filename){if(target.changeCurrentPath(filename))return true;filesystem root;if(target.getCurrentPath()!=root.getCurrentPath())return false;string path='+helper+'_directoryPath(filename);if(path==filename)return false;return target.changeCurrentPath(root.getCurrentPath()+"/"+path);}\n')

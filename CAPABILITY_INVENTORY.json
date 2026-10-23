@@ -360,6 +360,19 @@
             ".workspace/evidence/tire-live-inspection-20261022/"
           ],
           "scope": "43 JS modules; seven-pose original native comparison source1/strict relocated2 methods; six actual browser queries match all native surfaces; saved0.46 auxiliary cold geometry and exact Undo/Redo. Initial pitch-change expectation failed and is documented. Other families/layouts and broad closure remain Unproven."
+        },
+        {
+          "date": "2026-10-22",
+          "change": "Custom package filesystem navigation can discover unambiguous embedded data directories while retaining original native readers and geometry.",
+          "evidence": [
+            "CUSTOM_CONTROL_AUDIT.md",
+            "tests/test_custom_filesystem.py",
+            ".workspace/evidence/custom-directories-20261022/source-final.log",
+            ".workspace/evidence/custom-directories-20261022/packaged-final.json",
+            ".workspace/evidence/custom-directories-20261022/history.json",
+            ".workspace/evidence/custom-directories-20261022/component.png"
+          ],
+          "scope": "Source34 and relocated-package10 tests; original SDK parameter/surface equality; packaged browser slider, Undo/Redo and reopening. Initial explicit directory navigation is covered; bare default-directory listings and broader filesystem/runtime semantics remain unproven. W05 stays open."
         }
       ]
     },

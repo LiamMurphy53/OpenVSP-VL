@@ -61,11 +61,11 @@ def rewrite_reads(text,source,base,asset_root):
     tokens=[m for m in re.finditer(r'//[^\n]*|/\*.*?\*/|"(?:\\.|[^"\\])*"|[A-Za-z_]\w*|[^\s]',text,re.S) if not m[0].startswith(('//','/*'))]
     replacements=[];dynamic=False;wrappers=set()
     helper='StudioPackageProfile_'+hashlib.sha256((str(asset_root)+str(source.relative_to(base))).encode()).hexdigest()[:16]
-    from native_custom_file_reads import replacements as file_open_replacements
-    file_opens=file_open_replacements(text,tokens,helper)
-    for start,end,replacement in sorted(file_opens,reverse=True):text=text[:start]+replacement+text[end:]
-    if file_opens:tokens=[m for m in re.finditer(r'//[^\n]*|/\*.*?\*/|"(?:\\.|[^"\\])*"|[A-Za-z_]\w*|[^\s]',text,re.S) if not m[0].startswith(('//','/*'))]
-    dynamic=bool(file_opens)
+    from native_custom_file_reads import replacements as file_replacements
+    file_reads=file_replacements(text,tokens,helper)
+    for start,end,replacement in sorted(file_reads,reverse=True):text=text[:start]+replacement+text[end:]
+    if file_reads:tokens=[m for m in re.finditer(r'//[^\n]*|/\*.*?\*/|"(?:\\.|[^"\\])*"|[A-Za-z_]\w*|[^\s]',text,re.S) if not m[0].startswith(('//','/*'))]
+    dynamic=bool(file_reads)
     readers={'ReadFileAirfoil':1,'ReadFileXSec':1,'ReadBORFileAirfoil':1,'ReadBORFileXSec':1,'ReadAuxiliaryGeomCCEFile':1,'ReadAdvLinkCodeFile':1,'ReadApplyDESFile':0,'ReadApplyXDDMFile':0}
     for i,token in enumerate(tokens):
         if token[0] not in readers or i+1>=len(tokens) or tokens[i+1][0]!='(':continue
@@ -116,12 +116,12 @@ def rewrite_reads(text,source,base,asset_root):
         missing_path=asset_root/'.unavailable-profile'
         while (base/missing_path.relative_to(asset_root)).exists():missing_path=Path(str(missing_path)+'_')
         missing=missing_path.relative_to(Path.cwd()).as_posix()
-        if file_opens:
+        if file_reads:
             # Preserve native writes, optional reads and read-after-write behavior:
             # try the original filename first; only failed pure reads fall back
             # to an unambiguous embedded companion. Arguments evaluate once.
             from native_custom_file_reads import helper_code
-            text+=helper_code(helper,cases)
+            text+=helper_code(helper,cases,choice_cases(source,base,asset_root,directories=True))
         # Unknown computed names are recorded for rejection. Profile readers
         # retain their native diagnostic; unsafe design readers are skipped.
         text+='\nstring '+helper+'(const string &in filename){\nstring normalized=filename;\nwhile(normalized.length()>=2 && normalized.substr(0,2)=="./")normalized=normalized.substr(2);\n'+cases+'AddAttributeString(GetChildCollection(GetCurrCustomGeom()),'+json.dumps(MISSING_ATTRIBUTE)+',filename);\nreturn '+json.dumps(missing)+';\n}\n'
@@ -176,11 +176,11 @@ def _stage_tree(tree):
     return staged
 
 
-def choice_cases(source,base,asset_root):
+def choice_cases(source,base,asset_root,directories=False):
     import os
     choices={}
-    for file in base.rglob('*'):
-        if not file.is_file():continue
+    for file in ([base,*base.rglob('*')] if directories else base.rglob('*')):
+        if not (file.is_dir() if directories else file.is_file()):continue
         target=(asset_root/file.relative_to(base)).relative_to(Path.cwd()).as_posix()
         for key in {file.relative_to(base).as_posix(),Path(os.path.relpath(file,source.parent)).as_posix()}:
             choices.setdefault(key,set()).add(target)
@@ -214,7 +214,7 @@ def prepare(v,model):
         # Exclude individual helper bodies, not the remainder of the script.
         generated=[]
         for i,token in enumerate(tokens[:-2]):
-            if token[0] not in ('string','void','int') or not re.fullmatch(r'StudioPackage(?:Profile|Upgrade)_[0-9a-f]{16}(?:_[A-Za-z0-9_]+)?',tokens[i+1][0]) or tokens[i+2][0]!='(':continue
+            if token[0] not in ('string','void','int','bool') or not re.fullmatch(r'StudioPackage(?:Profile|Upgrade)_[0-9a-f]{16}(?:_[A-Za-z0-9_]+)?',tokens[i+1][0]) or tokens[i+2][0]!='(':continue
             j=i+2;depth=0
             while j<len(tokens):
                 if tokens[j][0]=='(':depth+=1
@@ -233,7 +233,7 @@ def prepare(v,model):
         edits=[edit for edit in file_replacements(text,tokens,helper) if not any(start<=edit[0]<end for start,end in generated)]
         if not edits:continue
         for start,end,replacement in sorted(edits,reverse=True):text=text[:start]+replacement+text[end:]
-        script.text=codec(text+helper_code(helper,choice_cases(entry,folder,folder)),False);changed=True
+        script.text=codec(text+helper_code(helper,choice_cases(entry,folder,folder),choice_cases(entry,folder,folder,directories=True)),False);changed=True
     if not changed:return model
     import os,tempfile
     fd,filename=tempfile.mkstemp(prefix='.studio-custom-readable-',suffix='.vsp3',dir=Path.cwd()/'.studio-custom-assets')
