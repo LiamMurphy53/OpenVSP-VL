@@ -1,6 +1,6 @@
 import {partPlacement} from './part-placement.js?v=20261011-placement';
 import {partProperties} from './part-properties.js?v=20261011-elements';
-import {fixedPointEditor,bindFixedPointEditors} from './fixed-point-editor.js?v=20261010-123';
+import {fixedPointEditor,bindFixedPointEditors} from './fixed-point-editor.js?v=20261022-sliders';
 // These controls edit native part IDs and native point ParmContainers.
 export function partEditor(structure,data,h){
  const {E,field,select,paramDetails}=h;

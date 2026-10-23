@@ -1,10 +1,13 @@
+import {customSliderMarkup,bindCustomSliders} from './custom-sliders.js?v=20261021-more';
 // Placement and offsets are native FeaFixPoint parameters, committed together.
+export const fixedPointSliderParameter=(part,p)=>({...p,label:p.name,customSliderKey:`fixed:${part}:${p.id}`,active:p.active!==false&&!p.userLocked&&!p.displayReadOnly});
+const sliderOptions={displayValue:x=>x,parameterDimension:()=>null,readOnly:p=>p.active===false};
 const modeLabels={FEA_FIX_PT_ON_BODY:'On a parent part',FEA_FIX_PT_GLOBAL_XYZ:'Global XYZ position',FEA_FIX_PT_DELTA_XYZ:'XYZ offset from a parent part',FEA_FIX_PT_DELTA_UVN:'Surface tangent / normal offset',FEA_FIX_PT_GEOM_ORIGIN:'Reference component origin',FEA_FIX_PT_GEOM_CG:'Reference component center of gravity'};
 const massLabels={MASS_UNIT_G:'g',MASS_UNIT_KG:'kg',MASS_UNIT_TONNE:'tonne',MASS_UNIT_LBM:'lbm',MASS_UNIT_SLUG:'slug',MASS_LBFSEC2IN:'lbf s²/in'};
 export function fixedPointEditor(p,structure,data,h){
  const {E,select,modelComponents}=h,refs=p.fixedPoint;
  const key=name=>'fixed-'+p.id+'-'+name,parm=name=>p.params.find(x=>x.name===name);
- const input=(name,label)=>{const v=parm(name);return `<label class="tool-field" for="${key(name)}" title="${E(v.description)}">${E(label)}<input id="${key(name)}" data-fixed-value="${name}" type="number" step="any" min="${v.min}" max="${v.max}" value="${E(v.value)}"></label>`;};
+ const input=(name,label)=>{const v=parm(name);return `<label class="tool-field" for="${key(name)}" title="${E(v.description)}">${E(label)}<input id="${key(name)}" data-fixed-value="${name}" type="number" step="any" min="${v.min}" max="${v.max}" value="${E(v.value)}" ${v.active===false||v.userLocked||v.displayReadOnly?'disabled':''}>${customSliderMarkup({...fixedPointSliderParameter(p.id,v),label},key(name),{...sliderOptions,esc:E})}</label>`;};
  const rows=(group,items)=>`<div class="tool-fields" data-fixed-group="${group}">${items.map(([name,label])=>input(name,label)).join('')}</div>`;
  const parents=structure.parts.filter(x=>structure.fixedPointParents.includes(x.id)).map(x=>[x.id,x.name]),geoms=modelComponents.filter(c=>data.fixedPointGeometries.includes(c.id)).map(c=>[c.id,c.name]);
  const referenceOptions=(items,current)=>items.some(([id])=>id===current)?items:[['',current?'Choose a replacement · native reference unavailable':'Choose a reference'],...items];
@@ -17,6 +20,8 @@ export function bindFixedPointEditors(structure,h){
   const update=()=>{const m=mode(),part=[types.FEA_FIX_PT_ON_BODY,types.FEA_FIX_PT_DELTA_XYZ,types.FEA_FIX_PT_DELTA_UVN].includes(m),geometry=[types.FEA_FIX_PT_GEOM_ORIGIN,types.FEA_FIX_PT_GEOM_CG].includes(m);
    const visible={part,geometry,global:m===types.FEA_FIX_PT_GLOBAL_XYZ,xyz:m===types.FEA_FIX_PT_DELTA_XYZ||geometry,uvn:m===types.FEA_FIX_PT_DELTA_UVN};root.querySelectorAll('[data-fixed-group]').forEach(el=>el.hidden=!visible[el.dataset.fixedGroup]);root.querySelector('[data-fixed-mass]').hidden=!Number(val(key('FixPointMassFlag')));
   };
+  const part=structure.parts.find(p=>p.id===id);
+  bindCustomSliders(root,(part?.params||[]).map(p=>fixedPointSliderParameter(id,p)),{...sliderOptions,isBusy:()=>false});
   update();root.querySelectorAll('input,select').forEach(el=>el.addEventListener('input',()=>{update();root.querySelector('[data-fixed-status]').textContent=' Placement changes are not yet applied.';}));
   root.querySelector('[data-fixed-apply]').onclick=async()=>{try{const values={};root.querySelectorAll('[data-fixed-value]').forEach(el=>{if(!el.value.trim()||!Number.isFinite(Number(el.value)))throw Error('Enter finite fixed-point positions and offsets.');values[el.dataset.fixedValue]=Number(el.value);});values.FixPointMassFlag=Number(val(key('FixPointMassFlag')));values.MassUnit=Number(val(key('MassUnit')));await mutate({operation:'part-fixed-point',structure:structure.id,id,mode:mode(),parent:val(key('parent')),reference:val(key('reference')),values});}catch(e){root.querySelector('[data-fixed-status]').textContent=' '+e.message;}};
  });

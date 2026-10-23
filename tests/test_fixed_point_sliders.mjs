@@ -1,0 +1,13 @@
+import assert from 'node:assert/strict';
+import {fixedPointEditor,fixedPointSliderParameter} from '../web/fixed-point-editor.js';
+import {sliderParameter,sliderWindow} from '../web/custom-sliders.js';
+const names=['PosU','PosW','AbsX','AbsY','AbsZ','DeltaX','DeltaY','DeltaZ','DeltaU','DeltaV','DeltaN','FixPointMass','FixedPointType','FixPointMassFlag','MassUnit'];
+const part={id:'point',fixedPoint:{ParentFeaPartID:'',OtherGeomID:''},params:names.map((name,i)=>({id:'p'+i,name,type:0,value:.5,min:name.startsWith('Pos')?0:-100,max:name.startsWith('Pos')?1:100,description:'',active:true}))};
+part.params[2].active=false;
+const html=fixedPointEditor(part,{parts:[],fixedPointParents:[]},{fixedPointGeometries:[],fixedPointTypes:{},fixedPointMassUnits:{}},{E:String,select:()=>'',modelComponents:[]});
+assert.equal((html.match(/type="range"/g)||[]).length,12);
+assert.match(html,/aria-label="Global X slider"[^>]*disabled/);
+for(const p of part.params.slice(0,2))assert.deepEqual(sliderWindow(sliderParameter(fixedPointSliderParameter(part.id,p))),{low:0,high:1});
+assert.equal(fixedPointSliderParameter('point',{userLocked:true}).active,false);
+assert.equal(fixedPointSliderParameter('point',{displayReadOnly:true}).active,false);
+console.log('Fixed-point placement sliders preserve native limits and locked fields.');
