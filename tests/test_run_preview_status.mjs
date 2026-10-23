@@ -1,0 +1,10 @@
+import assert from 'node:assert/strict';
+import {withRunStatus,runPreviewNotice} from '../web/run-preview-status.js';
+const native={runStatus:'complete',nodes:[[1,2,3]],fields:[{name:'Cp',nodeValues:[.125]}],warnings:['Original warning']},before=JSON.stringify(native);
+const preview=withRunStatus(native,'failed');assert.equal(preview.runStatus,'failed','Artifact metadata cannot override the actual failed job');
+assert.equal(preview.nodes,native.nodes);assert.equal(preview.fields,native.fields);assert.equal(preview.warnings,native.warnings);assert.equal(JSON.stringify(native),before);
+assert.match(runPreviewNotice(preview.runStatus),/Failed run.*invalid.*diagnosis/);
+assert.match(runPreviewNotice('cancelled'),/Cancelled.*incomplete/);assert.match(runPreviewNotice('running'),/provisional/);
+assert.equal(runPreviewNotice('complete'),'');assert.equal(runPreviewNotice(undefined),'','Independent modeling previews have no job state');
+assert.match(runPreviewNotice('interrupted'),/not completed successfully/);
+console.log('Preview status follows saved jobs and leaves native geometry and fields untouched.');

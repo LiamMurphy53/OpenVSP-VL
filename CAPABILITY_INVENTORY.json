@@ -735,6 +735,19 @@
             ".workspace/evidence/geometry-result-units-20261022/"
           ],
           "scope": "36 JS modules, relocated module loading, browser native slice table/plot and actual SVG unit labels verified;5 native receipts and aircraft unchanged. Broader families/mass-browser/responsive coverage and workflow closure stay Unproven."
+        },
+        {
+          "date": "2026-10-22",
+          "change": "Identify unsuccessful-run files/previews as diagnostic output, including expanded views.",
+          "evidence": [
+            "PROJECT_STATUS.md",
+            "web/run-preview-status.js",
+            "web/run-workspace.js",
+            "web/mesh-viewer.js",
+            "tests/test_run_preview_status.mjs",
+            ".workspace/evidence/failed-run-preview-20261022/"
+          ],
+          "scope": "41 JS modules and relocated helper; real saved failed/complete browser inspection, expanded context, native-data identity and4 unchanged model/response hashes. No native solver repair; broader closure Unproven."
         }
       ]
     },
@@ -930,6 +943,19 @@
             ".workspace/evidence/unsteady-failure-location-20261022/"
           ],
           "scope": "Installed-only failure at step2/time0.045, guarded original-source zero-area reproduction,10 strict relocated checks,258 exact finite records and actual browser failed retry. Native defect and ordinary regression remain unresolved; closure Unproven."
+        },
+        {
+          "date": "2026-10-22",
+          "change": "Identify unsuccessful-run files/previews as diagnostic output, including expanded views.",
+          "evidence": [
+            "PROJECT_STATUS.md",
+            "web/run-preview-status.js",
+            "web/run-workspace.js",
+            "web/mesh-viewer.js",
+            "tests/test_run_preview_status.mjs",
+            ".workspace/evidence/failed-run-preview-20261022/"
+          ],
+          "scope": "41 JS modules and relocated helper; real saved failed/complete browser inspection, expanded context, native-data identity and4 unchanged model/response hashes. No native solver repair; broader closure Unproven."
         }
       ]
     },
@@ -962,6 +988,19 @@
             ".workspace/evidence/unsteady-failure-location-20261022/"
           ],
           "scope": "Installed-only failure at step2/time0.045, guarded original-source zero-area reproduction,10 strict relocated checks,258 exact finite records and actual browser failed retry. Native defect and ordinary regression remain unresolved; closure Unproven."
+        },
+        {
+          "date": "2026-10-22",
+          "change": "Identify unsuccessful-run files/previews as diagnostic output, including expanded views.",
+          "evidence": [
+            "PROJECT_STATUS.md",
+            "web/run-preview-status.js",
+            "web/run-workspace.js",
+            "web/mesh-viewer.js",
+            "tests/test_run_preview_status.mjs",
+            ".workspace/evidence/failed-run-preview-20261022/"
+          ],
+          "scope": "41 JS modules and relocated helper; real saved failed/complete browser inspection, expanded context, native-data identity and4 unchanged model/response hashes. No native solver repair; broader closure Unproven."
         }
       ]
     },
@@ -1956,6 +1995,19 @@
             ".workspace/evidence/unsteady-failure-location-20261022/"
           ],
           "scope": "Installed-only failure at step2/time0.045, guarded original-source zero-area reproduction,10 strict relocated checks,258 exact finite records and actual browser failed retry. Native defect and ordinary regression remain unresolved; closure Unproven."
+        },
+        {
+          "date": "2026-10-22",
+          "change": "Identify unsuccessful-run files/previews as diagnostic output, including expanded views.",
+          "evidence": [
+            "PROJECT_STATUS.md",
+            "web/run-preview-status.js",
+            "web/run-workspace.js",
+            "web/mesh-viewer.js",
+            "tests/test_run_preview_status.mjs",
+            ".workspace/evidence/failed-run-preview-20261022/"
+          ],
+          "scope": "41 JS modules and relocated helper; real saved failed/complete browser inspection, expanded context, native-data identity and4 unchanged model/response hashes. No native solver repair; broader closure Unproven."
         }
       ]
     }
