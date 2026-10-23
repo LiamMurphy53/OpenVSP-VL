@@ -16,7 +16,7 @@ import {crewToolsEnabled,humanPromotedIDs,humanControlsMarkup,bindHumanControls,
 import {assemblySizingMarkup,bindAssemblySizing,assemblySizingRequest,restoreAssemblySizing} from './assembly-sizing.js?v=20261021-connections';
 import {profilePromotedIDs,profileControlsMarkup,setProfilePreviewPlane} from './profile-controls.js?v=20261010-123';
 import {endCapPromotedIDs,endCapControlsMarkup} from './end-cap-controls.js?v=20261010-123';
-import {bindSkinning} from './skinning-controls.js?v=20261010-123';
+import {bindSkinning} from './skinning-controls.js?v=20261023-sliders';
 import {propPromotedIDs,propControlsMarkup} from './prop-controls.js?v=20261021-sliders';
 import {attachmentPromotedIDs,attachmentControlsMarkup,drawAttachmentFrame} from './attachment-controls.js?v=20261010-123';
 import {bodyPromotedIDs,bodyControlsMarkup} from './body-controls.js?v=20261010-123';

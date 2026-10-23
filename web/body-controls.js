@@ -1,5 +1,5 @@
 // Identities, supported combinations and calculated values come from OpenVSP.
-import {skinningMarkup} from './skinning-controls.js?v=20261010-123';
+import {skinningMarkup} from './skinning-controls.js?v=20261023-sliders';
 export function bodyPromotedIDs(component,index){
  const section=component.sections[index];
  return [...[...(section?.bodyDriverControls||[]),...(section?.bodyPositionControls||[])].map(d=>d.parameter),...(section?.skinControls?.parameters||[])];

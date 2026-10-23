@@ -1,4 +1,8 @@
 import {displayValue,nativeValue,unitSuffix} from './display-units.js?v=20261010-123';
+import {customSliderMarkup,bindCustomSliders} from './custom-sliders.js?v=20261022-drafts';
+const skinReadOnly=p=>p.active===false||p.displayReadOnly||p.userLocked;
+const skinSliderUnits={displayValue,parameterDimension:p=>p.dimension,readOnly:skinReadOnly};
+const skinSliderParameter=p=>({...p,customSlider:{key:'skin:'+p.id,range:Math.min(p.max-p.min,Math.max(Math.abs(p.value)*.5,p.dimension==='angle'?15:.5)),adjustable:true}});
 const continuityChoices=[[0,'C0 — position'],[1,'C1 — tangent'],[2,'C2 — curvature']];
 export function skinningMarkup(component,section,{esc,parameterField}){
  const controls=section?.skinControls;if(!controls)return '';
@@ -9,18 +13,23 @@ export function skinningMarkup(component,section,{esc,parameterField}){
  return `<details class="parameter-group geometry-primary skin-editor" data-group="body-skin"><summary>Section blending</summary><p class="native-tip">Control how the skin approaches and leaves this profile. Automatic values come from OpenVSP; enable manual tangent or curvature constraints to shape the blend.</p>${controls.endpoint?`<p class="native-tip">${esc(controls.endpoint)}</p>`:''}${field(controls.continuity,'Section continuity',continuityChoices)}<div class="skin-primary-fields">${flags(controls.manual,true)}</div><details class="wing-secondary-controls" data-group="skin-symmetry" open><summary>Blending symmetry</summary>${flags(controls.symmetry)}</details>${direction(controls.directions[0])}<details class="wing-secondary-controls" data-group="skin-other-directions"><summary>Right, bottom & left directions</summary>${controls.directions.slice(1).map(direction).join('')}</details><p class="native-tip">Angle and slew use your display angle units. Strength and curvature retain OpenVSP’s native conventions. Equality and continuity can make the after-side values follow the before side.</p><div class="tool-actions"><button data-skin-reset>Reset this section’s blending</button><button data-skin-reset-all>Reset all body blending</button></div></details>`;
 }
 export function skinningField(p,esc){
- const value=Number(displayValue(p.value,p.dimension).toPrecision(12)),locked=p.active===false||p.displayReadOnly;
+ p=skinSliderParameter(p);
+ const value=Number(displayValue(p.value,p.dimension).toPrecision(12)),locked=skinReadOnly(p),fieldId='skin-param-'+p.id;
  const choices=p.choices||(p.type===2?[[0,'Off'],[1,'On']]:null);
- return `<label class="tool-field" title="${esc(p.readOnlyReason||p.description)}">${esc(p.label)}${p.dimension?` (${esc(unitSuffix(p.dimension))})`:''}${locked?' · calculated':''}${choices?`<select aria-label="${esc(p.label)}" data-skin-param="${esc(p.id)}" ${locked?'disabled':''}>${choices.map(([v,label])=>`<option value="${v}" ${v===p.value?'selected':''}>${esc(label)}</option>`).join('')}</select>`:`<input aria-label="${esc(p.label)}" data-skin-param="${esc(p.id)}" type="number" step="any" min="${displayValue(p.min,p.dimension)}" max="${displayValue(p.max,p.dimension)}" value="${value}" ${locked?'readonly':''}>`}<small>${esc(p.readOnlyReason||p.description)}</small></label>`;
+ return `<label class="tool-field" title="${esc(p.readOnlyReason||p.description)}">${esc(p.label)}${p.dimension?` (${esc(unitSuffix(p.dimension))})`:''}${locked?' · locked':''}${choices?`<select aria-label="${esc(p.label)}" data-skin-param="${esc(p.id)}" ${locked?'disabled':''}>${choices.map(([v,label])=>`<option value="${v}" ${v===p.value?'selected':''}>${esc(label)}</option>`).join('')}</select>`:`<input id="${esc(fieldId)}" aria-label="${esc(p.label)}" data-skin-param="${esc(p.id)}" type="number" step="any" min="${displayValue(p.min,p.dimension)}" max="${displayValue(p.max,p.dimension)}" value="${value}" ${locked?'readonly':''}>${customSliderMarkup(p,fieldId,{...skinSliderUnits,esc})}`}<small>${esc(p.readOnlyReason||p.description)}</small></label>`;
 }
-export function bindSkinning(host,component,section,{mutate,toast}){
+export function bindSkinning(host,component,section,{mutate,toast,liveEdit,isBusy=()=>false}){
  if(!section?.skinControls)return;
  const common={geom:component.id,surface:section.surface,index:section.index};
  host.querySelector('[data-skin-reset]').onclick=()=>mutate({...common,operation:'section-skin-reset'});
  host.querySelector('[data-skin-reset-all]').onclick=()=>mutate({geom:component.id,operation:'body-skin-reset-all'});
  for(const input of host.querySelectorAll('[data-skin-param]')){
   const p=component.params.find(p=>p.id===input.dataset.skinParam),original=Number(displayValue(p.value,p.dimension).toPrecision(12));let pending=false;
-  const commit=async()=>{if(pending||p.active===false||p.displayReadOnly)return;if(!input.value.trim()||!Number.isFinite(Number(input.value))){toast('Enter a finite number.');input.value=original;return;}if(Number(input.value)===original)return;const value=nativeValue(Number(input.value),p.dimension);if(value<p.min||value>p.max){toast('Use a value within the native limits.');input.value=original;return;}pending=true;try{await mutate({operation:'parameter',id:p.id,value});}finally{pending=false;}};
+  const commit=async()=>{if(pending||isBusy()||skinReadOnly(p))return;if(!input.value.trim()||!Number.isFinite(Number(input.value))){toast('Enter a finite number.');input.value=original;return;}if(Number(input.value)===original)return;const value=nativeValue(Number(input.value),p.dimension);if(value<p.min||value>p.max){toast('Use a value within the native limits.');input.value=original;return;}pending=true;try{await mutate({operation:'parameter',id:p.id,value});}finally{pending=false;}};
   input.onchange=commit;input.onblur=commit;input.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();input.blur();}};
  }
+ bindCustomSliders(host,component.params.map(skinSliderParameter),{...skinSliderUnits,isBusy,liveEdit:liveEdit?(p,slider,value,finished)=>{
+  if(skinReadOnly(p))return;
+  return liveEdit(p.id,slider,{operation:'parameter',id:p.id,value:nativeValue(value,p.dimension)},finished);
+ }:undefined});
 }

@@ -23,7 +23,7 @@ import {renderComponents} from './component-tools.js?v=20261022-export-review';
 import {partEditor,bindPartEditor} from './part-editor.js?v=20261010-123';
 import {regionEditor,bindRegionEditor} from './region-editor.js?v=20261010-123';
 import {downloadNative,prepareExportDraft} from './file-tools.js?v=20261022-review';
-import {renderAdvanced,chooseEngineeringSettings} from './advanced-tools.js?v=20261022-placement';
+import {renderAdvanced,chooseEngineeringSettings} from './advanced-tools.js?v=20261023-sliders';
 import {mountTangentEditor} from './curve-tangent-editor.js?v=20261022-sliders';
 import {mountCurveEditor} from './curve-editor.js?v=20261022-point-sliders';
 // Dedicated editors use native IDs and submit undoable OpenVSP operations.
@@ -55,6 +55,11 @@ function card(title,body,extra=''){return `<section class="tool-card ${extra}"><
 const toolRendering=visibleRenderer(renderVisibleTools);
 export function renderTools(){toolRendering.request();}
 export function refreshToolGeometry(){
+ if(active==='propellers'){
+  const root=$('#tool-prop-plot'),curve=data().propellers.find(p=>p.id===geom()?.id)?.curves.find(c=>c.name===$('#prop-curve')?.value);
+  if(root&&curve)root.innerHTML=plotSVG(curve.sampleStations,curve.sampleValues,'Radius fraction',curve.label+(curve.dimension==='angle'?' (degrees)':''));
+  return;
+ }
  if(active==='specialized'){
   const root=$('#bor-profile-plot'),bor=data().bodiesOfRevolution.find(b=>b.id===geom()?.id);
   if(root&&bor)root.innerHTML=plotSVG(bor.profile.map(p=>p[0]),bor.profile.map(p=>p[1]),'X','Y',true);

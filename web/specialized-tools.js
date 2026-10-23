@@ -7,7 +7,7 @@ import {crewToolsEnabled,humanControlsMarkup,bindHumanControls,disposeHumanInspe
 import {tireDetailsMarkup,suspensionMarkup,tireDetailNames,suspensionNames,mountTireInspection,disposeTireInspection} from './gear-tire.js?v=20261022-live';
 import {auxiliaryMarkup,bindAuxiliary} from './auxiliary-controls.js?v=20261010-123';
 import {gearRetractionMarkup,gearRetractionIDs} from './gear-retraction.js?v=20261010-123';
-import {skinningMarkup,skinningField,bindSkinning} from './skinning-controls.js?v=20261010-123';
+import {skinningMarkup,skinningField,bindSkinning} from './skinning-controls.js?v=20261023-sliders';
 import {mountMeshViewer} from './mesh-viewer.js?v=20261010-123';
 import {drawingMesh} from './structural-preview.js?v=20261010-123';
 let previewCleanup=null,sectionChoice=0,gearGroundPreview=false;
@@ -42,7 +42,7 @@ export function renderSpecialized(ctx){
   bind('copy-section-apply',()=>{return mutate({...common,operation:'section-copy-from',source:JSON.parse(val('copy-section-source')),curveOnly:!!num('copy-section-scope')});});
   bind('section-reparameterize',()=>mutate({...common,operation:'section-reparameterize'}));
   document.querySelector('#special-profile-file').onchange=async e=>{const f=e.target.files[0];if(f&&f.size<=5_000_000)await mutate({...common,operation:'section-profile-import',content:await f.text()});};
-  if(s.skinControls)bindSkinning(document.querySelector('#tool-skinning'),c,s,{mutate,toast:app.toast});
+  if(s.skinControls)bindSkinning(document.querySelector('#tool-skinning'),c,s,{mutate,toast:app.toast,liveEdit:app.liveEdit,isBusy:()=>app.isBusy?.()||false});
  }else{
   const typ=c.type.toUpperCase();
   if(typ==='HUMAN'){
