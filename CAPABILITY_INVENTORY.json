@@ -1724,6 +1724,17 @@
             ".workspace/evidence/study-axis-recovery-20261022/"
           ],
           "scope": "40 JS modules; source/strict relocated native versioning checks; before-browser failure, recovery actions, save/one-case original SDK equality/older execution preservation/fresh reopen. Broader closure remains Unproven."
+        },
+        {
+          "date": "2026-10-22",
+          "change": "Unfinished study forms survive local additions, reordering and removal by stable step/axis identity; strict save/native validation and remapped dependencies remain.",
+          "evidence": [
+            "PROJECT_STATUS.md",
+            "tests/test_study_form_drafts.mjs",
+            "tests/test_study_capture.mjs",
+            ".workspace/evidence/study-form-recovery-20261022/"
+          ],
+          "scope": "44 JS modules; source/strict relocated native definition-version regression; actual browser blank-step removal, retained17.0 draft and remapped sweep, invalid-save preservation, two original-native-equal slice cases and cold reopen. Unsaved forms are in-memory only. Wider specialist/semantic-transform coverage and full closure remain Unproven."
         }
       ]
     },
@@ -2032,6 +2043,17 @@
             ".workspace/evidence/tire-live-inspection-20261022/"
           ],
           "scope": "43 JS modules; seven-pose original native comparison source1/strict relocated2 methods; six actual browser queries match all native surfaces; saved0.46 auxiliary cold geometry and exact Undo/Redo. Initial pitch-change expectation failed and is documented. Other families/layouts and broad closure remain Unproven."
+        },
+        {
+          "date": "2026-10-22",
+          "change": "Unfinished study forms survive local additions, reordering and removal by stable step/axis identity; strict save/native validation and remapped dependencies remain.",
+          "evidence": [
+            "PROJECT_STATUS.md",
+            "tests/test_study_form_drafts.mjs",
+            "tests/test_study_capture.mjs",
+            ".workspace/evidence/study-form-recovery-20261022/"
+          ],
+          "scope": "44 JS modules; source/strict relocated native definition-version regression; actual browser blank-step removal, retained17.0 draft and remapped sweep, invalid-save preservation, two original-native-equal slice cases and cold reopen. Unsaved forms are in-memory only. Wider specialist/semantic-transform coverage and full closure remain Unproven."
         }
       ]
     }

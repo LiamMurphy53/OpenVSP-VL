@@ -32,7 +32,7 @@ import {installRegionOverlays,refreshRegionOverlays,drawRegionOverlays,focusRegi
 import {setupGuide,bindSetupGuide,guidedResults,bindGuidedResults,hasGuide,refreshGuideFields,bindGuideFields,bindAeroGeometryCopy} from './analysis-guides.js?v=20261022-sweep-visibility';
 import {installRunWorkspace,refreshHistory,renderRunWorkspace,clearRunWorkspace} from './run-workspace.js?v=20261022-run-status';
 import {installTools,renderTools,refreshToolGeometry,setToolsVisible,renderPlots,plotSVG,openEngineeringSettings,openGeometryCases,openFlowPlanes,openParameterLinks} from './tools.js?v=20261022-tire';
-import {installStudies,showStudies} from './studies.js?v=20261022-sweep-visibility';
+import {installStudies,showStudies} from './studies.js?v=20261022-form-drafts';
 const $=s=>document.querySelector(s), esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const wingSelections=new Map(),attachmentFrames=new Set(),propCurveChoices=new Map();
 let model=null,selected=null,page='design',busy=false,query='',sectionIndex=0;
@@ -288,7 +288,7 @@ installRunWorkspace({api,esc,analysisLabel,reuseReferenceInputs,reuseRunInputs,o
 function showRegionBoundary(id){const region=model.tools.controls.find(r=>r.id===id);if(!region)return;selected=region.geom;render();focusRegionBoundary(id);$('[data-page="design"]').click();}
 installRegionOverlays({model:()=>model,api,esc,draw});
 installTools({liveEdit:liveRequestEdit,isBusy:()=>busy,prepareGeometryCase:async id=>{$('[data-page="analysis"]').click();$('#analysis-select').value='GeometryAnalysis';await loadSchema();const field=document.getElementById('analysis-CaseID-0');if(field)field.value=id;},api,model:()=>model,selected:()=>selected,select:id=>{selected=id;sectionIndex=0;render();},transact,toast,esc,showRegionBoundary});
-installStudies({api,esc,toast,analysisLabel,model:()=>model,inputMarkup,editedInputs,canRun:()=>!busy&&!currentJob,
+installStudies({api,esc,toast,analysisLabel,model:()=>model,inputMarkup,editedInputs,refreshInputUnits:refreshAnalysisUnits,canRun:()=>!busy&&!currentJob,
  captureAnalysis:()=>{if(!schema)throw Error('Choose and configure an analysis first.');return{name:schema.name,inputs:editedInputs(schema,'analysis',schema.name==='FeaAssemblyMesh',true),...assemblySizingRequest(schema),geometryInputs:editedInputs(geometrySchema,'geometry',false,true),structure:['FeaMeshAnalysis','FeaAssemblyMesh'].includes(schema.name)?$('#analysis-structure').value:undefined,formats:['FeaMeshAnalysis','FeaAssemblyMesh'].includes(schema.name)?[...document.querySelectorAll('[data-fea-export]:checked')].map(e=>e.dataset.feaExport):undefined};},
  openRun:async id=>{$('[data-page="analysis"]').click();await openRun(id);},refreshHistory});
 installWorkspaceLayout();

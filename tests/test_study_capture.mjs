@@ -9,3 +9,6 @@ assert.throws(()=>captureSweepAxes(axes,(axis,index)=>{if(index===1)throw Error(
 assert.throws(()=>captureSweepAxes(axes,(axis,index)=>{if(index===1)throw Error('Later invalid value');return [9];}),/Later/);assert.equal(JSON.stringify(axes),saved,'A late parse failure cannot partially change retained axes');
 captureSweepAxes(axes,()=>[7]);assert.deepEqual(axes,[{values:[7]},{values:[7]}]);
 console.log('Sweep replacement/removal skips only discarded values; retained parsing is atomic.');
+captureSweepAxes(axes,invalid,-1,true);
+assert.deepEqual(axes,[{values:[7]},{values:[[4,5,6]]}],'Local draft capture retains the last valid value for an unfinished axis');
+assert.throws(()=>captureSweepAxes(axes,invalid),/Incomplete/,'Saving the same incomplete form still fails');
