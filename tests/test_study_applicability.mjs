@@ -19,3 +19,5 @@ const spec={inputs:[{name:'Limit',index:0,type:2,values:[3],editable:true,applic
 assert.throws(()=>collectAnalysisInputs(spec,'s',host,false,true,r=>applies(r)),/finite|number|empty/i,'Future-active incomplete field must be validated');
 assert.deepEqual(collectAnalysisInputs(spec,'s',host,false,true,r=>applies(r,[])),[]);
 console.log('Study visibility follows matching sweep cases, correlations and input validation.');
+assert.equal(applies(rule,[axis],0,'input','a'),true,'A shared assembly controller sweep applies to each member');
+assert.equal(applies(rule,[{...axis,member:'b'}],0,'input','a'),false,'A different member stays independent');

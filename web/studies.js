@@ -1,4 +1,4 @@
-import {studyRuleApplies} from './study-applicability.js?v=20261022';
+import {studyRuleApplies} from './study-applicability.js?v=20261022-members';
 import {memberPrefix,memberSpecs,separateMembers,shareFirstMember,memberMarkup,validateMemberSelection} from './study-members.js?v=20261021';
 import {stepInputOverrides,useSweptDefault,useAllSweptDefaults,omitFollowedDefaults,overridesMarkup,followingSpec} from './study-overrides.js?v=20261021-linked';
 import {plotSVG} from './plot-svg.js?v=20261022-export';

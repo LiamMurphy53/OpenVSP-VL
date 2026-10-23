@@ -1189,6 +1189,18 @@
             ".workspace/evidence/assembly-remesh-isolation-20261021/packaged.log"
           ],
           "scope": "Three runs, distinct worker PIDs, exact mesh/deck regeneration and first/third equality. No production change required; broader closure remains Unproven."
+        },
+        {
+          "date": "2026-10-22",
+          "change": "Shared assembly study controller sweeps expose required fields for every separately edited member.",
+          "evidence": [
+            "PROJECT_STATUS.md",
+            "web/study-applicability.js",
+            "tests/test_study_applicability.mjs",
+            "tests/test_study_shared_sizing.py",
+            ".workspace/evidence/shared-study-sizing-20261022/"
+          ],
+          "scope": "38 JS modules; source and strict relocated shared-basis native mesh/sizing comparisons; browser visibility/save/run/reopen with distinct member fractions. Broader closure remains Unproven."
         }
       ]
     },
@@ -1588,6 +1600,18 @@
             ".workspace/evidence/study-dependent-fields-20261022/"
           ],
           "scope": "Browser hide/restore/save/run/fresh reopen; original native projection regression source and relocated package; direct scalar/array input controllers only. W24 closure remains Unproven."
+        },
+        {
+          "date": "2026-10-22",
+          "change": "Shared assembly study controller sweeps expose required fields for every separately edited member.",
+          "evidence": [
+            "PROJECT_STATUS.md",
+            "web/study-applicability.js",
+            "tests/test_study_applicability.mjs",
+            "tests/test_study_shared_sizing.py",
+            ".workspace/evidence/shared-study-sizing-20261022/"
+          ],
+          "scope": "38 JS modules; source and strict relocated shared-basis native mesh/sizing comparisons; browser visibility/save/run/reopen with distinct member fractions. Broader closure remains Unproven."
         }
       ]
     },
@@ -1809,6 +1833,18 @@
             ".workspace/evidence/fixed-point-slider-workflow-20261022/"
           ],
           "scope": "38 JS modules; native all-six placement reopening source/strict relocated; browser draft/apply/original SDK drawing and parameter equality/Undo/Redo/fresh reopen. Broader closure remains Unproven."
+        },
+        {
+          "date": "2026-10-22",
+          "change": "Shared assembly study controller sweeps expose required fields for every separately edited member.",
+          "evidence": [
+            "PROJECT_STATUS.md",
+            "web/study-applicability.js",
+            "tests/test_study_applicability.mjs",
+            "tests/test_study_shared_sizing.py",
+            ".workspace/evidence/shared-study-sizing-20261022/"
+          ],
+          "scope": "38 JS modules; source and strict relocated shared-basis native mesh/sizing comparisons; browser visibility/save/run/reopen with distinct member fractions. Broader closure remains Unproven."
         }
       ]
     }
