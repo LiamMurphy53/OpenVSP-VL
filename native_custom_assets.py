@@ -63,10 +63,11 @@ def listing_context(entry,base,asset_root):
 
 
 def listing_calls(text):
-    """Find real native listing calls after includes have been expanded."""
-    from native_custom_file_reads import replacements
+    """Find native filesystem operations after includes have been expanded."""
+    from native_custom_file_reads import replacements,FILESYSTEM_METHODS
     tokens=[m for m in re.finditer(r'//[^\n]*|/\*.*?\*/|"(?:\\.|[^"\\])*"|[A-Za-z_]\w*|[^\s]',text,re.S) if not m[0].startswith(('//','/*'))]
-    return any(replacement.startswith(('StudioListing_getFiles(', 'StudioListing_getDirs(')) for _,_,replacement in replacements(text,tokens,'StudioListing'))
+    prefixes=tuple('StudioListing_'+method+'(' for method in FILESYSTEM_METHODS)
+    return any(replacement.startswith(prefixes) for _,_,replacement in replacements(text,tokens,'StudioListing'))
 
 
 def rewrite_reads(text,source,base,asset_root,runtime_entry=None):
@@ -236,7 +237,7 @@ def generated_functions(text,tokens):
         name=token[0]
         if not re.fullmatch(r'StudioPackage(?:Profile|Upgrade)_[0-9a-f]{16}(?:_[A-Za-z0-9_]+)?',name):continue
         if i+1>=len(tokens) or tokens[i+1][0]!='(':continue
-        if i and tokens[i-1][0] in ('string','void','int','bool'):start=i-1
+        if i and tokens[i-1][0] in ('string','void','int','int64','bool','datetime'):start=i-1
         elif i>=5 and [t[0] for t in tokens[i-5:i]]==['array','<','string','>','@']:start=i-5
         else:continue
         j=i+1;depth=0
@@ -253,7 +254,7 @@ def generated_functions(text,tokens):
             k+=1
             if depth==0:break
         if depth:continue
-        functions.append(dict(name=name,start=tokens[start].start(),end=tokens[k-1].end(),body_start=tokens[j].end(),body_end=tokens[k-1].start(),body=text[tokens[j].end():tokens[k-1].start()]))
+        functions.append(dict(name=name,start=tokens[start].start(),end=tokens[k-1].end(),declaration=text[tokens[start].start():tokens[j].end()],body_start=tokens[j].end(),body_end=tokens[k-1].start(),body=text[tokens[j].end():tokens[k-1].start()]))
     return functions
 
 
@@ -278,7 +279,8 @@ def upgrade_listing_helpers(functions,helper,allowed):
             previous=re.search(pattern,old);updated=re.search(pattern,new)
             if previous and updated and body==previous[1]:
                 replacement=updated[1]
-                for suffix in ('_runtimeFilePath','_runtimeDirectoryPath','_recordWrite','_preferCompanion'):
+                for suffix in ('_runtimeFilePath','_runtimeDirectoryPath','_recordWrite','_preferCompanion',
+                               '_runtimePath','_resolvedPath','_normalizedPath','_getCurrentPath'):
                     replacement=replacement.replace(owner+suffix,helper+suffix)
         if re.fullmatch(r'StudioPackageProfile_[0-9a-f]{16}',name):
             core='string normalized=filename;\nwhile(normalized.length()>=2 && normalized.substr(0,2)=="./")normalized=normalized.substr(2);\n'
@@ -308,7 +310,7 @@ def prepare(v,model):
         result=json.loads(convert(engine,text.encode(),decode))
         if isinstance(result,dict):raise ValueError(result.get('error','Native script XML conversion failed.'))
         return result
-    from native_custom_file_reads import replacements as file_replacements,helper_code
+    from native_custom_file_reads import replacements as file_replacements,helper_code,FILESYSTEM_METHODS
     for script,assets in candidates:
         if len(assets)!=1:raise ValueError('Custom component has ambiguous embedded package records.')
         folder,entry,_=staged[assets[0]]
@@ -320,15 +322,20 @@ def prepare(v,model):
         allowed={(file.relative_to(Path.cwd()).as_posix()) for file in folder.rglob('*') if file.is_file()}
         helper='StudioPackageUpgrade_'+hashlib.sha256(text.encode()).hexdigest()[:16]
         edits=[edit for edit in file_replacements(text,tokens,helper) if not any(f['start']<=edit[0]<f['end'] for f in functions)]
-        listing=listing_context(entry,folder,folder) if any(edit[2].startswith((helper+'_getFiles(',helper+'_getDirs(')) for edit in edits) else None
-        if listing:resolver_edits=upgrade_listing_helpers(functions,helper,allowed)
+        context=listing_context(entry,folder,folder)
+        from native_custom_runtime_upgrade import edits as runtime_upgrade_edits
+        runtime_edits,upgraded_owners=runtime_upgrade_edits(functions,context)
+        remaining_functions=[function for function in functions if not any(function['name'].startswith(owner+'_') for owner in upgraded_owners)]
+        prefixes=tuple(helper+'_'+method+'(' for method in FILESYSTEM_METHODS)
+        listing=context if any(edit[2].startswith(prefixes) for edit in edits) else None
+        if listing:resolver_edits=upgrade_listing_helpers(remaining_functions,helper,allowed)
         else:
             for function in functions:
                 if re.fullmatch(r'StudioPackageProfile_[0-9a-f]{16}',function['name']):
                     upgrade=upgrade_profile_resolver(function['body'],allowed)
                     if upgrade:resolver_edits.append((function['body_start'],function['body_start'],'\n'+upgrade))
-        if not edits and not resolver_edits:continue
-        for start,end,replacement in sorted(edits+resolver_edits,reverse=True):text=text[:start]+replacement+text[end:]
+        if not edits and not resolver_edits and not runtime_edits:continue
+        for start,end,replacement in sorted(edits+resolver_edits+runtime_edits,reverse=True):text=text[:start]+replacement+text[end:]
         if edits:text+=helper_code(helper,choice_cases(entry,folder,folder),choice_cases(entry,folder,folder,directories=True),listing=listing)
         script.text=codec(text,False);changed=True
     if not changed:return model

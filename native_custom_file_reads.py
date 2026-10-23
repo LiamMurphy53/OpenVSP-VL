@@ -2,9 +2,16 @@
 import re
 
 
+FILESYSTEM_METHODS=(
+    "changeCurrentPath","getCurrentPath","getFiles","getDirs",
+    "getSize","isDir","isLink","getCreateDateTime","getModifyDateTime",
+    "makeDir","removeDir","deleteFile","copyFile","move",
+)
+
+
 def replacements(text,tokens,helper):
     words=[t[0] for t in tokens];count=len(words)
-    primitives={'file','filesystem','int','uint','double','float','bool','string','auto','array'}
+    primitives={'file','filesystem','int','int64','uint','uint64','double','float','bool','string','auto','array'}
     pairs={}
     # Balance call, index and block scopes independently of comparison operators.
     for opening,closing in [('(',')'),('[',']'),('{','}')]:
@@ -138,7 +145,7 @@ def replacements(text,tokens,helper):
                                     bindings[words[n]]=kind
                                     if owner:fields.setdefault(owner,{})[words[n]]=kind
                             k+=1
-        if word in ('open','changeCurrentPath','getFiles','getDirs') and i>=2 and i+1<count and words[i-1]=='.' and words[i+1]=='(':
+        if word in ('open',*FILESYSTEM_METHODS) and i>=2 and i+1<count and words[i-1]=='.' and words[i+1]=='(':
             end=pairs.get(i+1)
             if end is not None:calls.append((i,end,[(c,dict(s)) for c,s in scopes]))
     def bounds(end):
@@ -218,28 +225,51 @@ def replacements(text,tokens,helper):
             if words[j] in ('(','[') and j in pairs:j=pairs[j]
             j+=1
         empty=end==i+2
-        if commas!=(1 if method=='open' else 0) or empty!=(method in ('getFiles','getDirs')):continue
+        if commas!=(1 if method in ('open','copyFile','move') else 0) or empty!=(method in ('getFiles','getDirs','getCurrentPath')):continue
         receiver=text[tokens[start].start():tokens[i-1].start()]
         result.append((tokens[start].start(),tokens[i+1].end(),helper+'_'+method+'(@('+receiver+')'+('' if empty else ',')))
     return result
 
 
-def helper_code(helper,cases,directory_cases='',listing=None):
-    def redirect(kind):return 'string listed='+helper+'_runtime'+kind+'Path(filename);if(listed!=filename)return listed;' if listing else ''
-    written='if(status==0 && mode!="r" && mode!="rb")'+helper+'_recordWrite(filename);' if listing else ''
-    preferred=('if((mode=="r" || mode=="rb") && '+helper+'_preferCompanion(filename)){string companion='+helper+'_runtimeFilePath(filename);if(companion!=filename)return target.open(companion,mode);}' if listing else '')
-    directory_preferred=('filesystem start;if(target.getCurrentPath()==start.getCurrentPath() && '+helper+'_preferCompanion(filename)){string companion='+helper+'_runtimeDirectoryPath(filename);if(companion!=filename)return target.changeCurrentPath(start.getCurrentPath()+"/"+companion);}' if listing else '')
-    text=('\nstring '+helper+'_filePath(const string &in filename){'+redirect('File')+'string normalized=filename;while(normalized.length()>=2 && normalized.substr(0,2)=="./")normalized=normalized.substr(2);'+cases+'return filename;}\n'
-            '\nint '+helper+'_open(file@ target,const string &in filename,const string &in mode){'+preferred+'int status=target.open(filename,mode);'+written+'if(status!=0 && (mode=="r" || mode=="rb")){string path='+helper+'_filePath(filename);if(path!=filename)return target.open(path,mode);}return status;}\n'
-            '\nstring '+helper+'_directoryPath(const string &in filename){'+redirect('Directory')+'string normalized=filename;while(normalized.length()>=2 && normalized.substr(0,2)=="./")normalized=normalized.substr(2);while(normalized.length()>1 && normalized.substr(normalized.length()-1)=="/")normalized=normalized.substr(0,normalized.length()-1);'+directory_cases+'return filename;}\n'
+def _legacy_helper_code(helper,cases,directory_cases=''):
+    # Preserve the established open-only fallback and its exact migration body.
+    text=('\nstring '+helper+'_filePath(const string &in filename){'+'string normalized=filename;while(normalized.length()>=2 && normalized.substr(0,2)=="./")normalized=normalized.substr(2);'+cases+'return filename;}\n'
+            '\nint '+helper+'_open(file@ target,const string &in filename,const string &in mode){'+'int status=target.open(filename,mode);'+'if(status!=0 && (mode=="r" || mode=="rb")){string path='+helper+'_filePath(filename);if(path!=filename)return target.open(path,mode);}return status;}\n'
+            '\nstring '+helper+'_directoryPath(const string &in filename){'+'string normalized=filename;while(normalized.length()>=2 && normalized.substr(0,2)=="./")normalized=normalized.substr(2);while(normalized.length()>1 && normalized.substr(normalized.length()-1)=="/")normalized=normalized.substr(0,normalized.length()-1);'+directory_cases+'return filename;}\n'
             # Keep successful native navigation and missing-path status. Only
             # an initial lookup from the worker directory can use a companion.
             # A fresh native object supplies the current job's absolute root;
             # saved scripts contain no paths to an earlier worker directory.
-            '\nbool '+helper+'_changeCurrentPath(filesystem@ target,const string &in filename){'+directory_preferred+'if(target.changeCurrentPath(filename))return true;filesystem root;if(target.getCurrentPath()!=root.getCurrentPath())return false;string path='+helper+'_directoryPath(filename);if(path==filename)return false;return target.changeCurrentPath(root.getCurrentPath()+"/"+path);}\n')
-    if listing:
-        from native_custom_listing import helper_code as listing_code
-        text+=listing_code(helper,**listing)
+            '\nbool '+helper+'_changeCurrentPath(filesystem@ target,const string &in filename){'+'if(target.changeCurrentPath(filename))return true;filesystem root;if(target.getCurrentPath()!=root.getCurrentPath())return false;string path='+helper+'_directoryPath(filename);if(path==filename)return false;return target.changeCurrentPath(root.getCurrentPath()+"/"+path);}\n')
+    return text
+
+
+def helper_code(helper,cases,directory_cases='',listing=None):
+    if not listing:
+        text=_legacy_helper_code(helper,cases,directory_cases)
+        for method in ('getFiles','getDirs'):
+            text+='\narray<string>@ '+helper+'_'+method+'(const filesystem@ target){return target.'+method+'();}\n'
+        text+='\nstring '+helper+'_getCurrentPath(const filesystem@ target){return target.getCurrentPath();}\n'
     else:
-        text+='\narray<string>@ '+helper+'_getFiles(filesystem@ target){return target.getFiles();}\narray<string>@ '+helper+'_getDirs(filesystem@ target){return target.getDirs();}\n'
+        from native_custom_listing import helper_code as listing_code
+        text=listing_code(helper,**listing)
+        text+=('\nstring '+helper+'_filePath(const string &in filename){string listed='+helper+'_runtimeFilePath(filename);if(listed!=filename)return listed;string normalized=filename;while(normalized.length()>=2 && normalized.substr(0,2)=="./")normalized=normalized.substr(2);'+cases+'return filename;}\n'
+               '\nstring '+helper+'_directoryPath(const string &in filename){string listed='+helper+'_runtimeDirectoryPath(filename);if(listed!=filename)return listed;string normalized=filename;while(normalized.length()>=2 && normalized.substr(0,2)=="./")normalized=normalized.substr(2);while(normalized.length()>1 && normalized.substr(normalized.length()-1)=="/")normalized=normalized.substr(0,normalized.length()-1);'+directory_cases+'return filename;}\n'
+               # Invoke native open even for a directory or invalid mode: it
+               # closes the previous handle before returning the native error.
+               '\nint '+helper+'_open(file@ target,const string &in filename,const string &in mode){string path='+helper+'_runtimePath(filename);int status=target.open(path,mode);if(status==0 && mode!="r" && mode!="rb")'+helper+'_recordWrite(path);if(status!=0 && (mode=="r" || mode=="rb") && '+helper+'_runtimeFilePath(filename)==filename){string fallback='+helper+'_filePath(filename);if(fallback!=filename && fallback!=path)return target.open(fallback,mode);}return status;}\n'
+               '\nbool '+helper+'_changeCurrentPath(filesystem@ target,const string &in filename){string path='+helper+'_resolvedPath(target,filename);if(target.changeCurrentPath(path))return true;filesystem root;if('+helper+'_normalizedPath('+helper+'_getCurrentPath(target))!=root.getCurrentPath())return false;string fallback='+helper+'_directoryPath(filename);if(fallback==filename)return false;return target.changeCurrentPath(root.getCurrentPath()+"/"+fallback);}\n')
+    # Const methods stay callable through a const filesystem handle. All work
+    # uses the original receiver, so argument/receiver expressions run once.
+    for method,result in [('getSize','int64'),('isDir','bool'),('isLink','bool'),('getCreateDateTime','datetime'),('getModifyDateTime','datetime')]:
+        path=helper+'_resolvedPath(target,filename)' if listing else 'filename'
+        text+='\n'+result+' '+helper+'_'+method+'(const filesystem@ target,const string &in filename){return target.'+method+'('+path+');}\n'
+    for method in ('makeDir','removeDir','deleteFile'):
+        path=helper+'_resolvedPath(target,filename)' if listing else 'filename'
+        record=('if(status==0)'+helper+'_recordWrite(path);') if listing and method=='makeDir' else ''
+        text+='\nint '+helper+'_'+method+'(filesystem@ target,const string &in filename){string path='+path+';int status=target.'+method+'(path);'+record+'return status;}\n'
+    for method in ('copyFile','move'):
+        resolve=lambda name:helper+'_resolvedPath(target,'+name+')' if listing else name
+        record=('if(status==0)'+helper+'_recordWrite(destination);') if listing else ''
+        text+='\nint '+helper+'_'+method+'(filesystem@ target,const string &in source,const string &in filename){string origin='+resolve('source')+';string destination='+resolve('filename')+';int status=target.'+method+'(origin,destination);'+record+'return status;}\n'
     return text
