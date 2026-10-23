@@ -1,4 +1,5 @@
 import {runPreviewNotice} from './run-preview-status.js?v=20261022';
+import {canReplaceGeometry} from './geometry-preview-update.js?v=20261022';
 import {flowPlaneCSV,flowPlaneHeader} from './flow-plane-samples.js?v=20261021-units';
 import {installViewControls} from './view-controls.js?v=20261010-123';
 // Display native nodes, connectivity and solution samples. No solver math.
@@ -16,7 +17,8 @@ export function mountMeshViewer(host,mesh,esc){
  if(mesh.initialView==='profile'){yaw=0;pitch=-Math.PI/2;}else if(mesh.initialView==='top'){yaw=Math.PI/2;pitch=Math.PI/2;}
  const visible=new Set(mesh.groups.filter(g=>!g.initiallyHidden&&(!mesh.pressureLabel||g.id!==0)).map(g=>g.id)),groupColor=new Map(mesh.groups.map((g,i)=>[g.id,g.color||colors[i%colors.length]]));
  const lo=[Infinity,Infinity,Infinity],hi=[-Infinity,-Infinity,-Infinity];const fitNodes=mesh.pressureLabel?new Set(mesh.elements.filter(e=>e.group!==0).flatMap(e=>e.nodes)):mesh.geometryPreview?new Set(mesh.elements.filter(e=>visible.has(e.group)).flatMap(e=>e.nodes)):null;for(const [i,p] of mesh.nodes.entries())if(!fitNodes||fitNodes.has(i))for(let k=0;k<3;k++){lo[k]=Math.min(lo[k],p[k]);hi[k]=Math.max(hi[k],p[k]);}let center=lo.map((x,k)=>(x+hi[k])/2),extent=Math.max(...hi.map((x,k)=>x-lo[k]))||1;
- const cells=mesh.elements.map((e,i)=>({...e,fieldRow:i,center:[0,1,2].map(k=>e.nodes.reduce((s,n)=>s+mesh.nodes[n][k],0)/e.nodes.length)}));
+ const makeCells=()=>mesh.elements.map((e,i)=>({...e,fieldRow:i,center:[0,1,2].map(k=>e.nodes.reduce((s,n)=>s+mesh.nodes[n][k],0)/e.nodes.length)}));
+ let cells=makeCells();
  function fitVisible(){
   if(mesh.geometryPreview){const indices=new Set(mesh.elements.filter(e=>visible.has(e.group)).flatMap(e=>e.nodes));if(indices.size){const min=[Infinity,Infinity,Infinity],max=[-Infinity,-Infinity,-Infinity];for(const i of indices)for(let k=0;k<3;k++){min[k]=Math.min(min[k],mesh.nodes[i][k]);max[k]=Math.max(max[k],mesh.nodes[i][k]);}center=min.map((v,k)=>(v+max[k])/2);extent=Math.max(...max.map((v,k)=>v-min[k]))||1;}}
   zoom=1;panX=panY=0;schedule();
@@ -52,5 +54,15 @@ export function mountMeshViewer(host,mesh,esc){
  installViewControls(canvas,{rotate:(dx,dy)=>{yaw-=dx*.008;pitch=Math.max(-1.56,Math.min(1.56,pitch+dy*.008));schedule();},pan:(dx,dy)=>{panX+=dx;panY+=dy;schedule();},zoom:delta=>{zoom=Math.max(.15,Math.min(12,zoom*Math.exp(-delta*.001)));schedule();},select:e=>{const r=canvas.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top;let hit=null;for(let n=rendered.length-1;n>=0;n--){const cell=rendered[n],p=cell.p;if(cell.kind==='point'){if(Math.hypot(x-p[0][0],y-p[0][1])<6){hit=cell;break;}continue;}if(cell.kind==='line'){const a=p[0],b=p[1],dx=b[0]-a[0],dy=b[1]-a[1],t=Math.max(0,Math.min(1,((x-a[0])*dx+(y-a[1])*dy)/(dx*dx+dy*dy||1)));if(Math.hypot(x-a[0]-t*dx,y-a[1]-t*dy)<5){hit=cell;break;}continue;}let inside=false;for(let i=0,j=p.length-1;i<p.length;j=i++)if((p[i][1]>y)!==(p[j][1]>y)&&x<(p[j][0]-p[i][0])*(y-p[i][1])/(p[j][1]-p[i][1])+p[i][0])inside=!inside;if(inside){hit=cell;break;}}
  selected=hit?.id??null;info.textContent=hit?`Element ${hit.id} · ${mesh.groups.find(g=>g.id===hit.group)?.name} · ${mesh.geometryPreview?'Point labels':'Node IDs'}: ${hit.nodes.map(i=>mesh.nodeIDs?.[i]??i).join(', ')}${scalar?' · '+mesh.fields.map(f=>`${f.label}: ${Number(f.values[hit.fieldRow].toPrecision(7))}${f.nodeValues?' (nodes: '+hit.nodes.map(n=>Number(f.nodeValues[n].toPrecision(6))).join(', ')+')':''}`).join(' · '):hit.nativeSource?' · '+hit.nativeSource+' · native mass '+hit.nativeMass:mesh.geometryPreview?' · '+(hit.nativeDrawingID?'Native drawing '+hit.nativeDrawingID+' · type '+hit.nativeDrawingType:'Native surface samples')+(hit.nativeSurface!==undefined?' · Surface '+hit.nativeSurface:'')+' · XYZ: '+hit.nodes.map(n=>'('+mesh.nodes[n].map(v=>Number(v.toPrecision(7))).join(', ')+')').join('; '):' · Gmsh type '+hit.type}`:'No surface element at this point.';if(hit?.nativeNormal)info.textContent+=' · Native cell normal: '+hit.nativeNormal.map(v=>Number(v.toPrecision(7))).join(', ');if(hit?.nativePatch!==undefined)info.textContent+=' · Native patch: '+hit.nativePatch;if(hit?.nativePointNormals)info.textContent+=' · Native point normals: '+hit.nativePointNormals.map(p=>'('+p.map(v=>Number(v.toPrecision(7))).join(', ')+')').join('; ');if(hit?.nativeResultID)info.textContent+=' · Native record: '+hit.nativeResultID;schedule();}});
  canvas.onkeydown=e=>{if(e.key==='f'||e.key==='F'){fitVisible();}else if(e.key.startsWith('Arrow')){e.preventDefault();if(e.key==='ArrowLeft')yaw-=.1;if(e.key==='ArrowRight')yaw+=.1;if(e.key==='ArrowUp')pitch=Math.min(1.56,pitch+.1);if(e.key==='ArrowDown')pitch=Math.max(-1.56,pitch-.1);}else return;schedule();};
- schedule();return()=>{disposed=true;observer.disconnect();root.removeEventListener('fullscreenchange',fullscreenChanged);if(frame!==null)cancelAnimationFrame(frame);};
+ const dispose=()=>{disposed=true;observer.disconnect();root.removeEventListener('fullscreenchange',fullscreenChanged);if(frame!==null)cancelAnimationFrame(frame);};
+ dispose.replaceGeometry=next=>{
+  if(disposed||!canReplaceGeometry(mesh,next))return false;
+  mesh=next;cells=makeCells();selected=null;rendered=[];
+  for(let k=0;k<3;k++){lo[k]=Infinity;hi[k]=-Infinity;}
+  for(const point of mesh.nodes)for(let k=0;k<3;k++){lo[k]=Math.min(lo[k],point[k]);hi[k]=Math.max(hi[k],point[k]);}
+  info.textContent='Left-drag rotate · Wheel-drag pan · Scroll zoom · Click to inspect';
+  // Keep camera, display settings, focus and fullscreen. Fit remains explicit.
+  schedule();return true;
+ };
+ schedule();return dispose;
 }

@@ -348,6 +348,18 @@
             ".workspace/evidence/custom-profile-persistence-20261022/"
           ],
           "scope": "Two source and two strictly relocated native cases verify changed surfaces, every profile field, cold saved values, history and locks. Dedicated browser fixture and arbitrary generated bindings remain unproven. W05 stays Unproven."
+        },
+        {
+          "date": "2026-10-22",
+          "change": "Live tire retraction inspection with serialized latest-value queries, retained camera/display state and valid-result save guards; removed ineffective single-gear analytic pitch input.",
+          "evidence": [
+            "PROJECT_STATUS.md",
+            "tests/test_live_preview.mjs",
+            "tests/test_tire_inspection_sliders.mjs",
+            "tests/test_tire_controls.py",
+            ".workspace/evidence/tire-live-inspection-20261022/"
+          ],
+          "scope": "43 JS modules; seven-pose original native comparison source1/strict relocated2 methods; six actual browser queries match all native surfaces; saved0.46 auxiliary cold geometry and exact Undo/Redo. Initial pitch-change expectation failed and is documented. Other families/layouts and broad closure remain Unproven."
         }
       ]
     },
@@ -2008,6 +2020,18 @@
             ".workspace/evidence/failed-run-preview-20261022/"
           ],
           "scope": "41 JS modules and relocated helper; real saved failed/complete browser inspection, expanded context, native-data identity and4 unchanged model/response hashes. No native solver repair; broader closure Unproven."
+        },
+        {
+          "date": "2026-10-22",
+          "change": "Live tire retraction inspection with serialized latest-value queries, retained camera/display state and valid-result save guards; removed ineffective single-gear analytic pitch input.",
+          "evidence": [
+            "PROJECT_STATUS.md",
+            "tests/test_live_preview.mjs",
+            "tests/test_tire_inspection_sliders.mjs",
+            "tests/test_tire_controls.py",
+            ".workspace/evidence/tire-live-inspection-20261022/"
+          ],
+          "scope": "43 JS modules; seven-pose original native comparison source1/strict relocated2 methods; six actual browser queries match all native surfaces; saved0.46 auxiliary cold geometry and exact Undo/Redo. Initial pitch-change expectation failed and is documented. Other families/layouts and broad closure remain Unproven."
         }
       ]
     }

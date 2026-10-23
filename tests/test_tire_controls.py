@@ -128,6 +128,24 @@ class NativeTireControls(unittest.TestCase):
         v.SetParmValUpdate(self.ids['Symmetrical'],0);v.Update();v.WriteVSPFile(str(self.model),v.SET_ALL)
         with self.assertRaisesRegex(ValueError,'mirroring'):self.worker(dict(action='query',operation='gear-tire-preview',geom=self.gear,bogie=self.bogie,**settings))
 
+    def test_inspection_slider_poses_match_original_without_model_edits(self):
+        self.fixture();v=self.v;before=self.model.read_bytes();surfaces=[]
+        poses=[dict(configuration=v.GEAR_CONFIGURATION_INTERMEDIATE,fraction=x,pitch=0) for x in (0,.25,.5,1)]
+        poses += [dict(configuration=v.GEAR_CONFIGURATION_DOWN,fraction=0,pitch=x) for x in (-30,0,30)]
+        for pose in poses:
+            settings={**self.settings(),**pose}
+            with self.subTest(**pose):
+                data,path=self.worker(dict(action='query',operation='gear-tire-preview',geom=self.gear,bogie=self.bogie,**settings))
+                original=self.direct_inspection(settings)
+                self.assertEqual(data['component']['surfaces'],self.sample(original))
+                self.assertEqual(data['settings'],settings)
+                self.assertEqual(self.model.read_bytes(),before);self.assertEqual(path.read_bytes(),before)
+                surfaces.append(data['component']['surfaces']);v.DeleteGeom(original);v.Update()
+        self.assertEqual(len({str(s) for s in surfaces[:4]}),4,'Each retraction slider position changes the native pose')
+        # Original AUX_GEOM_SINGLE_GEAR builds analytic surfaces without BogieTheta.
+        # Do not expose an ineffective pitch field in this inspection workflow.
+        self.assertEqual(len({str(s) for s in surfaces[4:]}),1,'Original single-gear surfaces ignore stored pitch')
+
     def test_all_six_native_tire_families_and_clearance_profiles(self):
         self.fixture();v=self.v
         for tire in (v.TIRE_TRA,v.TIRE_FAIR_FLANGE,v.TIRE_FAIR_WHEEL,v.TIRE_BALLOON,v.TIRE_BALLOON_WHEEL,v.TIRE_BALLOON_FAIR_WHEEL):
