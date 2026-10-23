@@ -55,7 +55,21 @@ def stage(raw):
     return folder,entry,digest
 
 
-def rewrite_reads(text,source,base,asset_root):
+def listing_context(entry,base,asset_root):
+    import native_custom_listing
+    return dict(root=(asset_root/entry.parent.relative_to(base)).relative_to(Path.cwd()).as_posix(),
+                file_cases=native_custom_listing.cases(entry.parent,base,asset_root),
+                directory_cases=native_custom_listing.cases(entry.parent,base,asset_root,directories=True))
+
+
+def listing_calls(text):
+    """Find real native listing calls after includes have been expanded."""
+    from native_custom_file_reads import replacements
+    tokens=[m for m in re.finditer(r'//[^\n]*|/\*.*?\*/|"(?:\\.|[^"\\])*"|[A-Za-z_]\w*|[^\s]',text,re.S) if not m[0].startswith(('//','/*'))]
+    return any(replacement.startswith(('StudioListing_getFiles(', 'StudioListing_getDirs(')) for _,_,replacement in replacements(text,tokens,'StudioListing'))
+
+
+def rewrite_reads(text,source,base,asset_root,runtime_entry=None):
     """Relocate packaged reader arguments while retaining native script evaluation."""
     # Tokenize comments separately so examples and labels cannot become edits.
     tokens=[m for m in re.finditer(r'//[^\n]*|/\*.*?\*/|"(?:\\.|[^"\\])*"|[A-Za-z_]\w*|[^\s]',text,re.S) if not m[0].startswith(('//','/*'))]
@@ -103,6 +117,10 @@ def rewrite_reads(text,source,base,asset_root):
         relative=Path(filename)
         candidates={(source.parent/relative).resolve(),(base/relative).resolve()}
         candidates=[p for p in candidates if p.is_relative_to(base) and p.is_file()]
+        # In a native directory workflow all included functions share the
+        # entry script's working folder, independent of their source file.
+        runtime_file=(runtime_entry.parent/relative).resolve() if runtime_entry else None
+        if runtime_file is not None and runtime_file.is_relative_to(base) and runtime_file.is_file():candidates=[runtime_file]
         if len(candidates)!=1:raise ValueError('Choose an unambiguous in-package '+kind+' file: '+filename)
         destination=asset_root/candidates[0].relative_to(base)
         if readers[token[0]]==0:
@@ -113,18 +131,20 @@ def rewrite_reads(text,source,base,asset_root):
     for start,end,replacement in sorted(replacements,reverse=True):text=text[:start]+replacement+text[end:]
     if dynamic:
         cases=choice_cases(source,base,asset_root)
+        listing=listing_context(runtime_entry,base,asset_root) if runtime_entry else None
         missing_path=asset_root/'.unavailable-profile'
         while (base/missing_path.relative_to(asset_root)).exists():missing_path=Path(str(missing_path)+'_')
         missing=missing_path.relative_to(Path.cwd()).as_posix()
-        if file_reads:
-            # Preserve native writes, optional reads and read-after-write behavior:
-            # try the original filename first; only failed pure reads fall back
-            # to an unambiguous embedded companion. Arguments evaluate once.
+        if file_reads or listing:
+            # Preserve native writes and read-after-write behavior. Pure reads
+            # prefer a bundled companion over untouched worker infrastructure;
+            # other reads try the native filename before fallback. Evaluate once.
             from native_custom_file_reads import helper_code
-            text+=helper_code(helper,cases,choice_cases(source,base,asset_root,directories=True))
+            text+=helper_code(helper,cases,choice_cases(source,base,asset_root,directories=True),listing=listing)
         # Unknown computed names are recorded for rejection. Profile readers
         # retain their native diagnostic; unsafe design readers are skipped.
-        text+='\nstring '+helper+'(const string &in filename){\n'+discovered_profile_cases(cases)+'string normalized=filename;\nwhile(normalized.length()>=2 && normalized.substr(0,2)=="./")normalized=normalized.substr(2);\n'+cases+'AddAttributeString(GetChildCollection(GetCurrCustomGeom()),'+json.dumps(MISSING_ATTRIBUTE)+',filename);\nreturn '+json.dumps(missing)+';\n}\n'
+        runtime_profile=('string runtimePath='+helper+'_runtimeFilePath(filename);if(runtimePath!=filename)return runtimePath;\n') if listing else ''
+        text+='\nstring '+helper+'(const string &in filename){\n'+runtime_profile+discovered_profile_cases(cases)+'string normalized=filename;\nwhile(normalized.length()>=2 && normalized.substr(0,2)=="./")normalized=normalized.substr(2);\n'+cases+'AddAttributeString(GetChildCollection(GetCurrCustomGeom()),'+json.dumps(MISSING_ATTRIBUTE)+',filename);\nreturn '+json.dumps(missing)+';\n}\n'
         # These native void readers can crash on a missing file. Leave the
         # original reader untouched for resolved data, and skip unresolved
         # calls so the worker can reject the recorded failure before saving.
@@ -164,6 +184,10 @@ def restore(model):
 
 
 def _stage_tree(tree):
+    # Region workers and direct saved-model restoration also load scripts,
+    # independently of the ordinary native worker's run entry point.
+    import native_custom_listing
+    native_custom_listing.begin()
     staged={}
     for node in tree.iter('Attribute'):
         if node.get('Name')!=ATTRIBUTE:continue
@@ -205,6 +229,68 @@ def upgrade_profile_resolver(body,allowed):
     return discovered_profile_cases(match['cases'],allowed) if match else ''
 
 
+def generated_functions(text,tokens):
+    """Identify individual reserved generated functions, including array handles."""
+    functions=[]
+    for i,token in enumerate(tokens):
+        name=token[0]
+        if not re.fullmatch(r'StudioPackage(?:Profile|Upgrade)_[0-9a-f]{16}(?:_[A-Za-z0-9_]+)?',name):continue
+        if i+1>=len(tokens) or tokens[i+1][0]!='(':continue
+        if i and tokens[i-1][0] in ('string','void','int','bool'):start=i-1
+        elif i>=5 and [t[0] for t in tokens[i-5:i]]==['array','<','string','>','@']:start=i-5
+        else:continue
+        j=i+1;depth=0
+        while j<len(tokens):
+            if tokens[j][0]=='(':depth+=1
+            elif tokens[j][0]==')':depth-=1
+            j+=1
+            if depth==0:break
+        if j>=len(tokens) or tokens[j][0]!='{':continue
+        k=j;depth=0
+        while k<len(tokens):
+            if tokens[k][0]=='{':depth+=1
+            elif tokens[k][0]=='}':depth-=1
+            k+=1
+            if depth==0:break
+        if depth:continue
+        functions.append(dict(name=name,start=tokens[start].start(),end=tokens[k-1].end(),body_start=tokens[j].end(),body_end=tokens[k-1].start(),body=text[tokens[j].end():tokens[k-1].start()]))
+    return functions
+
+
+def upgrade_listing_helpers(functions,helper,allowed):
+    """Upgrade only known generated bodies; keep their source-specific aliases."""
+    from native_custom_file_reads import helper_code
+    edits=[];quoted=r'"(?:\\.|[^"\\])*"'
+    cases=r'(?:if\(normalized=='+quoted+r'\)return '+quoted+r';\n)*'
+    normalize='string normalized=filename;while(normalized.length()>=2 && normalized.substr(0,2)=="./")normalized=normalized.substr(2);'
+    trim='while(normalized.length()>1 && normalized.substr(normalized.length()-1)=="/")normalized=normalized.substr(0,normalized.length()-1);'
+    for function in functions:
+        name=function['name'];body=function['body'];replacement=None
+        for suffix,kind,prefix in [('_filePath','File',normalize),('_directoryPath','Directory',normalize+trim)]:
+            if name.endswith(suffix) and re.fullmatch(re.escape(prefix)+cases+re.escape('return filename;'),body):
+                replacement='string listed='+helper+'_runtime'+kind+'Path(filename);if(listed!=filename)return listed;'+body
+        if name.endswith(('_open','_changeCurrentPath')):
+            owner=name.rsplit('_',1)[0]
+            # Compare the complete old generated implementation, not a user's
+            # similarly named wrapper. Reuse the generator for the new body.
+            old=helper_code(owner,'','');new=helper_code(owner,'','',listing=dict(root='',file_cases='',directory_cases=''))
+            pattern=r'\b'+re.escape(name)+r'\([^\n]*?\)\{(.*)\}\n'
+            previous=re.search(pattern,old);updated=re.search(pattern,new)
+            if previous and updated and body==previous[1]:
+                replacement=updated[1]
+                for suffix in ('_runtimeFilePath','_runtimeDirectoryPath','_recordWrite','_preferCompanion'):
+                    replacement=replacement.replace(owner+suffix,helper+suffix)
+        if re.fullmatch(r'StudioPackageProfile_[0-9a-f]{16}',name):
+            core='string normalized=filename;\nwhile(normalized.length()>=2 && normalized.substr(0,2)=="./")normalized=normalized.substr(2);\n'
+            suffix='AddAttributeString(GetChildCollection(GetCurrCustomGeom()),'+json.dumps(MISSING_ATTRIBUTE)+',filename);\nreturn '
+            match=re.search(re.escape(core)+'(?P<cases>'+cases+')'+re.escape(suffix)+quoted+r';\n\Z',body)
+            if match and body[:match.start()] in ('\n','\n'+discovered_profile_cases(match['cases'],allowed)):
+                if body[:match.start()]=='\n':body='\n'+discovered_profile_cases(match['cases'],allowed)+body[1:]
+                replacement='\nstring runtimePath='+helper+'_runtimeFilePath(filename);if(runtimePath!=filename)return runtimePath;'+body
+        if replacement is not None:edits.append((function['body_start'],function['body_end'],replacement))
+    return edits
+
+
 def prepare(v,model):
     """Upgrade embedded file receivers in an isolated native-load copy only."""
     import ctypes,native_preview
@@ -230,33 +316,20 @@ def prepare(v,model):
         tokens=[m for m in re.finditer(r'//[^\n]*|/\*.*?\*/|"(?:\\.|[^"\\])*"|[A-Za-z_]\w*|[^\s]',text,re.S) if not m[0].startswith(('//','/*'))]
         # Includes can place generated helpers before later user callbacks.
         # Exclude individual helper bodies, not the remainder of the script.
-        generated=[];resolver_edits=[]
+        functions=generated_functions(text,tokens);resolver_edits=[]
         allowed={(file.relative_to(Path.cwd()).as_posix()) for file in folder.rglob('*') if file.is_file()}
-        for i,token in enumerate(tokens[:-2]):
-            if token[0] not in ('string','void','int','bool') or not re.fullmatch(r'StudioPackage(?:Profile|Upgrade)_[0-9a-f]{16}(?:_[A-Za-z0-9_]+)?',tokens[i+1][0]) or tokens[i+2][0]!='(':continue
-            j=i+2;depth=0
-            while j<len(tokens):
-                if tokens[j][0]=='(':depth+=1
-                elif tokens[j][0]==')':depth-=1
-                j+=1
-                if depth==0:break
-            if j>=len(tokens) or tokens[j][0]!='{':continue
-            depth=0;k=j
-            while k<len(tokens):
-                if tokens[k][0]=='{':depth+=1
-                elif tokens[k][0]=='}':depth-=1
-                k+=1
-                if depth==0:break
-            generated.append((token.start(),tokens[k-1].end()))
-            if token[0]=='string' and re.fullmatch(r'StudioPackageProfile_[0-9a-f]{16}',tokens[i+1][0]):
-                body_start=tokens[j].end();body=text[body_start:tokens[k-1].start()]
-                upgrade=upgrade_profile_resolver(body,allowed)
-                if upgrade:resolver_edits.append((body_start,body_start,'\n'+upgrade))
         helper='StudioPackageUpgrade_'+hashlib.sha256(text.encode()).hexdigest()[:16]
-        edits=[edit for edit in file_replacements(text,tokens,helper) if not any(start<=edit[0]<end for start,end in generated)]
+        edits=[edit for edit in file_replacements(text,tokens,helper) if not any(f['start']<=edit[0]<f['end'] for f in functions)]
+        listing=listing_context(entry,folder,folder) if any(edit[2].startswith((helper+'_getFiles(',helper+'_getDirs(')) for edit in edits) else None
+        if listing:resolver_edits=upgrade_listing_helpers(functions,helper,allowed)
+        else:
+            for function in functions:
+                if re.fullmatch(r'StudioPackageProfile_[0-9a-f]{16}',function['name']):
+                    upgrade=upgrade_profile_resolver(function['body'],allowed)
+                    if upgrade:resolver_edits.append((function['body_start'],function['body_start'],'\n'+upgrade))
         if not edits and not resolver_edits:continue
         for start,end,replacement in sorted(edits+resolver_edits,reverse=True):text=text[:start]+replacement+text[end:]
-        if edits:text+=helper_code(helper,choice_cases(entry,folder,folder),choice_cases(entry,folder,folder,directories=True))
+        if edits:text+=helper_code(helper,choice_cases(entry,folder,folder),choice_cases(entry,folder,folder,directories=True),listing=listing)
         script.text=codec(text,False);changed=True
     if not changed:return model
     import os,tempfile

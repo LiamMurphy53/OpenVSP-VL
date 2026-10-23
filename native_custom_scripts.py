@@ -32,7 +32,24 @@ def import_script(v,path,name,parent="",package_root=None,asset_root=None):
         expand.argtypes=[ctypes.c_char_p,ctypes.c_char_p];expand.restype=ctypes.c_char_p
         with tempfile.TemporaryDirectory() as temporary:
             staged=Path(temporary)
-            for source in ordered:
+            expanded_listing=None
+            if asset_root is not None:
+                import native_custom_listing
+                from native_custom_assets import listing_calls,rewrite_reads
+                native_custom_listing.begin()
+                # Resolve receiver types across includes before deciding how
+                # to adapt directory discovery. The native expander retains
+                # source order; all callbacks still use the native compiler.
+                for source in ordered:
+                    destination=staged/source.relative_to(base)
+                    destination.parent.mkdir(parents=True,exist_ok=True)
+                    destination.write_text(source.read_text(encoding='utf-8'),encoding='utf-8')
+                expanded=json.loads(expand(engine,str(staged/path.relative_to(base)).encode()))
+                if isinstance(expanded,dict):raise ValueError(expanded.get('error','Native include expansion failed.'))
+                expanded=re.sub(r'(?m)^//#include([^\n]*)$',r'// Included helper\1',expanded)
+                if len(expanded.encode('utf-8'))>20_000_000:raise ValueError('Expanded custom script exceeds 20 MB.')
+                if listing_calls(expanded):expanded_listing=rewrite_reads(expanded,path,base,asset_root,runtime_entry=path)
+            for source in ([] if expanded_listing is not None else ordered):
                 destination=staged/source.relative_to(base)
                 destination.parent.mkdir(parents=True,exist_ok=True)
                 text=source.read_text(encoding='utf-8')
@@ -48,6 +65,8 @@ def import_script(v,path,name,parent="",package_root=None,asset_root=None):
                 expanded=re.sub(r'(?m)^//#include([^\n]*)$',r'// Included helper\1',expanded)
                 if len(expanded.encode('utf-8'))>20_000_000:raise ValueError('Expanded custom script exceeds 20 MB.')
                 destination.write_text(expanded,encoding='utf-8')
+            if expanded_listing is not None:
+                (staged/path.relative_to(base)).write_text(expanded_listing,encoding='utf-8')
             result=json.loads(f(engine,str(staged/path.relative_to(base)).encode(),name.encode(),parent.encode()))
     else:
         result=json.loads(f(engine,str(path).encode(),name.encode(),parent.encode()))

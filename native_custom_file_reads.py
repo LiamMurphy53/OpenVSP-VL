@@ -59,6 +59,10 @@ def replacements(text,tokens,helper):
         while j<end and words[j] in ('@','&','in','out','inout','const'):j+=1
         return kind,j
     def declaration(i,end):
+        # Do not rescan the :: suffix of a qualified type as an absolute native
+        # type (Other::filesystem must never become ::filesystem). Genuine
+        # leading :: declarations, including const ::file, remain available.
+        if i and (words[i-1]==':' or words[i]==':' and re.fullmatch(r'[A-Za-z_]\w*',words[i-1]) and words[i-1]!='const'):return None
         parsed=type_at(i,end)
         if parsed:
             kind,j=parsed
@@ -134,7 +138,7 @@ def replacements(text,tokens,helper):
                                     bindings[words[n]]=kind
                                     if owner:fields.setdefault(owner,{})[words[n]]=kind
                             k+=1
-        if word in ('open','changeCurrentPath') and i>=2 and i+1<count and words[i-1]=='.' and words[i+1]=='(':
+        if word in ('open','changeCurrentPath','getFiles','getDirs') and i>=2 and i+1<count and words[i-1]=='.' and words[i+1]=='(':
             end=pairs.get(i+1)
             if end is not None:calls.append((i,end,[(c,dict(s)) for c,s in scopes]))
     def bounds(end):
@@ -213,18 +217,29 @@ def replacements(text,tokens,helper):
             if words[j]==',':commas+=1
             if words[j] in ('(','[') and j in pairs:j=pairs[j]
             j+=1
-        if commas!=(1 if method=='open' else 0) or end==i+2:continue
+        empty=end==i+2
+        if commas!=(1 if method=='open' else 0) or empty!=(method in ('getFiles','getDirs')):continue
         receiver=text[tokens[start].start():tokens[i-1].start()]
-        result.append((tokens[start].start(),tokens[i+1].end(),helper+'_'+method+'(@('+receiver+'),'))
+        result.append((tokens[start].start(),tokens[i+1].end(),helper+'_'+method+'(@('+receiver+')'+('' if empty else ',')))
     return result
 
 
-def helper_code(helper,cases,directory_cases=''):
-    return ('\nstring '+helper+'_filePath(const string &in filename){string normalized=filename;while(normalized.length()>=2 && normalized.substr(0,2)=="./")normalized=normalized.substr(2);'+cases+'return filename;}\n'
-            '\nint '+helper+'_open(file@ target,const string &in filename,const string &in mode){int status=target.open(filename,mode);if(status!=0 && (mode=="r" || mode=="rb")){string path='+helper+'_filePath(filename);if(path!=filename)return target.open(path,mode);}return status;}\n'
-            '\nstring '+helper+'_directoryPath(const string &in filename){string normalized=filename;while(normalized.length()>=2 && normalized.substr(0,2)=="./")normalized=normalized.substr(2);while(normalized.length()>1 && normalized.substr(normalized.length()-1)=="/")normalized=normalized.substr(0,normalized.length()-1);'+directory_cases+'return filename;}\n'
+def helper_code(helper,cases,directory_cases='',listing=None):
+    def redirect(kind):return 'string listed='+helper+'_runtime'+kind+'Path(filename);if(listed!=filename)return listed;' if listing else ''
+    written='if(status==0 && mode!="r" && mode!="rb")'+helper+'_recordWrite(filename);' if listing else ''
+    preferred=('if((mode=="r" || mode=="rb") && '+helper+'_preferCompanion(filename)){string companion='+helper+'_runtimeFilePath(filename);if(companion!=filename)return target.open(companion,mode);}' if listing else '')
+    directory_preferred=('filesystem start;if(target.getCurrentPath()==start.getCurrentPath() && '+helper+'_preferCompanion(filename)){string companion='+helper+'_runtimeDirectoryPath(filename);if(companion!=filename)return target.changeCurrentPath(start.getCurrentPath()+"/"+companion);}' if listing else '')
+    text=('\nstring '+helper+'_filePath(const string &in filename){'+redirect('File')+'string normalized=filename;while(normalized.length()>=2 && normalized.substr(0,2)=="./")normalized=normalized.substr(2);'+cases+'return filename;}\n'
+            '\nint '+helper+'_open(file@ target,const string &in filename,const string &in mode){'+preferred+'int status=target.open(filename,mode);'+written+'if(status!=0 && (mode=="r" || mode=="rb")){string path='+helper+'_filePath(filename);if(path!=filename)return target.open(path,mode);}return status;}\n'
+            '\nstring '+helper+'_directoryPath(const string &in filename){'+redirect('Directory')+'string normalized=filename;while(normalized.length()>=2 && normalized.substr(0,2)=="./")normalized=normalized.substr(2);while(normalized.length()>1 && normalized.substr(normalized.length()-1)=="/")normalized=normalized.substr(0,normalized.length()-1);'+directory_cases+'return filename;}\n'
             # Keep successful native navigation and missing-path status. Only
             # an initial lookup from the worker directory can use a companion.
             # A fresh native object supplies the current job's absolute root;
             # saved scripts contain no paths to an earlier worker directory.
-            '\nbool '+helper+'_changeCurrentPath(filesystem@ target,const string &in filename){if(target.changeCurrentPath(filename))return true;filesystem root;if(target.getCurrentPath()!=root.getCurrentPath())return false;string path='+helper+'_directoryPath(filename);if(path==filename)return false;return target.changeCurrentPath(root.getCurrentPath()+"/"+path);}\n')
+            '\nbool '+helper+'_changeCurrentPath(filesystem@ target,const string &in filename){'+directory_preferred+'if(target.changeCurrentPath(filename))return true;filesystem root;if(target.getCurrentPath()!=root.getCurrentPath())return false;string path='+helper+'_directoryPath(filename);if(path==filename)return false;return target.changeCurrentPath(root.getCurrentPath()+"/"+path);}\n')
+    if listing:
+        from native_custom_listing import helper_code as listing_code
+        text+=listing_code(helper,**listing)
+    else:
+        text+='\narray<string>@ '+helper+'_getFiles(filesystem@ target){return target.getFiles();}\narray<string>@ '+helper+'_getDirs(filesystem@ target){return target.getDirs();}\n'
+    return text

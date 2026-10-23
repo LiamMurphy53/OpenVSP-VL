@@ -51,12 +51,13 @@ class CustomFilesystem(unittest.TestCase):
         original,surfaces=self.original(self.directory_script())
         _,_,c=self.imported(script);self.assertEqual(self.length(c),original);self.assertEqual([s['points'] for s in c['surfaces']],surfaces)
 
-    def test_ambiguous_directory_does_not_choose_an_unrelated_companion(self):
+    def test_default_directory_discovery_uses_entry_folder_before_package_aliases(self):
         original_files=self.files
         self.files=lambda script:{**original_files(script),'data/wrong.txt':'99\n'}
-        original,_=self.original(self.directory_script());self.assertEqual(original,12)
-        _,path,c=self.imported(self.directory_script());self.assertEqual(self.length(c),5)
-        state,_=self.worker(dict(action='state'),path);self.assertEqual(self.length(next(item for item in state['components'] if item['id']==c['id'])),5)
+        original,surfaces=self.original(self.directory_script());self.assertEqual(original,12)
+        _,path,c=self.imported(self.directory_script());self.assertEqual(self.length(c),original)
+        self.assertEqual([s['points'] for s in c['surfaces']],surfaces)
+        state,_=self.worker(dict(action='state'),path);self.assertEqual(self.length(next(item for item in state['components'] if item['id']==c['id'])),original)
 
     def test_nested_and_empty_directories_keep_native_navigation_and_status(self):
         prefix='filesystem directory;double length=5;if(directory.changeCurrentPath("./data")){length=0;array<string>@ dirs=directory.getDirs();if(dirs.find("nested")<0)length=100;file reader;if(reader.open(directory.getCurrentPath()+"/one.txt","r")==0){length+=parseFloat(reader.readLine());reader.close();}if(directory.changeCurrentPath("nested")){if(reader.open(directory.getCurrentPath()+"/two.txt","r")==0){length+=parseFloat(reader.readLine());reader.close();}string before=directory.getCurrentPath();if(directory.changeCurrentPath("data") || directory.getCurrentPath()!=before)length=200;directory.changeCurrentPath("../..");if(!directory.changeCurrentPath("empty") || directory.getFiles().length()!=0)length=300;before=directory.getCurrentPath();if(directory.changeCurrentPath("missing") || directory.getCurrentPath()!=before)length=400;}}SetParmVal(GetParm(GetCurrCustomGeom(),"Length","Design"),length);'

@@ -651,6 +651,8 @@ def execute_analysis(v,req):
     return native_guides.save_preview(v,data,name)
 
 def run(req, model):
+    import native_custom_listing
+    native_custom_listing.begin()
     v=load()
     action=req['action']
     v.ClearVSPModel()

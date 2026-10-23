@@ -398,6 +398,20 @@
             ".workspace/evidence/discovered-profiles-20261022/packaged.json"
           ],
           "scope": "55 related source and five relocated-package methods; exact original body/airfoil and DES/XDDM geometry, cold persistence, rejection, migration and read-only file preservation. Bare default listing is independently reproduced as still unsupported; W05 closure remains unproven."
+        },
+        {
+          "date": "2026-10-23",
+          "change": "Default-directory custom package file/folder discovery, entry-relative and included reads, worker-basename precedence, and raw/legacy saved-reader migration with direct restore/prepare initialization.",
+          "evidence": [
+            "CUSTOM_CONTROL_AUDIT.md",
+            "tests/test_custom_default_listing.py",
+            "tests/test_custom_discovered_profiles.py",
+            ".workspace/evidence/default-listing-20261023/source-final.log",
+            ".workspace/evidence/default-listing-20261023/packaged.json",
+            ".workspace/evidence/default-listing-20261023/packaged.log",
+            ".workspace/evidence/default-listing-runtime-20261023/remaining.json"
+          ],
+          "scope": "71 source tests (84.603 s) and the same 71 strictly relocated-package tests (85.299 s); complete native geometry, read-only bytes, cold persistence, type-aware include resolution, specialist-reader validation and direct-load paths. Supersedes the prior unsupported-default-listing finding. Independent native probes still contradict default-folder metadata, parent navigation and file/directory creation conflict behavior. No new browser check or W05 closure is claimed; all W01\u2013W25 remain Unproven."
         }
       ]
     },
