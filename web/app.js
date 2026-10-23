@@ -31,7 +31,7 @@ import {wireEditor,bindWireEditor} from './wire-editor.js?v=20261010-123';
 import {installRegionOverlays,refreshRegionOverlays,drawRegionOverlays,focusRegionBoundary} from './region-overlay.js?v=20261010-123';
 import {setupGuide,bindSetupGuide,guidedResults,bindGuidedResults,hasGuide,refreshGuideFields,bindGuideFields,bindAeroGeometryCopy} from './analysis-guides.js?v=20261022-sweep-visibility';
 import {installRunWorkspace,refreshHistory,renderRunWorkspace,clearRunWorkspace} from './run-workspace.js?v=20261022-run-status';
-import {installTools,renderTools,refreshToolGeometry,setToolsVisible,renderPlots,plotSVG,openEngineeringSettings,openGeometryCases,openFlowPlanes,openParameterLinks} from './tools.js?v=20261022-tire';
+import {installTools,renderTools,refreshToolGeometry,setToolsVisible,renderPlots,plotSVG,openEngineeringSettings,openGeometryCases,openFlowPlanes,openParameterLinks} from './tools.js?v=20261022-placement';
 import {installStudies,showStudies} from './studies.js?v=20261022-form-drafts';
 const $=s=>document.querySelector(s), esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const wingSelections=new Map(),attachmentFrames=new Set(),propCurveChoices=new Map();

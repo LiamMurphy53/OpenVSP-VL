@@ -10,7 +10,7 @@ import {structuralRegions,bindStructuralRegions} from './structural-regions.js?v
 import {mountStructuralPreview,mountAssemblyPreview} from './structural-preview.js?v=20261010-123';
 import {renderDataTools} from './data-tools.js?v=20261010-123';
 import {renderSpecialized} from './specialized-tools.js?v=20261022-tire';
-import {renderMeasurements} from './measurement-tools.js?v=20261022-report';
+import {renderMeasurements} from './measurement-tools.js?v=20261022-placement';
 import {renderFiles} from './file-tools.js?v=20261022-review';
 import {renderConfigurations} from './configuration-tools.js?v=20261022-preview';
 import {intersectionSettings,bindIntersectionSettings,intersectionSelection,bindIntersectionSelection} from './intersection-settings.js?v=20261010-123';
