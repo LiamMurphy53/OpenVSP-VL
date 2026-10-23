@@ -316,7 +316,28 @@ while True:time.sleep(.1)
         with self.assertRaises(ValueError):studies.bundle(plan['id'],'../')
 
 
+    def test_projection_controller_sweep_retains_initially_inactive_boundary(self):
+        v=self.v;body=v.AddGeom('POD');v.SetParmValUpdate(body,'X_Rel_Location','XForm',3)
+        for g in v.FindGeoms():v.SetSetFlag(g,3,g==self.gid)
+        v.Update();v.WriteVSPFile(str(self.model),v.SET_ALL);source=self.model.read_bytes()
+        inputs=[dict(name='TargetType',values=[v.SET_TARGET]),dict(name='TargetSet',values=[3]),dict(name='DirectionType',values=[v.Z_PROJ]),dict(name='BoundaryType',values=[v.NO_BOUNDARY]),dict(name='BoundaryGeomID',values=[body])]
+        axis=dict(kind='input',stage=0,name='BoundaryType',index=0,valueMode='element',values=[v.NO_BOUNDARY,v.GEOM_BOUNDARY])
+        plan=self.save([axis],[dict(name='Projection',inputs=inputs,freezeInputs=True)])
+        baseline=studies.study_folder(plan['id'])/'aircraft.vsp3';frozen=baseline.read_bytes()
+        self.assertEqual(next(e['values'] for e in studies.definition(plan['id'])['stages'][0]['inputs'] if e['name']=='BoundaryGeomID'),[body])
+        batch=self.wait(plan['id'],studies.launch(plan['id'])['id']);self.assertEqual(batch['status'],'complete');areas=[]
+        def numeric(results):return sorted((r['name'],e['name'],e['index'],json.dumps(e['values'])) for r in results for e in r['entries'] if e['type'] in (v.INT_DATA,v.DOUBLE_DATA,v.VEC3D_DATA) and e['name']!='Analysis_Duration_Sec')
+        for case,boundary in zip(batch['cases'],axis['values']):
+            job=service.job_state(case['stages'][0]['job']);self.assertEqual(job['status'],'complete');actual=job['result'];areas.append(next(e['values'][0] for r in actual['results'] if r['name']=='Projection' for e in r['entries'] if e['name']=='Area'))
+            v.ClearVSPModel();v.ReadVSPFile(str(baseline));v.Update();v.DeleteAllResults();v.SetVSP3FileName(str(self.path/('original-boundary-'+str(boundary)+'.vsp3')));v.SetAnalysisInputDefaults('Projection')
+            for e in inputs:
+                values=[boundary] if e['name']=='BoundaryType' else e['values'];setter=v.SetStringAnalysisInput if v.GetAnalysisInputType('Projection',e['name'])==v.STRING_DATA else v.SetIntAnalysisInput;setter('Projection',e['name'],values)
+            self.assertTrue(v.ExecAnalysis('Projection'));native_worker.errors(v);self.assertEqual(numeric(actual['results']),numeric(native_worker.collect_results(v)))
+        self.assertNotEqual(*areas);self.assertEqual(self.model.read_bytes(),source);self.assertEqual(baseline.read_bytes(),frozen)
+
+
 def read_stage(folder):return studies.read_json(folder/'batch.json')['cases'][0]['stages'][0]
+
 
 
 if __name__=='__main__':unittest.main()

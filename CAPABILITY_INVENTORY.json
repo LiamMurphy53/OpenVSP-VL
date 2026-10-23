@@ -1553,6 +1553,19 @@
             ".workspace/evidence/cg-set-identity-20261022/"
           ],
           "scope": "Previous-source JS failure;34 JS modules,3 source/3 strict relocated study methods, browser pending selectors and35 original MassProp numeric fields per target verified. No new VSPAERO solve/degenerate CG/browser saved-run claim; workflow closure stays Unproven."
+        },
+        {
+          "date": "2026-10-22",
+          "change": "Preserved valid initially inactive study inputs that controller sweeps can activate later, while retaining single-run filtering.",
+          "evidence": [
+            "PROJECT_STATUS.md",
+            "web/analysis-input-state.js",
+            "web/studies.js",
+            "tests/test_analysis_input_state.mjs",
+            "tests/test_studies.py",
+            ".workspace/evidence/study-inactive-inputs-20261022/"
+          ],
+          "scope": "Before-helper regression,36 JS modules, source/strict relocated two-case native projection and browser capture/save/run/reopen comparisons pass. Broader dependent configurations and workflow closure remain Unproven."
         }
       ]
     },
@@ -1750,6 +1763,19 @@
             ".workspace/evidence/geometry-result-units-20261022/"
           ],
           "scope": "36 JS modules, relocated module loading, browser native slice table/plot and actual SVG unit labels verified;5 native receipts and aircraft unchanged. Broader families/mass-browser/responsive coverage and workflow closure stay Unproven."
+        },
+        {
+          "date": "2026-10-22",
+          "change": "Preserved valid initially inactive study inputs that controller sweeps can activate later, while retaining single-run filtering.",
+          "evidence": [
+            "PROJECT_STATUS.md",
+            "web/analysis-input-state.js",
+            "web/studies.js",
+            "tests/test_analysis_input_state.mjs",
+            "tests/test_studies.py",
+            ".workspace/evidence/study-inactive-inputs-20261022/"
+          ],
+          "scope": "Before-helper regression,36 JS modules, source/strict relocated two-case native projection and browser capture/save/run/reopen comparisons pass. Broader dependent configurations and workflow closure remain Unproven."
         }
       ]
     }
