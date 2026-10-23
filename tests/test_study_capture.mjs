@@ -1,0 +1,11 @@
+import assert from 'node:assert/strict';
+import {captureSweepAxes} from '../web/study-capture.js';
+const axes=[{values:[1,3]},{values:[[1,2,3]]}],before=JSON.stringify(axes);
+const invalid=(axis,index)=>{if(index===0)throw Error('Incomplete sweep');return [[4,5,6]];};
+assert.throws(()=>captureSweepAxes(axes,invalid),/Incomplete/);assert.equal(JSON.stringify(axes),before);
+captureSweepAxes(axes,invalid,0);assert.deepEqual(axes,[{values:[1,3]},{values:[[4,5,6]]}]);
+const saved=JSON.stringify(axes);
+assert.throws(()=>captureSweepAxes(axes,(axis,index)=>{if(index===1)throw Error('Another incomplete sweep');return [9];},0),/Another/);assert.equal(JSON.stringify(axes),saved);
+assert.throws(()=>captureSweepAxes(axes,(axis,index)=>{if(index===1)throw Error('Later invalid value');return [9];}),/Later/);assert.equal(JSON.stringify(axes),saved,'A late parse failure cannot partially change retained axes');
+captureSweepAxes(axes,()=>[7]);assert.deepEqual(axes,[{values:[7]},{values:[7]}]);
+console.log('Sweep replacement/removal skips only discarded values; retained parsing is atomic.');

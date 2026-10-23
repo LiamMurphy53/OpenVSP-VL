@@ -1639,6 +1639,18 @@
             ".workspace/evidence/study-result-units-20261022/"
           ],
           "scope": "39 JS modules;3 strict relocated Python checks including native slice/CSV equality; browser labels, generated exports and25 immutable native files checked. Broader closure remains Unproven."
+        },
+        {
+          "date": "2026-10-22",
+          "change": "Recover invalid sweep values through explicit removal/replacement/generation while retaining strict unrelated validation.",
+          "evidence": [
+            "PROJECT_STATUS.md",
+            "web/study-capture.js",
+            "web/studies.js",
+            "tests/test_study_capture.mjs",
+            ".workspace/evidence/study-axis-recovery-20261022/"
+          ],
+          "scope": "40 JS modules; source/strict relocated native versioning checks; before-browser failure, recovery actions, save/one-case original SDK equality/older execution preservation/fresh reopen. Broader closure remains Unproven."
         }
       ]
     },
@@ -1899,6 +1911,18 @@
             ".workspace/evidence/study-result-units-20261022/"
           ],
           "scope": "39 JS modules;3 strict relocated Python checks including native slice/CSV equality; browser labels, generated exports and25 immutable native files checked. Broader closure remains Unproven."
+        },
+        {
+          "date": "2026-10-22",
+          "change": "Recover invalid sweep values through explicit removal/replacement/generation while retaining strict unrelated validation.",
+          "evidence": [
+            "PROJECT_STATUS.md",
+            "web/study-capture.js",
+            "web/studies.js",
+            "tests/test_study_capture.mjs",
+            ".workspace/evidence/study-axis-recovery-20261022/"
+          ],
+          "scope": "40 JS modules; source/strict relocated native versioning checks; before-browser failure, recovery actions, save/one-case original SDK equality/older execution preservation/fresh reopen. Broader closure remains Unproven."
         }
       ]
     }
