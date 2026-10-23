@@ -19,6 +19,23 @@ def digest(path):
     with regular(path).open('rb') as stream:return hashlib.file_digest(stream,'sha256').hexdigest()
 
 
+def circulation_error(reason,record,time,instant,index,level):
+    location=f'record {record} (time index {time}, time {instant:.12g} s), '+(f'loop {index}' if level is None else f'grid level {level}, edge {index}')
+    prefix='Native evaluated '+('circulation' if level is None else 'edge circulation')+' is '
+    return ValueError(prefix+reason+' at '+location+'.')
+
+
+def circulation(stream,record,time,instant,index,level=None):
+    value=stream.readline().strip()
+    if not re.fullmatch(r'[+-]?0x[0-9a-fA-F]+(?:\.[0-9a-fA-F]*)?p[+-]?\d+',value):
+        reason='truncated' if not value else 'nonfinite' if value.lower() in {'nan','+nan','-nan','inf','+inf','-inf','infinity','+infinity','-infinity'} else 'malformed'
+        raise circulation_error(reason,record,time,instant,index,level)
+    try:number=float.fromhex(value)
+    except OverflowError as error:raise circulation_error('nonfinite',record,time,instant,index,level) from error
+    if not math.isfinite(number):raise circulation_error('nonfinite',record,time,instant,index,level)
+    return number
+
+
 def read(path):
     path=regular(path,MAX_BYTES);records=[];previous=None;previous_instant=None
     try:
@@ -33,13 +50,7 @@ def read(path):
                     raise ValueError('Invalid native evaluated-state dimensions or time.')
                 if previous is None and time!=0 or previous is not None and time not in (0,previous+1):raise ValueError('Native evaluated-state time records are incomplete or out of order.')
                 if time==0 and instant!=0 or time>0 and previous_instant is not None and instant<=previous_instant:raise ValueError('Native evaluated-state times do not follow their record order.')
-                gamma=[]
-                for _ in range(count):
-                    value=stream.readline().strip()
-                    if not re.fullmatch(r'[+-]?0x[0-9a-fA-F]+(?:\.[0-9a-fA-F]*)?p[+-]?\d+',value):raise ValueError('Native evaluated circulation is truncated, nonfinite, or malformed.')
-                    number=float.fromhex(value)
-                    if not math.isfinite(number):raise ValueError('Native evaluated circulation is nonfinite.')
-                    gamma.append(number)
+                gamma=[circulation(stream,len(records)+1,time,instant,index+1) for index in range(count)]
                 edge_levels=[]
                 if magic==CURRENT_MAGIC:
                     header=stream.readline().split()
@@ -50,13 +61,7 @@ def read(path):
                         if len(entry)!=3 or entry[0]!='L' or int(entry[1])!=level+offset or not 0<int(entry[2])<=1_000_000:raise ValueError('Invalid native evaluated-state edge dimensions.')
                         edge_count=int(entry[2]);total_edges+=edge_count
                         if total_edges>2_000_000:raise ValueError('Too many native evaluated-state edges.')
-                        edges=[]
-                        for _ in range(edge_count):
-                            value=stream.readline().strip()
-                            if not re.fullmatch(r'[+-]?0x[0-9a-fA-F]+(?:\.[0-9a-fA-F]*)?p[+-]?\d+',value):raise ValueError('Native evaluated edge circulation is truncated, nonfinite, or malformed.')
-                            number=float.fromhex(value)
-                            if not math.isfinite(number):raise ValueError('Native evaluated edge circulation is nonfinite.')
-                            edges.append(number)
+                        edges=[circulation(stream,len(records)+1,time,instant,index+1,level+offset) for index in range(edge_count)]
                         edge_levels.append(dict(level=level+offset,gamma=edges))
                 record=dict(time=time,level=level,loops=count,surfaces=surfaces,currentTime=instant,gamma=gamma)
                 if magic==CURRENT_MAGIC:record['edgeLevels']=edge_levels

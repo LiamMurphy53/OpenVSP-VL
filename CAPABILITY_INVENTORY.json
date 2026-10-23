@@ -919,6 +919,17 @@
             ".workspace/evidence/inactive-analysis-inputs-20261022/"
           ],
           "scope": "Before-browser reproduction;35 JS modules, source/strict relocated native CG-mode setup and browser original-file comparisons pass. Active missing-target guards remain; broader dependencies and workflow closure remain Unproven."
+        },
+        {
+          "date": "2026-10-22",
+          "change": "Reproduced on-axis roll NaNs in the installed solver and report precise rejected circulation locations.",
+          "evidence": [
+            "MODELING_AUDIT.md",
+            "native_evaluated_state.py",
+            "tests/test_evaluated_state.py",
+            ".workspace/evidence/unsteady-failure-location-20261022/"
+          ],
+          "scope": "Installed-only failure at step2/time0.045, guarded original-source zero-area reproduction,10 strict relocated checks,258 exact finite records and actual browser failed retry. Native defect and ordinary regression remain unresolved; closure Unproven."
         }
       ]
     },
@@ -940,6 +951,17 @@
             "FEATURE_STATUS.md"
           ],
           "scope": "Three exact native restoration cases, strict28-module isolation, unchanged tool hashes, source/relocated decoder checks and saved yaw five-field browser viewing; broad closure remains Unproven."
+        },
+        {
+          "date": "2026-10-22",
+          "change": "Reproduced on-axis roll NaNs in the installed solver and report precise rejected circulation locations.",
+          "evidence": [
+            "MODELING_AUDIT.md",
+            "native_evaluated_state.py",
+            "tests/test_evaluated_state.py",
+            ".workspace/evidence/unsteady-failure-location-20261022/"
+          ],
+          "scope": "Installed-only failure at step2/time0.045, guarded original-source zero-area reproduction,10 strict relocated checks,258 exact finite records and actual browser failed retry. Native defect and ordinary regression remain unresolved; closure Unproven."
         }
       ]
     },
@@ -1923,6 +1945,17 @@
             ".workspace/evidence/study-axis-recovery-20261022/"
           ],
           "scope": "40 JS modules; source/strict relocated native versioning checks; before-browser failure, recovery actions, save/one-case original SDK equality/older execution preservation/fresh reopen. Broader closure remains Unproven."
+        },
+        {
+          "date": "2026-10-22",
+          "change": "Reproduced on-axis roll NaNs in the installed solver and report precise rejected circulation locations.",
+          "evidence": [
+            "MODELING_AUDIT.md",
+            "native_evaluated_state.py",
+            "tests/test_evaluated_state.py",
+            ".workspace/evidence/unsteady-failure-location-20261022/"
+          ],
+          "scope": "Installed-only failure at step2/time0.045, guarded original-source zero-area reproduction,10 strict relocated checks,258 exact finite records and actual browser failed retry. Native defect and ordinary regression remain unresolved; closure Unproven."
         }
       ]
     }

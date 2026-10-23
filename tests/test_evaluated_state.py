@@ -31,6 +31,16 @@ class EvaluatedState(unittest.TestCase):
             self.companion.write_text(bad)
             with self.subTest(text=bad),self.assertRaises(ValueError):state.read(self.companion)
 
+    def test_invalid_circulation_reports_record_time_and_native_value_location(self):
+        for value,reason in [('nan','nonfinite'),('inf','nonfinite'),('bad','malformed'),('','truncated'),('0x1p+99999','nonfinite')]:
+            self.companion.write_text(self.text.replace('-0x1p+3',value))
+            with self.subTest(value=value),self.assertRaisesRegex(ValueError,reason+r'.*record 2.*time index 1.*0.03125 s.*loop 2'):
+                state.read(self.companion)
+        first='E 1\nL 1 1\n0x1p+0\n';second='E 1\nL 1 1\n-nan\n'
+        self.companion.write_text(self.text.replace(state.MAGIC,state.CURRENT_MAGIC).replace('R 1',first+'R 1')+second)
+        with self.assertRaisesRegex(ValueError,r'edge circulation is nonfinite.*record 2.*time index 1.*0.03125 s.*level 1.*edge 1'):
+            state.read(self.companion)
+
     def test_changed_missing_symlink_and_wrong_provenance_reject(self):
         state.seal(self.database,WRITER)
         for p in [self.database,self.cases,self.companion]:
