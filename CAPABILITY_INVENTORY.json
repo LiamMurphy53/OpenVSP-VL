@@ -373,6 +373,17 @@
             ".workspace/evidence/custom-directories-20261022/component.png"
           ],
           "scope": "Source34 and relocated-package10 tests; original SDK parameter/surface equality; packaged browser slider, Undo/Redo and reopening. Initial explicit directory navigation is covered; bare default-directory listings and broader filesystem/runtime semantics remain unproven. W05 stays open."
+        },
+        {
+          "date": "2026-10-22",
+          "change": "Resolve native-discovered profile/design filenames and migrate previous saved profile resolvers while retaining original readers and validation.",
+          "evidence": [
+            "CUSTOM_CONTROL_AUDIT.md",
+            "tests/test_custom_discovered_profiles.py",
+            ".workspace/evidence/discovered-profiles-20261022/source.log",
+            ".workspace/evidence/discovered-profiles-20261022/packaged.json"
+          ],
+          "scope": "55 related source and five relocated-package methods; exact original body/airfoil and DES/XDDM geometry, cold persistence, rejection, migration and read-only file preservation. Bare default listing is independently reproduced as still unsupported; W05 closure remains unproven."
         }
       ]
     },

@@ -6,6 +6,8 @@ This is a status view of the existing capability plan, not a new scope or a repl
 
 Custom component packages now support native directory discovery after an explicit relative folder change. A previously incorrect 5-unit import now matches the original engine's 12-unit geometry; native nested-folder reads, control-driven choices, relocation, older saved components and browser Undo/Redo/reopening are verified. Thirty-four source tests and ten relocated-package tests pass. Default working-directory listings and broader custom filesystem semantics remain unproven; W05 stays open. See CUSTOM_CONTROL_AUDIT.md.
 
+Native-discovered body/airfoil profile filenames and DES/XDDM data now resolve through saved custom packages, including migration of older generated readers. Complete native geometry, cold persistence and rejection checks pass in source and the relocated package. Bare default-directory listing remains a reproduced custom runtime gap; W05 is still open.
+
 | Existing category | Implementation remaining | Verification remaining |
 | --- | --- | --- |
 | Modeling | Complete remaining specialized/custom workflows, including broader custom device behavior and remaining runtime companion data; confirm complete section workflows on genuine secondary cross-section surfaces. Compound Streamlined workflows remain partial. | Wider geometry/profile/attachment/symmetry combinations; native save/reopen and browser recovery for the complete scope. Rounded-propeller chevron inconsistency/crash remains unresolved. |

@@ -124,7 +124,7 @@ def rewrite_reads(text,source,base,asset_root):
             text+=helper_code(helper,cases,choice_cases(source,base,asset_root,directories=True))
         # Unknown computed names are recorded for rejection. Profile readers
         # retain their native diagnostic; unsafe design readers are skipped.
-        text+='\nstring '+helper+'(const string &in filename){\nstring normalized=filename;\nwhile(normalized.length()>=2 && normalized.substr(0,2)=="./")normalized=normalized.substr(2);\n'+cases+'AddAttributeString(GetChildCollection(GetCurrCustomGeom()),'+json.dumps(MISSING_ATTRIBUTE)+',filename);\nreturn '+json.dumps(missing)+';\n}\n'
+        text+='\nstring '+helper+'(const string &in filename){\n'+discovered_profile_cases(cases)+'string normalized=filename;\nwhile(normalized.length()>=2 && normalized.substr(0,2)=="./")normalized=normalized.substr(2);\n'+cases+'AddAttributeString(GetChildCollection(GetCurrCustomGeom()),'+json.dumps(MISSING_ATTRIBUTE)+',filename);\nreturn '+json.dumps(missing)+';\n}\n'
         # These native void readers can crash on a missing file. Leave the
         # original reader untouched for resolved data, and skip unresolved
         # calls so the worker can reject the recorded failure before saving.
@@ -187,6 +187,24 @@ def choice_cases(source,base,asset_root,directories=False):
     return ''.join('if(normalized=='+json.dumps(key)+')return '+json.dumps(next(iter(paths)))+';\n' for key,paths in sorted(choices.items()) if len(paths)==1)
 
 
+def discovered_profile_cases(cases,allowed=None):
+    """Canonicalize exact native-discovered files, retaining design validation."""
+    targets={json.loads(value) for value in re.findall(r'return ("(?:\\.|[^"\\])*");',cases)}
+    if allowed is not None:targets.intersection_update(allowed)
+    if not targets:return ''
+    return ('filesystem studioProfileRoot;string studioProfileRootPath=studioProfileRoot.getCurrentPath()+"/";\n'+
+            ''.join('if(filename=='+json.dumps(target)+' || filename==studioProfileRootPath+'+json.dumps(target)+')return '+json.dumps(target)+';\n' for target in sorted(targets)))
+
+
+def upgrade_profile_resolver(body,allowed):
+    """Recognize the previous generated resolver, preserving its source aliases."""
+    quoted=r'"(?:\\.|[^"\\])*"'
+    prefix='\nstring normalized=filename;\nwhile(normalized.length()>=2 && normalized.substr(0,2)=="./")normalized=normalized.substr(2);\n'
+    suffix='AddAttributeString(GetChildCollection(GetCurrCustomGeom()),'+json.dumps(MISSING_ATTRIBUTE)+',filename);\nreturn '
+    match=re.fullmatch(re.escape(prefix)+'(?P<cases>(?:if\\(normalized=='+quoted+r'\)return '+quoted+r';\n)*)'+re.escape(suffix)+quoted+r';\n',body)
+    return discovered_profile_cases(match['cases'],allowed) if match else ''
+
+
 def prepare(v,model):
     """Upgrade embedded file receivers in an isolated native-load copy only."""
     import ctypes,native_preview
@@ -212,7 +230,8 @@ def prepare(v,model):
         tokens=[m for m in re.finditer(r'//[^\n]*|/\*.*?\*/|"(?:\\.|[^"\\])*"|[A-Za-z_]\w*|[^\s]',text,re.S) if not m[0].startswith(('//','/*'))]
         # Includes can place generated helpers before later user callbacks.
         # Exclude individual helper bodies, not the remainder of the script.
-        generated=[]
+        generated=[];resolver_edits=[]
+        allowed={(file.relative_to(Path.cwd()).as_posix()) for file in folder.rglob('*') if file.is_file()}
         for i,token in enumerate(tokens[:-2]):
             if token[0] not in ('string','void','int','bool') or not re.fullmatch(r'StudioPackage(?:Profile|Upgrade)_[0-9a-f]{16}(?:_[A-Za-z0-9_]+)?',tokens[i+1][0]) or tokens[i+2][0]!='(':continue
             j=i+2;depth=0
@@ -229,11 +248,16 @@ def prepare(v,model):
                 k+=1
                 if depth==0:break
             generated.append((token.start(),tokens[k-1].end()))
+            if token[0]=='string' and re.fullmatch(r'StudioPackageProfile_[0-9a-f]{16}',tokens[i+1][0]):
+                body_start=tokens[j].end();body=text[body_start:tokens[k-1].start()]
+                upgrade=upgrade_profile_resolver(body,allowed)
+                if upgrade:resolver_edits.append((body_start,body_start,'\n'+upgrade))
         helper='StudioPackageUpgrade_'+hashlib.sha256(text.encode()).hexdigest()[:16]
         edits=[edit for edit in file_replacements(text,tokens,helper) if not any(start<=edit[0]<end for start,end in generated)]
-        if not edits:continue
-        for start,end,replacement in sorted(edits,reverse=True):text=text[:start]+replacement+text[end:]
-        script.text=codec(text+helper_code(helper,choice_cases(entry,folder,folder),choice_cases(entry,folder,folder,directories=True)),False);changed=True
+        if not edits and not resolver_edits:continue
+        for start,end,replacement in sorted(edits+resolver_edits,reverse=True):text=text[:start]+replacement+text[end:]
+        if edits:text+=helper_code(helper,choice_cases(entry,folder,folder),choice_cases(entry,folder,folder,directories=True))
+        script.text=codec(text,False);changed=True
     if not changed:return model
     import os,tempfile
     fd,filename=tempfile.mkstemp(prefix='.studio-custom-readable-',suffix='.vsp3',dir=Path.cwd()/'.studio-custom-assets')
