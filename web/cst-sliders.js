@@ -1,4 +1,4 @@
-import {customSliderMarkup,bindCustomSliders} from './custom-sliders.js?v=20261021-more';
+import {customSliderMarkup,bindCustomSliders} from './custom-sliders.js?v=20261022-drafts';
 export function cstSliderParameters(component,section){
  if(!section.cst)return [];
  return ['upper','lower'].flatMap(side=>section.cst[side].map((value,index)=>({

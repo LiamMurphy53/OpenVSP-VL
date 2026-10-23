@@ -1,4 +1,4 @@
-import {customSliderMarkup,bindCustomSliders} from './custom-sliders.js?v=20261021-more';
+import {customSliderMarkup,bindCustomSliders} from './custom-sliders.js?v=20261022-drafts';
 export function podSliderParameters(c){
  if(c.type.toUpperCase()!=='POD')return [];
  const length=c.params.find(p=>p.rawGroup==='Design'&&p.name==='Length'),ratio=c.params.find(p=>p.rawGroup==='Design'&&p.name==='FineRatio');

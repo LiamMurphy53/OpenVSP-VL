@@ -1,4 +1,4 @@
-import {customSliderMarkup,bindCustomSliders} from './custom-sliders.js?v=20261021-more';
+import {customSliderMarkup,bindCustomSliders} from './custom-sliders.js?v=20261022-drafts';
 const units={displayValue:x=>x,parameterDimension:()=>null};
 export function tangentSliderParameters(section,control,side){
  const handle=control.handles[side];

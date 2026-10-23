@@ -1,4 +1,4 @@
-import {customSliderMarkup,bindCustomSliders} from './custom-sliders.js?v=20261021-more';
+import {customSliderMarkup,bindCustomSliders} from './custom-sliders.js?v=20261022-drafts';
 // Move native normalized control points; OpenVSP evaluates the curve on commit.
 let selectedPoint=0;
 export function pointSliderParameters(points,activity,index,key='curve'){

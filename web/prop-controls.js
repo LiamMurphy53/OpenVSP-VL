@@ -1,4 +1,4 @@
-import {customSliderMarkup} from './custom-sliders.js?v=20261021-more';
+import {customSliderMarkup} from './custom-sliders.js?v=20261022-drafts';
 // Original native parameters and curve samples drive these editors.
 const arrangement=['PropMode','Rotate','Precone','ReverseFlag','CylindricalSectionsFlag'];
 const spacing=['BladeAzimuthMode','BladeAzimuthDeltaFlag','BalanceX1','BalanceX2'];

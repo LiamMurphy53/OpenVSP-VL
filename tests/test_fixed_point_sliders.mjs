@@ -7,6 +7,7 @@ part.params[2].active=false;
 const html=fixedPointEditor(part,{parts:[],fixedPointParents:[]},{fixedPointGeometries:[],fixedPointTypes:{},fixedPointMassUnits:{}},{E:String,select:()=>'',modelComponents:[]});
 assert.equal((html.match(/type="range"/g)||[]).length,12);
 assert.match(html,/aria-label="Global X slider"[^>]*disabled/);
+assert.match(html,/data-fixed-value="AbsX" aria-label="Global X"/);
 for(const p of part.params.slice(0,2))assert.deepEqual(sliderWindow(sliderParameter(fixedPointSliderParameter(part.id,p))),{low:0,high:1});
 assert.equal(fixedPointSliderParameter('point',{userLocked:true}).active,false);
 assert.equal(fixedPointSliderParameter('point',{displayReadOnly:true}).active,false);

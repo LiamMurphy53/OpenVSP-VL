@@ -1000,6 +1000,17 @@
             ".workspace/evidence/region-file-browser-20261022/compare_structural.py"
           ],
           "scope": "One Selig file and structural region; complete original preview equality, including 20,992 region drawing points; malformed file and undo/redo byte preservation. Other stated family/layout requirements remain open."
+        },
+        {
+          "date": "2026-10-22",
+          "change": "Preserve unsaved values through slider range changes and verify fixed-point sliders end-to-end.",
+          "evidence": [
+            "MODELING_AUDIT.md",
+            "tests/test_custom_sliders.mjs",
+            "tests/test_fixed_point_sliders.mjs",
+            ".workspace/evidence/fixed-point-slider-workflow-20261022/"
+          ],
+          "scope": "38 JS modules; native all-six placement reopening source/strict relocated; browser draft/apply/original SDK drawing and parameter equality/Undo/Redo/fresh reopen. Broader closure remains Unproven."
         }
       ]
     },
@@ -1787,6 +1798,17 @@
             ".workspace/evidence/study-inactive-inputs-20261022/"
           ],
           "scope": "Before-helper regression,36 JS modules, source/strict relocated two-case native projection and browser capture/save/run/reopen comparisons pass. Broader dependent configurations and workflow closure remain Unproven."
+        },
+        {
+          "date": "2026-10-22",
+          "change": "Preserve unsaved values through slider range changes and verify fixed-point sliders end-to-end.",
+          "evidence": [
+            "MODELING_AUDIT.md",
+            "tests/test_custom_sliders.mjs",
+            "tests/test_fixed_point_sliders.mjs",
+            ".workspace/evidence/fixed-point-slider-workflow-20261022/"
+          ],
+          "scope": "38 JS modules; native all-six placement reopening source/strict relocated; browser draft/apply/original SDK drawing and parameter equality/Undo/Redo/fresh reopen. Broader closure remains Unproven."
         }
       ]
     }

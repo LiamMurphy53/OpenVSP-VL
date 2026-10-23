@@ -1,4 +1,4 @@
-import {customSliderMarkup,bindCustomSliders} from './custom-sliders.js?v=20261021-more';
+import {customSliderMarkup,bindCustomSliders} from './custom-sliders.js?v=20261022-drafts';
 // Placement and offsets are native FeaFixPoint parameters, committed together.
 export const fixedPointSliderParameter=(part,p)=>({...p,label:p.name,customSliderKey:`fixed:${part}:${p.id}`,active:p.active!==false&&!p.userLocked&&!p.displayReadOnly});
 const sliderOptions={displayValue:x=>x,parameterDimension:()=>null,readOnly:p=>p.active===false};
@@ -7,7 +7,7 @@ const massLabels={MASS_UNIT_G:'g',MASS_UNIT_KG:'kg',MASS_UNIT_TONNE:'tonne',MASS
 export function fixedPointEditor(p,structure,data,h){
  const {E,select,modelComponents}=h,refs=p.fixedPoint;
  const key=name=>'fixed-'+p.id+'-'+name,parm=name=>p.params.find(x=>x.name===name);
- const input=(name,label)=>{const v=parm(name);return `<label class="tool-field" for="${key(name)}" title="${E(v.description)}">${E(label)}<input id="${key(name)}" data-fixed-value="${name}" type="number" step="any" min="${v.min}" max="${v.max}" value="${E(v.value)}" ${v.active===false||v.userLocked||v.displayReadOnly?'disabled':''}>${customSliderMarkup({...fixedPointSliderParameter(p.id,v),label},key(name),{...sliderOptions,esc:E})}</label>`;};
+ const input=(name,label)=>{const v=parm(name);return `<label class="tool-field" for="${key(name)}" title="${E(v.description)}">${E(label)}<input id="${key(name)}" data-fixed-value="${name}" aria-label="${E(label)}" type="number" step="any" min="${v.min}" max="${v.max}" value="${E(v.value)}" ${v.active===false||v.userLocked||v.displayReadOnly?'disabled':''}>${customSliderMarkup({...fixedPointSliderParameter(p.id,v),label},key(name),{...sliderOptions,esc:E})}</label>`;};
  const rows=(group,items)=>`<div class="tool-fields" data-fixed-group="${group}">${items.map(([name,label])=>input(name,label)).join('')}</div>`;
  const parents=structure.parts.filter(x=>structure.fixedPointParents.includes(x.id)).map(x=>[x.id,x.name]),geoms=modelComponents.filter(c=>data.fixedPointGeometries.includes(c.id)).map(c=>[c.id,c.name]);
  const referenceOptions=(items,current)=>items.some(([id])=>id===current)?items:[['',current?'Choose a replacement · native reference unavailable':'Choose a reference'],...items];

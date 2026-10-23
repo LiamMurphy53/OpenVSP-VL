@@ -67,3 +67,16 @@ for(const type of [3,4]){
  assert.doesNotMatch(customSliderMarkup({...added,active:true},'extra',{esc:String,displayValue:x=>x,parameterDimension:()=>null,readOnly:p=>!p.active}),/disabled/);
 }
 for(const type of [2,5,6])assert.equal(sliderParameter({...ordinary,type}).customSlider,undefined,'Do not invent steps for boolean, non-equal, or power-integer parameters');
+
+// Draft-only editors must not reset unsaved values when resizing a range.
+const draftEvents={},draftInput={value:'6.096',addEventListener:(name,callback)=>draftEvents[name]=callback};
+const narrow={dataset:{sliderResize:'0.5'}},wide={dataset:{sliderResize:'2'}},low={},high={};
+const draftSlider={dataset:{customSlider:'draft'},value:'3.048',disabled:false};
+const draftWrapper={dataset:{sliderKey:'native:draft'},querySelector:selector=>selector==='[data-custom-slider]'?draftSlider:selector==='[data-slider-low]'?low:high,querySelectorAll:()=>[narrow,wide]};
+const draftHost={querySelectorAll:()=>[draftWrapper],querySelector:()=>draftInput};
+bindCustomSliders(draftHost,[{...ordinary,id:'draft'}],{displayValue:x=>x*.3048,parameterDimension:()=> 'length',isBusy:()=>false});
+narrow.onclick();assert.equal(draftInput.value,'6.096');assert.equal(draftSlider.value,6.096,'Resizing centers on the edited native value, preserving display units');
+draftInput.value='30.48';draftEvents.input();assert.equal(draftSlider.value,30.48);assert.ok(draftSlider.max>=30.48,'Exact entry beyond the old range expands its window');
+wide.onclick();assert.equal(draftInput.value,'30.48');assert.equal(draftSlider.value,30.48);
+const before={min:draftSlider.min,max:draftSlider.max,value:draftSlider.value};draftInput.value='';narrow.onclick();assert.deepEqual({min:draftSlider.min,max:draftSlider.max,value:draftSlider.value},before,'Incomplete entry is left intact');
+assert.equal(draftInput.value,'');

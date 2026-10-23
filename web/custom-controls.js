@@ -1,4 +1,4 @@
-import {bindCustomSliders} from './custom-sliders.js?v=20261021-more';
+import {bindCustomSliders} from './custom-sliders.js?v=20261022-drafts';
 export const customControlRows=c=>[...(c.customOwnControls||[]),...(c.customExternalControls||[])].sort((a,b)=>a.index-b.index);
 export function customActionsMarkup(c,E,parameterField,query=''){
  const matches=value=>String(value).toLowerCase().includes(query.toLowerCase());

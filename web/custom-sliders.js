@@ -55,15 +55,28 @@ export function bindCustomSliders(host,parameters,{displayValue,parameterDimensi
   slider.onpointerup=()=>{if(editing&&liveEdit)return finish();};
   slider.onpointercancel=()=>{if(editing&&liveEdit)return finish();};
   slider.onblur=()=>{if(editing&&liveEdit)return finish();};
+  // Exact-entry fields and draft-only editors can hold values newer than p.
+  // All display conversions supplied by modeling controls are linear factors.
+  const draftParameter=()=>{
+   const value=Number(input.value)/displayValue(1,dimension);
+   return input.value.trim()&&Number.isFinite(value)&&value>=p.min&&value<=p.max&&(!integer(p)||Number.isInteger(value))?{...p,value}:null;
+  };
+  const showWindow=(next,value)=>{
+   windows.set(key,next);slider.min=convert(next.low);slider.max=convert(next.high);slider.value=convert(value);
+   for(const [selector,bound] of [['[data-slider-low]',next.low],['[data-slider-high]',next.high]]){
+    const label=wrapper.querySelector(selector);label.textContent=rangeLabel(convert(bound));label.title=String(convert(bound));
+   }
+  };
+  input.addEventListener?.('input',()=>{
+   if(slider.disabled)return;const current=draftParameter();if(!current)return;
+   const next=sliderWindow(current,windows.get(key));if(next)showWindow(next,current.value);
+  });
   for(const button of wrapper.querySelectorAll('[data-slider-resize]'))button.onclick=()=>{
    if(isBusy()||slider.disabled)return;
-   const current=windows.get(key)||sliderWindow(p);if(!current)return;
-   const next=resizeSliderWindow(p,current,Number(button.dataset.sliderResize));windows.set(key,next);
-   slider.min=convert(next.low);slider.max=convert(next.high);slider.value=convert(p.value);
-   input.value=convert(p.value);
-   for(const [selector,value] of [['[data-slider-low]',next.low],['[data-slider-high]',next.high]]){
-    const label=wrapper.querySelector(selector);label.textContent=rangeLabel(convert(value));label.title=String(convert(value));
-   }
+   const currentParameter=draftParameter();if(!currentParameter)return;
+   const current=windows.get(key)||sliderWindow(currentParameter);if(!current)return;
+   const next=resizeSliderWindow(currentParameter,current,Number(button.dataset.sliderResize));
+   showWindow(next,currentParameter.value);
   };
  }
 }
