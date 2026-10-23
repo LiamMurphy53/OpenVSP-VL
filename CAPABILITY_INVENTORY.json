@@ -1566,6 +1566,17 @@
             ".workspace/evidence/study-inactive-inputs-20261022/"
           ],
           "scope": "Before-helper regression,36 JS modules, source/strict relocated two-case native projection and browser capture/save/run/reopen comparisons pass. Broader dependent configurations and workflow closure remain Unproven."
+        },
+        {
+          "date": "2026-10-22",
+          "change": "Show and validate study inputs required by direct controller sweep cases.",
+          "evidence": [
+            "web/study-applicability.js",
+            "tests/test_study_applicability.mjs",
+            "PROJECT_STATUS.md",
+            ".workspace/evidence/study-dependent-fields-20261022/"
+          ],
+          "scope": "Browser hide/restore/save/run/fresh reopen; original native projection regression source and relocated package; direct scalar/array input controllers only. W24 closure remains Unproven."
         }
       ]
     },

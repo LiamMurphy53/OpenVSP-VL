@@ -5,16 +5,16 @@ export function analysisInputApplies(rule,prefix,host){
  const controller=host.getElementById(`${prefix}-${rule.input}-0`);
  return !!controller&&rule.values.some(value=>String(value)===controller.value);
 }
-export function editableAnalysisInputs(spec,prefix,host,includeInactive=false){
- return (spec?.inputs||[]).filter(e=>e.editable&&(includeInactive||!e.applicableWhen||analysisInputApplies(e.applicableWhen,prefix,host)));
+export function editableAnalysisInputs(spec,prefix,host,includeInactive=false,applicability=null){
+ return (spec?.inputs||[]).filter(e=>e.editable&&(includeInactive||!e.applicableWhen||(applicability?applicability(e.applicableWhen):analysisInputApplies(e.applicableWhen,prefix,host))));
 }
 
 // Study controllers may activate configured fields in later cases. Keep valid
 // inactive values for that purpose; incomplete inactive drafts can be omitted.
-export function collectAnalysisInputs(spec,prefix,host,all=false,includeInactive=false){
+export function collectAnalysisInputs(spec,prefix,host,all=false,includeInactive=false,applicability=null){
  const out=[];
- for(const e of editableAnalysisInputs(spec,prefix,host,includeInactive)){
-  const active=!e.applicableWhen||analysisInputApplies(e.applicableWhen,prefix,host);
+ for(const e of editableAnalysisInputs(spec,prefix,host,includeInactive,applicability)){
+  const active=!e.applicableWhen||(applicability?applicability(e.applicableWhen):analysisInputApplies(e.applicableWhen,prefix,host));
   const el=host.getElementById(`${prefix}-${e.name}-${e.index}`);let values;
   try{
    if(!el)throw Error(`${e.name}: input is unavailable.`);

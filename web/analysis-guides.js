@@ -1,5 +1,5 @@
 import {geometryResultLabel} from './geometry-result-units.js?v=20261022';
-import {analysisInputApplies} from './analysis-input-state.js?v=20261022-study';
+import {analysisInputApplies} from './analysis-input-state.js?v=20261022-sweep-visibility';
 import {projectionOptionInputs} from './projection-defaults.js?v=20261021';
 import {waveAreaResults,bindWaveAreaResults} from './wave-area-results.js?v=20261015';
 import {parasiteFlightResults} from './parasite-flight-results.js?v=20261012-1';
@@ -24,21 +24,25 @@ export function setupGuide(spec,esc){
  const members=g.memberSizing?`<details class="guide-mass-settings"><summary>Saved member sizing (${g.memberSizing.length} structures)</summary><p>These are each member’s saved settings before this run. Shared sizing starts from the first member and applies to every member. Choose separate sizing to preserve or edit each member’s own settings.</p><table class="result-table"><thead><tr><th>Structure</th>${['Maximum edge','Minimum edge','Surface gap','Circle target','Growth ratio','Rigorous growth','Positive-Y half'].map(n=>`<th>${n}</th>`).join('')}</tr></thead><tbody>${g.memberSizing.map(m=>`<tr><th>${esc(m.name)} · ${esc(m.component)}</th>${['BaseLen','MinLen','MaxGap','NCircSeg','GrowthRatio','RigorLimit','HalfMeshFlag'].map(n=>`<td>${esc(['RigorLimit','HalfMeshFlag'].includes(n)?m.values[n]?'On':'Off':display(m.values[n]))}</td>`).join('')}</tr>`).join('')}</tbody></table></details>`:'';
  return `<section class="analysis-guide"><h3>${esc(g.title)}</h3><p>${esc(g.note)}</p><p class="native-tip">${spec.standaloneNative?'Reference results use the inputs below.':'Results use the aircraft saved with this run.'} ${esc(g.sensitivityNote||'Compare runs with more slices or sections to check sensitivity.')}${spec.name==='ParasiteDrag'?' Atmosphere choices determine which supplied properties drive parasite drag; its results report the properties OpenVSP actually used.':''}</p>${spec.name==='GeometryAnalysis'?'<button id="guide-edit-geometry-cases">Configure saved geometry checks</button>':''}${g.savedProjectionOptions?'<button id="guide-projection-options">Apply saved projection options</button><p class="native-tip">Copies saved selection types, hull flags and vector. Geometry, mode and boundary references stay as entered below. Reset projection inputs restores the standard options.</p>':''}${reference}${mass}${preparation}${members}</section>`;
 }
-export function refreshGuideFields(spec,prefix='analysis'){
+export function refreshGuideFields(spec,prefix='analysis',applicability=null){
  const groups=new Set();
  for(const e of spec?.inputs||[]){
   const field=document.getElementById(`${prefix}-${e.name}-${e.index}`)?.closest('.analysis-input');
   if(field?.closest('.guide-fields'))groups.add(field.closest('.guide-fields'));
-  const applies=rule=>analysisInputApplies(rule,prefix,document);
-  if(field&&e.applicableWhen)field.hidden=!applies(e.applicableWhen);
+  const applies=rule=>applicability?applicability(rule):analysisInputApplies(rule,prefix,document);
+  if(field&&e.applicableWhen){
+   field.hidden=!applies(e.applicableWhen);
+   const future=applicability&&!field.hidden&&!analysisInputApplies(e.applicableWhen,prefix,document),note=field.querySelector('[data-study-applicability]');
+   if(future&&!note){const text=document.createElement('small');text.dataset.studyApplicability='true';text.textContent='Used by a sweep case.';field.append(text);}else if(!future&&note)note.remove();
+  }
   if(e.minWhen){const input=document.getElementById(`${prefix}-${e.name}-${e.index}`);if(input)input.min=String(applies(e.minWhen)?e.minWhen.value:e.min);}
  }
  for(const group of groups)group.hidden=![...group.querySelectorAll('.analysis-input')].some(field=>!field.hidden);
 }
-export function bindGuideFields(spec,prefix='analysis'){
- refreshGuideFields(spec,prefix);
+export function bindGuideFields(spec,prefix='analysis',applicability=null){
+ refreshGuideFields(spec,prefix,applicability);
  const controllers=rule=>rule.any?rule.any.flatMap(controllers):rule.all?rule.all.flatMap(controllers):[rule.input];
- for(const input of new Set((spec?.inputs||[]).flatMap(e=>[...e.applicableWhen?controllers(e.applicableWhen):[],...e.minWhen?controllers(e.minWhen):[]])))document.getElementById(`${prefix}-${input}-0`)?.addEventListener('change',()=>refreshGuideFields(spec,prefix));
+ for(const input of new Set((spec?.inputs||[]).flatMap(e=>[...e.applicableWhen?controllers(e.applicableWhen):[],...e.minWhen?controllers(e.minWhen):[]])))document.getElementById(`${prefix}-${input}-0`)?.addEventListener('change',()=>refreshGuideFields(spec,prefix,applicability));
 }
 export function bindAeroGeometryCopy(spec,flightPrefix,geometryPrefix,onCopy=()=>{}){
  const first=document.getElementById(`${geometryPrefix}-UseModeFlag-0`);
