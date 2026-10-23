@@ -1625,6 +1625,20 @@
             ".workspace/evidence/swept-starting-inputs-20261022/"
           ],
           "scope": "38 JS modules; source/strict relocated native two-case manual-slice comparisons; browser guard/save/run/original SDK equality/cold server recovery. Broader closure remains Unproven."
+        },
+        {
+          "date": "2026-10-22",
+          "change": "Label known native study results in selectors, tables, plots/SVG and additive CSV value_units metadata.",
+          "evidence": [
+            "PROJECT_STATUS.md",
+            "native_result_units.py",
+            "web/study-result-labels.js",
+            "tests/test_result_units.py",
+            "tests/test_study_result_labels.mjs",
+            "tests/test_study_replaced_inputs.py",
+            ".workspace/evidence/study-result-units-20261022/"
+          ],
+          "scope": "39 JS modules;3 strict relocated Python checks including native slice/CSV equality; browser labels, generated exports and25 immutable native files checked. Broader closure remains Unproven."
         }
       ]
     },
@@ -1871,6 +1885,20 @@
             ".workspace/evidence/swept-starting-inputs-20261022/"
           ],
           "scope": "38 JS modules; source/strict relocated native two-case manual-slice comparisons; browser guard/save/run/original SDK equality/cold server recovery. Broader closure remains Unproven."
+        },
+        {
+          "date": "2026-10-22",
+          "change": "Label known native study results in selectors, tables, plots/SVG and additive CSV value_units metadata.",
+          "evidence": [
+            "PROJECT_STATUS.md",
+            "native_result_units.py",
+            "web/study-result-labels.js",
+            "tests/test_result_units.py",
+            "tests/test_study_result_labels.mjs",
+            "tests/test_study_replaced_inputs.py",
+            ".workspace/evidence/study-result-units-20261022/"
+          ],
+          "scope": "39 JS modules;3 strict relocated Python checks including native slice/CSV equality; browser labels, generated exports and25 immutable native files checked. Broader closure remains Unproven."
         }
       ]
     }

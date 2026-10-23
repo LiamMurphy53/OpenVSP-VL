@@ -304,6 +304,7 @@ def cancel(sid,bid):
 
 
 def result_fields(sid,bid):
+    from native_result_units import result_unit
     batch=batch_state(sid,bid);fields={}
     for case in batch['cases']:
         for stage in case['stages']:
@@ -312,18 +313,18 @@ def result_fields(sid,bid):
             for r in data['results']:
                 for e in r['entries']:
                     key=json.dumps([stage['index'],r['name'],r['index'],e['name'],e['index']],separators=(',',':'))
-                    fields[key]=dict(key=key,stage=stage['index'],result=r['name'],resultIndex=r['index'],field=e['name'],fieldIndex=e['index'],type=e['type'],description=e.get('description',''),
+                    fields[key]=dict(key=key,stage=stage['index'],result=r['name'],resultIndex=r['index'],field=e['name'],fieldIndex=e['index'],type=e['type'],description=e.get('description',''),unit=result_unit(r['name'],e['name']),
                                      numeric=e['type'] in (1,2) and all(x is None or isinstance(x,(int,float)) for x in e['values']),samples=max(len(e['values']),fields.get(key,{}).get('samples',0)))
             for prop,label in [('nodes','Nodes'),('elements','Elements')]:
                 value=data.get('meshSummary',{}).get(prop)
                 if not isinstance(value,int) or isinstance(value,bool):continue
                 key=json.dumps([stage['index'],'meshSummary',prop],separators=(',',':'))
-                fields[key]=dict(key=key,stage=stage['index'],result='Saved native mesh',resultIndex=0,field=label,fieldIndex=0,type=1,numeric=True,samples=1,kind='meshSummary',property=prop,
+                fields[key]=dict(key=key,stage=stage['index'],result='Saved native mesh',resultIndex=0,field=label,fieldIndex=0,type=1,numeric=True,samples=1,kind='meshSummary',property=prop,unit='count',
                                  description=label+' recorded in this run’s original native mesh file. These counts describe mesh size; they do not establish mesh quality or convergence.')
             for item in data.get('flowPlanes',[]):
                 for prop in ('X','Y','Z','Cp','U','V','W'):
                     key=json.dumps([stage['index'],'flowPlane',item['file'],prop],separators=(',',':'))
-                    fields[key]=dict(key=key,stage=stage['index'],result='Native airflow · '+item['file'],resultIndex=0,field=prop,fieldIndex=0,type=2,numeric=True,samples=max(item['nodes'],fields.get(key,{}).get('samples',0)),kind='flowPlane',file=item['file'],property=prop,
+                    fields[key]=dict(key=key,stage=stage['index'],result='Native airflow · '+item['file'],resultIndex=0,field=prop,fieldIndex=0,type=2,numeric=True,samples=max(item['nodes'],fields.get(key,{}).get('samples',0)),kind='flowPlane',file=item['file'],property=prop,unit='model length' if prop in ('X','Y','Z') else 'dimensionless' if prop=='Cp' else 'native length/s',
                                      description='Original native nodal '+prop+' samples in file order. Plane positions and node locations can differ between cases; these samples are not interpolated onto common spatial points.')
     return sorted(fields.values(),key=lambda e:(e['stage'],e['result'],e['resultIndex'],e['field'],e['fieldIndex']))
 
@@ -381,11 +382,11 @@ def csv_comparison(sid,bid,key):
         if isinstance(x,(list,dict)):x=json.dumps(x,separators=(',',':'))
         return "'"+x if isinstance(x,str) and x.startswith(('=','+','-','@')) else x
     spatial=data['field'].get('kind')=='flowPlane'
-    writer.writerow(['case','status','stage_status','native_run',*[a['label']+' requested' for a in data['axes']],*[a['label']+' native' for a in data['axes']],'result','result_index','field','field_index','sample','value','native_setting_notes',*(['native_node_X','native_node_Y','native_node_Z'] if spatial else [])])
+    writer.writerow(['case','status','stage_status','native_run',*[a['label']+' requested' for a in data['axes']],*[a['label']+' native' for a in data['axes']],'result','result_index','field','field_index','sample','value','native_setting_notes',*(['native_node_X','native_node_Y','native_node_Z'] if spatial else []),'value_units'])
     for row in data['rows']:
         for i,value in enumerate(row['values'] if row['values'] is not None else [None]):
             location=(row.get('sampleLocations') or [])[i:i+1]
-            writer.writerow([safe(x) for x in [row['label'],row['status'],row['stageStatus'],row['job'],*row['requested'],*row['effective'],data['field']['result'],data['field']['resultIndex'],data['field']['field'],data['field']['fieldIndex'],i,value,' | '.join(row.get('warnings',[])),*((location[0] if location else [None,None,None]) if spatial else [])]])
+            writer.writerow([safe(x) for x in [row['label'],row['status'],row['stageStatus'],row['job'],*row['requested'],*row['effective'],data['field']['result'],data['field']['resultIndex'],data['field']['field'],data['field']['fieldIndex'],i,value,' | '.join(row.get('warnings',[])),*((location[0] if location else [None,None,None]) if spatial else []),data['field'].get('unit','')]])
     return out.getvalue().encode()
 
 

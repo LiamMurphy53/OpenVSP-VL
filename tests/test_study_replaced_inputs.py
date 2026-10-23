@@ -1,5 +1,5 @@
 """Complete input sweeps supply omitted starting inputs through original analysis."""
-import json,unittest
+import json,unittest,csv,io
 import test_studies
 import native_studies as studies,native_service as service,native_worker
 
@@ -28,4 +28,7 @@ class StudyReplacedInputs(unittest.TestCase):
                 else:
                     setter=v.SetDoubleAnalysisInput if kind==v.DOUBLE_DATA else v.SetIntAnalysisInput;setter('PlanarSlice',e['name'],e['values'])
             self.assertTrue(v.ExecAnalysis('PlanarSlice'));native_worker.errors(v);self.assertEqual(numeric(result['results']),numeric(native_worker.collect_results(v)))
+        field=next(f for f in studies.result_fields(plan['id'],batch['id']) if f['field']=='Slice_Area');self.assertEqual(field['unit'],'model length²')
+        rows=list(csv.DictReader(io.StringIO(studies.csv_comparison(plan['id'],batch['id'],field['key']).decode())))
+        self.assertEqual([float(row['value']) for row in rows],[value for values in areas for value in values]);self.assertTrue(all(row['value_units']=='model length²' for row in rows))
         self.assertNotEqual(*areas);self.assertEqual(self.model.read_bytes(),source);self.assertEqual(baseline.read_bytes(),frozen)
