@@ -1612,6 +1612,19 @@
             ".workspace/evidence/shared-study-sizing-20261022/"
           ],
           "scope": "38 JS modules; source and strict relocated shared-basis native mesh/sizing comparisons; browser visibility/save/run/reopen with distinct member fractions. Broader closure remains Unproven."
+        },
+        {
+          "date": "2026-10-22",
+          "change": "Allow complete input sweeps to supply incomplete starting fields without weakening unswept validation.",
+          "evidence": [
+            "PROJECT_STATUS.md",
+            "web/study-applicability.js",
+            "web/analysis-input-state.js",
+            "tests/test_study_applicability.mjs",
+            "tests/test_study_replaced_inputs.py",
+            ".workspace/evidence/swept-starting-inputs-20261022/"
+          ],
+          "scope": "38 JS modules; source/strict relocated native two-case manual-slice comparisons; browser guard/save/run/original SDK equality/cold server recovery. Broader closure remains Unproven."
         }
       ]
     },
@@ -1845,6 +1858,19 @@
             ".workspace/evidence/shared-study-sizing-20261022/"
           ],
           "scope": "38 JS modules; source and strict relocated shared-basis native mesh/sizing comparisons; browser visibility/save/run/reopen with distinct member fractions. Broader closure remains Unproven."
+        },
+        {
+          "date": "2026-10-22",
+          "change": "Allow complete input sweeps to supply incomplete starting fields without weakening unswept validation.",
+          "evidence": [
+            "PROJECT_STATUS.md",
+            "web/study-applicability.js",
+            "web/analysis-input-state.js",
+            "tests/test_study_applicability.mjs",
+            "tests/test_study_replaced_inputs.py",
+            ".workspace/evidence/swept-starting-inputs-20261022/"
+          ],
+          "scope": "38 JS modules; source/strict relocated native two-case manual-slice comparisons; browser guard/save/run/original SDK equality/cold server recovery. Broader closure remains Unproven."
         }
       ]
     }

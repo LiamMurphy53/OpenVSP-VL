@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {studyRuleApplies} from '../web/study-applicability.js';
+import {studyRuleApplies,studyInputCovered} from '../web/study-applicability.js';
 import {collectAnalysisInputs} from '../web/analysis-input-state.js';
 const rule={input:'BoundaryType',values:[2]},host={getElementById:id=>({'s-BoundaryType-0':{value:'0'},'s-Limit-0':{value:'',dataset:{scalar:'true'},tagName:'INPUT'}}[id])};
 const axis={kind:'input',stage:0,name:'BoundaryType',values:[0,2]};
@@ -21,3 +21,16 @@ assert.deepEqual(collectAnalysisInputs(spec,'s',host,false,true,r=>applies(r,[])
 console.log('Study visibility follows matching sweep cases, correlations and input validation.');
 assert.equal(applies(rule,[axis],0,'input','a'),true,'A shared assembly controller sweep applies to each member');
 assert.equal(applies(rule,[{...axis,member:'b'}],0,'input','a'),false,'A different member stays independent');
+// A full replacement supplies the input even if its starting numeric field is blank.
+assert.deepEqual(collectAnalysisInputs(spec,'s',host,false,true,r=>applies(r),()=>true),[]);
+
+const scalar={name:'Limit',index:0,values:[3]},replacement={kind:'input',stage:0,name:'Limit',values:[2,4]};
+assert.equal(studyInputCovered(scalar,[replacement],0,'input'),true);
+assert.equal(studyInputCovered({...scalar,values:[3,5]},[replacement],0,'input'),false);
+assert.equal(studyInputCovered({...scalar,values:[3,5]},[{...replacement,valueMode:'array',values:[[2,4]]}],0,'input'),true);
+assert.equal(studyInputCovered(scalar,[{...replacement,component:0}],0,'input'),false);
+assert.equal(studyInputCovered(scalar,[{...replacement,member:'b'}],0,'input','a'),false);
+assert.equal(studyInputCovered(scalar,[replacement],0,'input','a'),true);
+assert.equal(studyInputCovered(scalar,[replacement],1,'input'),false);
+assert.equal(studyInputCovered(scalar,[replacement],0,'geometryInput'),false);
+assert.equal(studyInputCovered(scalar,[{...replacement,values:[]}],0,'input'),false);

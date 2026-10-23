@@ -10,8 +10,9 @@ export function editableAnalysisInputs(spec,prefix,host,includeInactive=false,ap
 }
 
 // Study controllers may activate configured fields in later cases. Keep valid
-// inactive values for that purpose; incomplete inactive drafts can be omitted.
-export function collectAnalysisInputs(spec,prefix,host,all=false,includeInactive=false,applicability=null){
+// inactive values for that purpose. Incomplete inactive drafts, or starting
+// values entirely replaced by a study sweep, can be omitted.
+export function collectAnalysisInputs(spec,prefix,host,all=false,includeInactive=false,applicability=null,covered=null){
  const out=[];
  for(const e of editableAnalysisInputs(spec,prefix,host,includeInactive,applicability)){
   const active=!e.applicableWhen||(applicability?applicability(e.applicableWhen):analysisInputApplies(e.applicableWhen,prefix,host));
@@ -33,7 +34,7 @@ export function collectAnalysisInputs(spec,prefix,host,all=false,includeInactive
     try{values=JSON.parse(el.value);}catch{throw Error(`${e.name}: enter a valid JSON array.`);}
     if(!Array.isArray(values))throw Error(`${e.name}: wrap values in [brackets].`);
    }
-  }catch(error){if(includeInactive&&!active)continue;throw error;}
+  }catch(error){if(includeInactive&&(!active||covered?.(e)))continue;throw error;}
   if(all||JSON.stringify(values)!==JSON.stringify(e.values))out.push({name:e.name,index:e.index,values});
  }
  return out;
