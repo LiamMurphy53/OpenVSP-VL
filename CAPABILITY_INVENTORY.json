@@ -208,6 +208,20 @@
             ".workspace/evidence/bor-cst-sliders-20261022/packaged-verification.json"
           ],
           "scope": "Eight degree-three browser controls; 202 parameter values/multiplicities, 101 profile samples and 153 surface points exact; single-step Undo/Redo bytes and page/focus retention. Nine packaged native regressions passed; broader closure unproven."
+        },
+        {
+          "date": "2026-10-23",
+          "change": "Expose native CST fitting and coefficient sliders on eligible fuselage and stack airfoil sections; eligibility follows original Airfoil types rather than the owner.",
+          "evidence": [
+            "MODELING_AUDIT.md",
+            "tests/test_cst_section_families.py",
+            "tests/test_cst_editor.mjs",
+            ".workspace/evidence/cst-owner-families-20261022/source.log",
+            ".workspace/evidence/cst-body-browser-20261022/packaged.json",
+            ".workspace/evidence/cst-body-browser-20261022/history.json",
+            ".workspace/evidence/cst-body-browser-20261022/cst-controls.png"
+          ],
+          "scope": "Seven source and relocated-package native methods, all 47 JS modules, and both families fitted/edited through the packaged browser with exact original parameters/profiles/surfaces. Native warm/cold histories matched; invalid/generated/locked edits remain guarded. W03/full modeling closure remains unproven."
         }
       ]
     },

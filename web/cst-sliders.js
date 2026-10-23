@@ -1,4 +1,10 @@
 import {customSliderMarkup,bindCustomSliders} from './custom-sliders.js?v=20261022-drafts';
+export function cstEditorMarkup(component,section,{card,field,button,E}){
+ if(section.generated||(!section.cst&&!section.cstFitAllowed))return '';
+ const coefFields=side=>`<h3>${side==='upper'?'Upper':'Lower'} surface · degree ${section.cst[side].length-1}</h3><div class="tool-fields cst-coefficients">${cstSliderParameters(component,section).filter(p=>p.side===side).map(p=>`<div>${field(p.name,`cst-${side}-${p.index}`,p.value)}${cstSliderMarkup(p,E)}</div>`).join('')}</div><div class="tool-actions"><button data-cst-degree="${side}" data-direction="promote">Increase ${side} degree</button><button data-cst-degree="${side}" data-direction="demote" ${section.cst[side].length===1?'disabled':''}>Reduce ${side} degree</button></div>`;
+ return card('CST airfoil',`<p>CST describes each side with coefficients. Native fitting approximates the current profile; compare the result before using it.</p>${section.cst?`${coefFields('upper')}${coefFields('lower')}<div class="tool-actions">${button('apply-cst','Apply coefficients',true)}</div><p class="native-tip">OpenVSP applies its leading-edge and continuity constraints. Reducing the degree can change the shape.</p>`:`<div class="inline-fields">${field('Fitting degree (1–20)','cst-degree',8)}${button('fit-cst','Fit current profile to CST',true)}</div>`}`,'wide');
+}
+
 export function cstSliderParameters(component,section){
  if(!section.cst)return [];
  return ['upper','lower'].flatMap(side=>section.cst[side].map((value,index)=>({

@@ -205,9 +205,9 @@ def mutate(v,r):
             v.MoveEditXSecPnt(xid,idx,v.vec3d(*[finite(x) for x in p]))
     elif op in ('cst-fit','cst-coefficients','cst-degree'):
         gid,surf,index,xid=section(v,r)
-        if v.GetGeomTypeName(gid).upper() not in ('WING','PROP','PROPELLER'):raise ValueError('CST editing requires an airfoil on a wing or propeller.')
         if op=='cst-fit':
-            from native_cst_validation import fitting_degree
+            from native_cst_validation import fitting_degree,fitting_allowed
+            if not fitting_allowed(v,v.GetXSecShape(xid)):raise ValueError('Choose an airfoil profile before fitting CST.')
             degree=fitting_degree(r.get('degree'))
             from native_editable_curves import guard_shape_replacement
             guard_shape_replacement(v,xid,v.XS_CST_AIRFOIL)

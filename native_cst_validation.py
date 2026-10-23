@@ -1,4 +1,15 @@
 """Validate CST requests against native coefficient parameter limits."""
+# Original FitCSTAirfoil accepts Airfoil-derived curves independently of the
+# section owner. AC25-773 and editable/body curves derive from XSecCurve only.
+AIRFOIL_SHAPES=('XS_FOUR_SERIES','XS_SIX_SERIES','XS_BICONVEX','XS_WEDGE',
+                'XS_FILE_AIRFOIL','XS_CST_AIRFOIL','XS_VKT_AIRFOIL',
+                'XS_FOUR_DIGIT_MOD','XS_FIVE_DIGIT','XS_FIVE_DIGIT_MOD','XS_ONE_SIX_SERIES')
+
+
+def fitting_allowed(v,shape):
+    return shape in {getattr(v,name) for name in AIRFOIL_SHAPES}
+
+
 def fitting_degree(value):
     if type(value)!=int or not 1<=value<=20:raise ValueError('Choose a fitting degree from 1 to 20.')
     return value

@@ -1,8 +1,10 @@
-# Project status — reviewed 2026-10-22
+# Project status — reviewed 2026-10-23
 
 The full objective remains: all installed OpenVSP engineering capabilities usable end to end in Studio, with native verification. No completion category is closed. Modeling and engineering workflows are implemented in parts and remain under active native and browser verification. Human/crew workflows are deferred by user request.
 
 This is a status view of the existing capability plan, not a new scope or a replacement for its detailed requirements. The original 25 workflow rows are frozen as W01–W25 in [CAPABILITY_INVENTORY.json](CAPABILITY_INVENTORY.json). Future findings belong to those rows and the four existing categories.
+
+CST airfoil fitting and live coefficient sliders now work on eligible fuselage and stack sections. Both families match the original engine through fit, coefficient/degree edits and cold reopening; source/package checks and packaged-browser history pass. This removes a confirmed modeling restriction without closing the broader modeling scope. See MODELING_AUDIT.md.
 
 Custom component packages now support native directory discovery after an explicit relative folder change. A previously incorrect 5-unit import now matches the original engine's 12-unit geometry; native nested-folder reads, control-driven choices, relocation, older saved components and browser Undo/Redo/reopening are verified. Thirty-four source tests and ten relocated-package tests pass. Default working-directory listings and broader custom filesystem semantics remain unproven; W05 stays open. See CUSTOM_CONTROL_AUDIT.md.
 

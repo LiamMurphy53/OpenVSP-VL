@@ -135,6 +135,8 @@ def snapshot(v):
                 for ix in range(v.GetNumXSec(surf)):
                     xid = v.GetXSec(surf, ix)
                     entry = dict(generated=generated_sections,surface=si, index=ix, id=xid, shape=v.GetXSecShape(xid),alias=v.GetXSecAlias(xid),curveAlias=v.GetXSecCurveAlias(xid))
+                    from native_cst_validation import fitting_allowed
+                    entry['cstFitAllowed']=not generated_sections and fitting_allowed(v,entry['shape'])
                     if kind.upper() in ('FUSELAGE','STACK'):
                         entry['skin']=dict(continuity=v.GetXSecContinuity(xid),sides={label:dict(angles=list(v.GetXSecTanAngles(xid,side)),slews=list(v.GetXSecTanSlews(xid,side)),strengths=list(v.GetXSecTanStrengths(xid,side)),curvatures=list(v.GetXSecCurvatures(xid,side))) for label,side in [('XSEC_LEFT_SIDE',v.XSEC_LEFT_SIDE),('XSEC_RIGHT_SIDE',v.XSEC_RIGHT_SIDE)]})
                     import native_file_profiles
