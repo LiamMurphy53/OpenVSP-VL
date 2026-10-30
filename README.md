@@ -4,6 +4,16 @@ The current workspace focuses on autonomous aircraft. Human/crew creation and de
 
 An independent modern interface over the **official, unmodified OpenVSP 3.52.2 engine**. Aircraft geometry, parameter dependencies, fitting and analyses are evaluated by OpenVSP. The browser displays native geometry and results. Full workflow parity remains under development; see [FEATURE_STATUS.md](FEATURE_STATUS.md) and [CAPABILITY_PLAN.md](CAPABILITY_PLAN.md) for verified coverage and remaining work.
 
+## Mac app
+
+Run `tools/install_app.sh` once to build **OpenVSP Studio.app** into `~/Applications`. It opens Studio in its own window, with no browser, and gives you a Dock icon, Spotlight entry, native Open/Save dialogs and menus. View → Design / Modeling Tools / Analyze / Studies are ⌘1–⌘4, and ⌘Z/⇧⌘Z undo and redo aircraft edits. The app starts the engine itself and stops it on quit; it reuses a Studio server that is already running for the same workspace. It runs this checkout, so rerun the script after moving the folder.
+
+## Analyze
+
+Analyses are grouped by the question they answer: size & weight, aerodynamics, post-processing a saved lift & drag run, meshes & exports, checks, and textbook references. Each shows a handful of plain-language inputs. Everything else OpenVSP accepts sits under **All engine settings**, and only values you change are sent. Results open as headline numbers, charts and per-component tables, with the run's files below. Every run is kept under **Past runs**. Analyses that need something first (a propeller, a structure, a saved solution) say so before you run them. **Open the classic analysis workspace**, at the bottom of the list, still has the older full-detail forms.
+
+VSPAERO runs use a source build of the 3.52.2 solver with `native_bridge/solver_stability_3_52_2.patch` applied. The stock binary reads an uninitialized wake leading-edge index, so on this Mac it randomly crashed or returned NaN for CL, CD and L/D, even on a plain wing. Studio also now fails a run that writes no polar instead of reporting it complete. VSPAERO still cannot build a wake for some junctions, such as joined box-wing tips; those runs now stop with a clear error.
+
 
 Polygon-mesh projects include a checksummed Studio snapshot inside the `.vsp3` file. Studio restores the native polygon graph when reopening, editing or undoing changes. The original OpenVSP 3.52.2 reader ignores this extra data, and saving through that application discards it. Use the native VSPGEOM export and its companion files for polygon data in other tools. Polygon coarsening and other specialized operations remain under development.
 

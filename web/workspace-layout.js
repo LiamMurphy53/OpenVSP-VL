@@ -62,7 +62,7 @@ export function installWorkspaceLayout(){
   restore.hidden=!s.max;restore.onclick=()=>change(d,s=>s.max=null);
  }
  document.querySelector('#reset-layout').onclick=()=>{const d=definitions.find(d=>d.id===current);change(d,s=>{s.order=d.panes.map(p=>p[0]);s.hidden=[];s.widths=Object.fromEntries(d.panes.map(([id,,,w])=>[id,w]));s.max=null;});};
- document.querySelectorAll('[data-page]').forEach(button=>button.addEventListener('click',()=>{current=button.dataset.page;apply(definitions.find(d=>d.id===current));updateMenu();}));
+ document.querySelectorAll('[data-page]').forEach(button=>button.addEventListener('click',()=>{const d=definitions.find(d=>d.id===button.dataset.page);document.querySelector('.panel-picker').hidden=!d;if(!d)return;current=d.id;apply(d);updateMenu();}));
  // Editors replace their contents after native edits. Reattach controls without
  // rebuilding inputs or changing any native model data.
  const observer=new MutationObserver(()=>{for(const d of definitions){const host=document.querySelector(d.host);if(host&&d.panes.some(([,selector])=>{const pane=host.querySelector(selector);return pane&&!pane.querySelector(':scope > .pane-toolbar');}))apply(d);}});

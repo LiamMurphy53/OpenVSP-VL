@@ -32,6 +32,7 @@ import {installRegionOverlays,refreshRegionOverlays,drawRegionOverlays,focusRegi
 import {setupGuide,bindSetupGuide,guidedResults,bindGuidedResults,hasGuide,refreshGuideFields,bindGuideFields,bindAeroGeometryCopy} from './analysis-guides.js?v=20261022-sweep-visibility';
 import {installRunWorkspace,refreshHistory,renderRunWorkspace,clearRunWorkspace} from './run-workspace.js?v=20261022-run-status';
 import {installTools,renderTools,refreshToolGeometry,setToolsVisible,renderPlots,plotSVG,openEngineeringSettings,openGeometryCases,openFlowPlanes,openParameterLinks} from './tools.js?v=20261022-cst-owners';
+import {installAnalyze} from './analyze.js?v=20261030';
 import {installStudies,showStudies} from './studies.js?v=20261022-result-ownership';
 const $=s=>document.querySelector(s), esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const wingSelections=new Map(),attachmentFrames=new Set(),propCurveChoices=new Map();
@@ -285,6 +286,7 @@ async function reuseRunInputs(job){
 
 $('#cancel').onclick=async()=>{if(currentJob)try{await api('/api/cancel',{id:currentJob});}catch(e){toast(e.message);}};$('#download-results').onclick=()=>{if(!lastResult)return;const url=URL.createObjectURL(new Blob([JSON.stringify(lastResult,null,2)],{type:'application/json'})),a=document.createElement('a');a.href=url;a.download=lastResult.name+'-results.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);};
 installRunWorkspace({api,esc,analysisLabel,reuseReferenceInputs,reuseRunInputs,open:openRun,start:startAnalysis,toast});
+installAnalyze({api,esc,toast,model:()=>model});
 function showRegionBoundary(id){const region=model.tools.controls.find(r=>r.id===id);if(!region)return;selected=region.geom;render();focusRegionBoundary(id);$('[data-page="design"]').click();}
 installRegionOverlays({model:()=>model,api,esc,draw});
 installTools({liveEdit:liveRequestEdit,isBusy:()=>busy,prepareGeometryCase:async id=>{$('[data-page="analysis"]').click();$('#analysis-select').value='GeometryAnalysis';await loadSchema();const field=document.getElementById('analysis-CaseID-0');if(field)field.value=id;},api,model:()=>model,selected:()=>selected,select:id=>{selected=id;sectionIndex=0;render();},transact,toast,esc,showRegionBoundary});

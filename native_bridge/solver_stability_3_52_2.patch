@@ -1,0 +1,83 @@
+--- original/Vortex_Trail.C
++++ solver-repair/Vortex_Trail.C
+@@ -31,6 +31,8 @@
+     Wing_ = 0;
+     
+     TE_Edge_ = 0;
++    
++    LE_Edge_ = 0;
+     
+     TE_Node_ = 0;
+     
+@@ -187,6 +189,8 @@
+     Wing_                           = Trailing_Vortex.Wing_;
+                                    
+     TE_Edge_                        = Trailing_Vortex.TE_Edge_;
++
++    LE_Edge_                        = Trailing_Vortex.LE_Edge_;
+                                        
+     TE_Node_                        = Trailing_Vortex.TE_Node_;
+     
+--- original/VSP_Geom.C
++++ solver-repair/VSP_Geom.C
+@@ -2382,6 +2382,8 @@
+              LE_Edge = ABS(VortexSheet(k).TrailingVortex(i).LE_Edge());
+              TE_Edge = ABS(VortexSheet(k).TrailingVortex(i).TE_Edge());
+    
++             if ( LE_Edge == 0 ) continue;
++
+              VortexSheet(k).TrailingVortex(i).LocalChord() = sqrt( pow(Grid(SolveOnMGLevel_).EdgeList(LE_Edge).Xc() - Grid(SolveOnMGLevel_).EdgeList(TE_Edge).Xc(), 2.)
+                                                                  + pow(Grid(SolveOnMGLevel_).EdgeList(LE_Edge).Yc() - Grid(SolveOnMGLevel_).EdgeList(TE_Edge).Yc(), 2.)
+                                                                  + pow(Grid(SolveOnMGLevel_).EdgeList(LE_Edge).Zc() - Grid(SolveOnMGLevel_).EdgeList(TE_Edge).Zc(), 2.) );
+@@ -5428,7 +5430,7 @@
+                 
+              }
+              
+-             if ( VortexSheet(k).IsPeriodic() ) {
++             if ( VortexSheet(k).IsPeriodic() && VortexSheet(k).NumberOfTrailingVortices() > 0 ) {
+                 
+                j = VortexSheet(k).NumberOfTrailingVortices();
+                   
+@@ -5605,6 +5607,42 @@
+                   
+        }
+        
++    }
++
++    // A strip whose leading edge was not found inherits the leading edge and
++    // chord of the nearest strip on the same sheet that has one.
++
++    for ( k = 1 ; k <= NumberOfVortexSheets_ ; k++ ) {
++
++       for ( j = 1 ; j < VortexSheet(k).NumberOfTrailingVortices() ; j++ ) {
++
++          if ( VortexSheet(k).TrailingVortex(j).LE_Edge() != 0 ) continue;
++
++          for ( q = 1 ; q < VortexSheet(k).NumberOfTrailingVortices() ; q++ ) {
++
++             jp = j + q;
++             jm = j - q;
++
++             if ( jp < VortexSheet(k).NumberOfTrailingVortices() && VortexSheet(k).TrailingVortex(jp).LE_Edge() != 0 ) {
++
++                VortexSheet(k).TrailingVortex(j).LE_Edge() = VortexSheet(k).TrailingVortex(jp).LE_Edge();
++                VortexSheet(k).TrailingVortex(j).LocalChord() = VortexSheet(k).TrailingVortex(jp).LocalChord();
++                break;
++
++             }
++
++             if ( jm >= 1 && VortexSheet(k).TrailingVortex(jm).LE_Edge() != 0 ) {
++
++                VortexSheet(k).TrailingVortex(j).LE_Edge() = VortexSheet(k).TrailingVortex(jm).LE_Edge();
++                VortexSheet(k).TrailingVortex(j).LocalChord() = VortexSheet(k).TrailingVortex(jm).LocalChord();
++                break;
++
++             }
++
++          }
++
++       }
++
+     }
+ 
+     // Distribute edges for strip wise force/moment integrations

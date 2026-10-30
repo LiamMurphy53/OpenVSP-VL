@@ -15,7 +15,9 @@ def executable(v,capture=False):
     vendor=ROOT/'native_bridge/vendor/vspaero-3.52.2'
     patch=ROOT/'native_bridge/flow_reader_3_52_2.patch'
     state_patch=ROOT/'native_bridge/evaluated_state_read_3_52_2.patch'
-    patches=[patch,state_patch]
+    # Uninitialized wake leading edges made the stock solver crash or return NaN.
+    stability_patch=ROOT/'native_bridge/solver_stability_3_52_2.patch'
+    patches=[patch,state_patch,stability_patch]
     if capture:patches.append(ROOT/'native_bridge/evaluated_state_3_52_2.patch')
     patch_bytes=b''.join(p.read_bytes() for p in patches)
     sources=sorted(p for p in vendor.iterdir() if p.suffix in ('.C','.H'))

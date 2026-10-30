@@ -325,6 +325,18 @@ def set_inputs(v, name, entries, validate_guides=True, prepared_single_geom=''):
     native_guides.configure_output(v,name)
 
 
+def require_solution(results):
+    """VSPAERO can exit without writing results; OpenVSP still returns a wrapper record."""
+    names={r['name'] for r in results}
+    finite=any(isinstance(x,(int,float)) and math.isfinite(x) for r in results if r['name']=='VSPAERO_Polar' for e in r['entries'] if e['name']=='CLtot' for x in e['values'])
+    if 'VSPAERO_History' in names and ('VSPAERO_Polar' not in names or finite):return
+    log=Path.cwd()/'engine.log'
+    lines=log.read_text(errors='replace').splitlines()[-400:] if log.exists() else []
+    causes=[l.strip() for l in lines if any(w in l.lower() for w in ('could not find','error in','failed to','bailing')) and 'could not open' not in l.lower()]
+    reason=('VSPAERO stopped without writing results' if 'VSPAERO_History' not in names else 'VSPAERO returned no finite lift or drag coefficients')
+    raise ValueError(reason+(' ('+causes[-1].rstrip('!. ')+')' if causes else '')+'. The solver could not handle this geometry. Check what it sees with “VSPAERO geometry only”, or run a geometry set without the problem component.')
+
+
 def collect_results(v):
     output=[]
     getters={v.INT_DATA:v.GetIntResults,v.DOUBLE_DATA:v.GetDoubleResults,v.STRING_DATA:v.GetStringResults,
@@ -645,6 +657,7 @@ def execute_analysis(v,req):
         import native_case_drawings
         native_case_drawings.save(v,data)
     if name in ('VSPAEROSweep','VSPAEROSinglePoint'):
+        require_solution(data['results'])
         import native_solver_setup
         data['solverSetup']=native_solver_setup.read(Path.cwd())
         if evaluated_capture:data['evaluatedStateCapture']=evaluated_capture
