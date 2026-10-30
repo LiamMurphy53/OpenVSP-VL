@@ -8,6 +8,10 @@ An independent modern interface over the **official, unmodified OpenVSP 3.52.2 e
 
 Run `tools/install_app.sh` once to build **OpenVSP Studio.app** into `~/Applications`. It opens Studio in its own window, with no browser, and gives you a Dock icon, Spotlight entry, native Open/Save dialogs and menus. View → Design / Modeling Tools / Analyze / Studies are ⌘1–⌘4, and ⌘Z/⇧⌘Z undo and redo aircraft edits. The app starts the engine itself and stops it on quit; it reuses a Studio server that is already running for the same workspace. It runs this checkout, so rerun the script after moving the folder.
 
+## Studies
+
+A study changes part of the aircraft in steps and runs analyses on every combination. Choose what to change, either a component dimension (wingspan, wing area, section sweep, position, density…) or an analysis setting such as Mach. Give a range or a list of values, then tick what to calculate. Results show a chart of any summary value (best L/D, CD₀, wetted area, mass, CG…) against the values you changed, drag polars for every case, and a table you can download. Click a case to open its runs in Analyze. Property locks still apply, so cases that would break a lock fail and say why. **Open the classic study editor** has the older full-detail editor.
+
 ## Analyze
 
 Analyses are grouped by the question they answer: size & weight, aerodynamics, post-processing a saved lift & drag run, meshes & exports, checks, and textbook references. Each shows a handful of plain-language inputs. Everything else OpenVSP accepts sits under **All engine settings**, and only values you change are sent. Results open as headline numbers, charts and per-component tables, with the run's files below. Every run is kept under **Past runs**. Analyses that need something first (a propeller, a structure, a saved solution) say so before you run them. **Open the classic analysis workspace**, at the bottom of the list, still has the older full-detail forms.

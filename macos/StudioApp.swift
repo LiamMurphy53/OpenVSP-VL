@@ -213,7 +213,7 @@ final class StudioApp: NSObject, NSApplicationDelegate, WKNavigationDelegate, WK
     @objc func undoStudio() { web.evaluateJavaScript("(e=>e&&/INPUT|TEXTAREA/.test(e.tagName)?document.execCommand('undo'):document.querySelector('#undo')?.click())(document.activeElement)") }
     @objc func redoStudio() { web.evaluateJavaScript("(e=>e&&/INPUT|TEXTAREA/.test(e.tagName)?document.execCommand('redo'):document.querySelector('#redo')?.click())(document.activeElement)") }
     @objc func showPage(_ sender: NSMenuItem) {
-        let page = ["", "design", "tools", "analyze", "studies"][sender.tag]
+        let page = ["", "design", "tools", "analyze", "study"][sender.tag]
         click("[data-page=\"\(page)\"]")
     }
     @objc func zoomReset() { web.pageZoom = 1 }

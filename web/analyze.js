@@ -4,18 +4,18 @@ import {mountMeshViewer} from './mesh-viewer.js?v=20261022-run-status';
 import {setInputNames} from './set-selection.js?v=20261022-cg';
 import {modelLengthUnit} from './display-units.js?v=20261019';
 
-let app,host,current=null,schema=null,geometrySchema=null,values=new Map(),drafts=new Map(),viewed=null,running=null,pollTimer=null,clockTimer=null,generation=0,jobsCache=[],disposeMesh=null;
+let pendingRun=null,app,host,current=null,schema=null,geometrySchema=null,values=new Map(),drafts=new Map(),viewed=null,running=null,pollTimer=null,clockTimer=null,generation=0,jobsCache=[],disposeMesh=null;
 const $=s=>host.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const key=e=>e.name+'|'+e.index;
-const num=(x,p=4)=>typeof x!=='number'||!Number.isFinite(x)?'—':Math.abs(x)<1e-10?'0':Math.abs(x)>=1e5||(Math.abs(x)<1e-3&&x!==0)?x.toExponential(p-1):Number(x.toPrecision(p)).toLocaleString(undefined,{maximumFractionDigits:8});
+export const num=(x,p=4)=>typeof x!=='number'||!Number.isFinite(x)?'—':Math.abs(x)<1e-10?'0':Math.abs(x)>=1e5||(Math.abs(x)<1e-3&&x!==0)?x.toExponential(p-1):Number(x.toPrecision(p)).toLocaleString(undefined,{maximumFractionDigits:8});
 const len=()=>{const u=modelLengthUnit();return u==='model length'?'units':u;};
 const area=()=>len()+'²',vol=()=>len()+'³';
 
 // ---------- Catalog ----------
 // Names are the native analyses; everything else is presentation.
 const wings=m=>m.components.filter(c=>c.type==='Wing');
-const mainWing=m=>{const w=wings(m);return w.map(c=>[c,c.params.find(p=>p.name==='TotalArea')?.value||0]).sort((a,b)=>b[1]-a[1])[0]?.[0];};
+export const mainWing=m=>{const w=wings(m);return w.map(c=>[c,c.params.find(p=>p.name==='TotalArea')?.value||0]).sort((a,b)=>b[1]-a[1])[0]?.[0];};
 const savedAero=()=>jobsCache.some(j=>j.status==='complete'&&j.name==='VSPAEROSweep');
 const CATALOG=[
  {group:'Size & weight',items:[
@@ -59,6 +59,8 @@ const CATALOG=[
 ];
 const ITEMS=Object.fromEntries(CATALOG.flatMap(g=>g.items.map(i=>[i.name,{...i,group:g.group}])));
 export const analyzeTitle=n=>ITEMS[n]?.title||n;
+// Other pages open a saved run here (a study case, for example).
+export function openInAnalyze(id){pendingRun=id;document.querySelector('[data-page="analyze"]').click();}
 // File names written for the engine's own bookkeeping, not results.
 const INTERNAL=/^(request|response|analysis-setup|job|worker-exit)\.json$|\.guide\.json$|^engine\.log$|studio-state\.json$/;
 const HIDDEN_INPUT=/FileName$|^RedirectFile$|^BEMFileName$/;
@@ -78,6 +80,8 @@ export function installAnalyze(context){
 
 async function show(){
  await refreshJobs();renderCatalog();
+ const wanted=pendingRun&&jobsCache.find(j=>j.id===pendingRun);pendingRun=null;
+ if(wanted&&!jobsCache.some(j=>j.status==='running')){await choose(wanted.name,false);openRun(wanted.id);return;}
  const active=jobsCache.find(j=>j.status==='running'||j.stopping);
  if(active){running=active.id;await choose(active.name,false);openRun(active.id);return;}
  if(!current)await choose('CompGeom');
@@ -286,7 +290,7 @@ function bars(labels,vals,unitLabel){
  return `<div class="az-bars">${labels.map((l,i)=>`<div><span>${esc(l)}</span><i style="--w:${(Math.abs(vals[i])/max*100).toFixed(1)}%"></i><b>${esc(num(vals[i],3))}${unitLabel?' '+esc(unitLabel):''}</b></div>`).join('')}</div>`;
 }
 // Small line chart: series = [{label, x:[], y:[]}]
-function chart(series,xl,yl){
+export function chart(series,xl,yl){
  const pts=series.flatMap(s=>s.x.map((x,i)=>[x,s.y[i]])).filter(p=>p.every(Number.isFinite));
  if(pts.length<2)return'';
  let [x0,x1]=[Math.min(...pts.map(p=>p[0])),Math.max(...pts.map(p=>p[0]))],[y0,y1]=[Math.min(...pts.map(p=>p[1])),Math.max(...pts.map(p=>p[1]))];
@@ -294,7 +298,10 @@ function chart(series,xl,yl){
  const pad=(y1-y0)*.08;y0-=pad;y1+=pad;
  const W=460,H=230,L=52,B=34,T=12,Rm=12,X=x=>L+(x-x0)/(x1-x0)*(W-L-Rm),Y=y=>T+(1-(y-y0)/(y1-y0))*(H-T-B);
  const ticks=(a,b)=>[0,1,2,3,4].map(i=>a+(b-a)*i/4);
- const grid=ticks(y0,y1).map(v=>`<line x1="${L}" x2="${W-Rm}" y1="${Y(v)}" y2="${Y(v)}"/><text x="${L-6}" y="${Y(v)+3}" text-anchor="end">${esc(num(v,3))}</text>`).join('')+ticks(x0,x1).map(v=>`<text x="${X(v)}" y="${H-B+15}" text-anchor="middle">${esc(num(v,3))}</text>`).join('');
+ // Use the fewest digits that still tell neighbouring ticks apart.
+ const labels=v=>{for(let p=3;p<8;p++){const l=v.map(x=>num(x,p));if(new Set(l).size===l.length)return l;}return v.map(x=>num(x,8));};
+ const yt=ticks(y0,y1),xt=ticks(x0,x1),yl2=labels(yt),xl2=labels(xt);
+ const grid=yt.map((v,i)=>`<line x1="${L}" x2="${W-Rm}" y1="${Y(v)}" y2="${Y(v)}"/><text x="${L-6}" y="${Y(v)+3}" text-anchor="end">${esc(yl2[i])}</text>`).join('')+xt.map((v,i)=>`<text x="${X(v)}" y="${H-B+15}" text-anchor="middle">${esc(xl2[i])}</text>`).join('');
  const zero=y0<0&&y1>0?`<line class="zero" x1="${L}" x2="${W-Rm}" y1="${Y(0)}" y2="${Y(0)}"/>`:'';
  const lines=series.map((s,k)=>{const p=s.x.map((x,i)=>[x,s.y[i]]).filter(q=>q.every(Number.isFinite));return `<g class="s${k}"><polyline points="${p.map(q=>X(q[0]).toFixed(1)+','+Y(q[1]).toFixed(1)).join(' ')}"/>${p.map(q=>`<circle cx="${X(q[0]).toFixed(1)}" cy="${Y(q[1]).toFixed(1)}" r="2.6"><title>${esc(num(q[0]))}, ${esc(num(q[1]))}</title></circle>`).join('')}</g>`;}).join('');
  return `<figure class="az-chart"><figcaption>${esc(yl)}</figcaption><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(yl)} versus ${esc(xl)}"><g class="grid">${grid}</g>${zero}${lines}<text class="axis" x="${(L+W-Rm)/2}" y="${H-3}" text-anchor="middle">${esc(xl)}</text></svg>${series.length>1?`<div class="az-legend">${series.map((s,k)=>`<span class="s${k}">${esc(s.label)}</span>`).join('')}</div>`:''}</figure>`;

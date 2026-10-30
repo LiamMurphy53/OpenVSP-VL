@@ -1,5 +1,5 @@
 /* Analyze page. Uses the same palette and type as the rest of Studio. */
-#analyze-page{--az-ink:#243634;--az-muted:#6f7c76;--az-line:#e1e6df;--az-soft:#f3f6f1;--az-green:#176e56;--az-warn:#9a6a12;--az-bad:#aa5845;background:#f9faf7}
+#analyze-page,#study-page{--az-ink:#243634;--az-muted:#6f7c76;--az-line:#e1e6df;--az-soft:#f3f6f1;--az-green:#176e56;--az-warn:#9a6a12;--az-bad:#aa5845;background:#f9faf7}
 .az{display:grid;grid-template-columns:268px minmax(330px,400px) minmax(0,1fr);height:calc(100vh - 207px);min-height:560px}
 .az>*{overflow:auto;min-height:0}
 .az h1,.az h2,.az h3{font-family:'Space Grotesk',sans-serif;letter-spacing:-.3px;color:var(--az-ink);margin:0}
@@ -109,6 +109,14 @@
 .az-legend{display:flex;gap:12px;font-size:11px;color:var(--az-muted);margin-top:4px}
 .az-legend .s0::before,.az-legend .s1::before{content:'';display:inline-block;width:10px;height:3px;margin-right:5px;vertical-align:middle;background:var(--az-green)}
 .az-legend .s1::before{background:#c47f2c}
+.az-chart .s2 polyline,.az-chart .s2 circle{stroke:#4f7fc4}.az-legend .s2::before{background:#4f7fc4}
+.az-chart .s3 polyline,.az-chart .s3 circle{stroke:#a65fa8}.az-legend .s3::before{background:#a65fa8}
+.az-chart .s4 polyline,.az-chart .s4 circle{stroke:#3d9aa3}.az-legend .s4::before{background:#3d9aa3}
+.az-chart .s5 polyline,.az-chart .s5 circle{stroke:#c0614f}.az-legend .s5::before{background:#c0614f}
+.az-chart .s6 polyline,.az-chart .s6 circle{stroke:#8a8a3a}.az-legend .s6::before{background:#8a8a3a}
+.az-chart .s7 polyline,.az-chart .s7 circle{stroke:#6b6f76}.az-legend .s7::before{background:#6b6f76}
+.az-legend .s2::before,.az-legend .s3::before,.az-legend .s4::before,.az-legend .s5::before,.az-legend .s6::before,.az-legend .s7::before{content:'';display:inline-block;width:10px;height:3px;margin-right:5px;vertical-align:middle}
+.az-legend{flex-wrap:wrap}
 .az-outline svg{max-height:260px}
 .az-outline polygon{fill:rgba(23,110,86,.12);stroke:var(--az-green);stroke-width:1;vector-effect:non-scaling-stroke}
 .az-files{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px}

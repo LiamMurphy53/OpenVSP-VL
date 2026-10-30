@@ -1,0 +1,64 @@
+/* Studies page. Shares the Analyze layout (.az-*) and adds the study builder. */
+.st-intro{font-size:12px;color:var(--az-muted);line-height:1.45;margin:-4px 0 12px}
+.st-new{width:100%;padding:10px;font-weight:600}
+.st .az-item small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.st-name{width:100%;border:1px solid transparent;border-radius:7px;padding:4px 6px;margin-left:-6px;font:600 24px 'Space Grotesk',sans-serif;letter-spacing:-.3px;color:var(--az-ink);background:transparent}
+.st-name:hover{border-color:var(--az-line)}
+.st-name:focus{outline:2px solid #27a77c;background:#fff}
+.st-block{margin-top:22px}
+.st-block h3{display:flex;align-items:center;gap:9px;font-size:15px}
+.st-block h3 span{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--az-green);color:#fff;font:600 11px 'DM Sans',sans-serif}
+.st-block>.az-hint{margin:6px 0 12px}
+.st-empty{font-size:12px;color:var(--az-muted);background:#fff;border:1px dashed #d3dbd1;border-radius:9px;padding:12px;margin:0 0 10px}
+.st-var{background:#fff;border:1px solid var(--az-line);border-radius:10px;padding:11px 12px;margin-bottom:9px}
+.st-var-head{display:flex;align-items:baseline;gap:8px}
+.st-var-head b{font-size:13px;color:var(--az-ink);flex:1}
+.st-var-head small{font-size:11px;color:var(--az-muted);white-space:nowrap}
+.st-x{border:0;background:none;color:var(--az-muted);font-size:16px;line-height:1;padding:0 2px}
+.st-x:hover{color:var(--az-bad);background:none}
+.st-values{display:flex;align-items:center;gap:6px;margin-top:9px;flex-wrap:wrap;font-size:12px;color:var(--az-muted)}
+.st-values select{width:auto;flex:none}
+.st-values select,.st-values input{border:1px solid #d7ddd5;border-radius:7px;padding:6px 7px;font-size:13px;background:#fff;color:var(--az-ink);min-width:0}
+.st-values input[type=number]{width:78px}
+.st-values input.st-count{width:52px}
+.st-values input[type=text]{flex:1;min-width:140px}
+.st-choices{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:9px;font-size:12px}
+.st-choices label{display:flex;gap:5px;align-items:center}
+.st-preview{display:block;margin-top:7px;font-size:11px;color:var(--az-muted)}
+.st-add{width:100%;border-style:dashed;color:var(--az-green);font-weight:600}
+.st-picker{background:#fff;border:1px solid #c9ddd0;border-radius:10px;padding:12px;display:grid;gap:10px}
+.st-picker select[size]{margin-top:6px;padding:4px}
+.st-picker-actions{display:flex;justify-content:flex-end}
+.st-steps{display:grid;gap:6px}
+.st-step{border:1px solid var(--az-line);border-radius:9px;background:#fff;padding:8px 11px}
+.st-step.on{border-color:#c9ddd0;background:#f6faf7}
+.st-step label{display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer}
+.st-step b{font-weight:550;color:var(--az-ink)}
+.st-settings{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;margin:9px 0 3px 24px}
+.st-settings .az-field{grid-column:auto!important}
+.st-settings .az-field label{font-size:11px;font-weight:550}
+.st-settings .az-field input,.st-settings .az-field select{padding:6px 7px;font-size:12px}
+.st-summary{margin-top:20px;font-size:12.5px;color:#55635d;background:var(--az-soft);border-radius:9px;padding:10px 12px}
+.st-summary b{color:var(--az-ink)}
+.st-run{flex-wrap:wrap}
+.st-check{display:flex;align-items:center;gap:6px;font-size:12px;color:#55635d}
+.st-progress{display:flex;align-items:center;gap:12px;background:#fff;border:1px solid var(--az-line);border-radius:10px;padding:12px 14px;margin-bottom:14px;font-size:12px;color:#55635d}
+.st-bar{flex:1;height:8px;border-radius:4px;background:#e6ede7;overflow:hidden}
+.st-bar i{display:block;height:100%;background:linear-gradient(90deg,#2e8a69,#4fa985);transition:width .4s}
+.st-callout-actions{margin-top:8px}
+.az-callout button{margin-top:8px}
+.st-metrics{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 14px}
+.st-metrics button{border-radius:16px;padding:6px 12px;font-size:12px}
+.st-metrics button.active{background:var(--az-green);border-color:var(--az-green);color:#fff}
+.st-kpi-at{display:block;margin-top:4px;font-size:11px;color:var(--az-muted);font-family:'DM Sans',sans-serif}
+.az-results .az-kpis+.az-chart{margin-top:12px}
+.st-case{border:0;background:none;padding:0;color:var(--az-green);font-weight:600;font-size:12px;text-decoration:underline;text-underline-offset:2px}
+.st-case:hover{background:none}
+.az-table td{position:relative}
+.st-case-menu{position:absolute;z-index:5;left:8px;top:28px;background:#fff;border:1px solid var(--az-line);border-radius:9px;box-shadow:0 8px 24px rgba(30,50,40,.14);padding:8px;display:grid;gap:4px;min-width:200px;white-space:normal}
+.st-case-menu b{font-size:12px;padding:2px 4px 4px}
+.st-case-menu button{text-align:left;font-size:12px;padding:6px 8px;border:0}
+.st-case-menu span{font-size:11px;color:var(--az-muted);padding:4px 8px}
+.st-failed td{background:#fcf3f0}
+.st-error-row td{white-space:normal;font-size:11.5px;color:var(--az-bad);background:#fcf3f0;padding-top:0}
+.st-lock{margin:8px 0 0;font-size:11.5px;line-height:1.4;color:var(--az-warn);background:#fdf8ec;border:1px solid #ecd9ae;border-radius:7px;padding:6px 8px}
